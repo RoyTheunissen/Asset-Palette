@@ -92,8 +92,6 @@ namespace RoyTheunissen.PrefabPalette
 
         private void OnGUI()
         {
-            EditorGUILayout.LabelField("Drag prefabs here.");
-
             DropAreaGUI();
 
             DrawPrefabs();
@@ -102,33 +100,67 @@ namespace RoyTheunissen.PrefabPalette
         private void DrawPrefabs()
         {
             prefabPreviewsScrollPosition = GUILayout.BeginScrollView(prefabPreviewsScrollPosition, "Box");
-            EditorGUILayout.BeginHorizontal();
-            
-            for (int i = 0; i < prefabsToDisplay.Count; i++)
-            {
-                PrefabEntry prefab = prefabsToDisplay[i];
-                
-                // Purge invalid entries.
-                if (!prefab.IsValid)
-                {
-                    prefabsToDisplay.RemoveAt(i);
-                    i--;
-                    continue;
-                }
 
-                Rect rect = GUILayoutUtility.GetRect(
-                    0, 0, GUILayout.Width(PrefabEntry.TextureSize), GUILayout.Height(PrefabEntry.TextureSize));
-                if (prefab.PreviewTexture != null)
-                    EditorGUI.DrawPreviewTexture(rect, prefab.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
-                else
+            //Rect containerRect = GUILayoutUtility.GetRect(0, 0, GUILayout.ExpandWidth(true));
+            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - 14;//containerRect.width;
+            const float prefabWidth = 100;
+            const float spacing = 2;
+
+            int columnCount = Mathf.FloorToInt(containerWidth / (prefabWidth + spacing));
+            int rowCount = Mathf.CeilToInt((float)prefabsToDisplay.Count / columnCount);
+
+            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
                 {
-                    const float brightness = 0.325f;
-                    EditorGUI.DrawRect(rect, new Color(brightness, brightness, brightness));
+                    int index = rowIndex * columnCount + columnIndex;
+                    if (index >= prefabsToDisplay.Count)
+                    {
+                        GUILayout.FlexibleSpace();
+                        break;
+                    }
+
+                    // Purge invalid entries.
+                    while (!prefabsToDisplay[index].IsValid && index < prefabsToDisplay.Count)
+                    {
+                        prefabsToDisplay.RemoveAt(index);
+                    }
+                    
+                    if (index >= prefabsToDisplay.Count)
+                    {
+                        GUILayout.FlexibleSpace();
+                        break;
+                    }
+                    
+                    PrefabEntry prefab = prefabsToDisplay[index];
+
+                    Rect rect = GUILayoutUtility.GetRect(0, 0, GUILayout.Width(prefabWidth), GUILayout.Height(prefabWidth));
+                
+                    Color borderColor = new Color(0.5f, 0.5f, 0.5f);
+                    EditorGUI.DrawRect(rect, borderColor);
+                
+                    Rect textureRect = rect.Inset(1);
+                    if (prefab.PreviewTexture != null)
+                        EditorGUI.DrawPreviewTexture(textureRect, prefab.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
+                    else
+                    {
+                        const float brightness = 0.325f;
+                        EditorGUI.DrawRect(textureRect, new Color(brightness, brightness, brightness));
+                    }
+                    EditorGUI.LabelField(textureRect, prefab.Prefab.name, PrefabPreviewTextStyle);
+
+                    if (columnIndex < columnCount - 1)
+                        EditorGUILayout.Space(spacing);
+                    else
+                        GUILayout.FlexibleSpace();
                 }
-                EditorGUI.LabelField(rect, prefab.Prefab.name, PrefabPreviewTextStyle);
+                EditorGUILayout.EndHorizontal();
+                
+                if (rowIndex < rowCount - 1)
+                    EditorGUILayout.Space(spacing);
             }
             
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndScrollView();
         }
 
