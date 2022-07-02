@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -152,20 +153,22 @@ namespace RoyTheunissen.PrefabPalette
 
                     Rect rect = GUILayoutUtility.GetRect(0, 0, GUILayout.Width(prefabWidth), GUILayout.Height(prefabWidth));
 
-                    // Allow this prefab to selected by clicking it.
-                    if (Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
+                    // Allow this prefab to be selected by clicking it.
+                    bool isMouseOnPrefab = rect.Contains(Event.current.mousePosition);
+                    bool wasAlreadySelected = prefabsSelected.Contains(prefab);
+                    if (Event.current.type == EventType.MouseDown && isMouseOnPrefab)
                     {
-                        if ((Event.current.modifiers & EventModifiers.Shift) == EventModifiers.Shift)
+                        if ((Event.current.modifiers & EventModifiers.Shift) == EventModifiers.Shift && !wasAlreadySelected)
                         {
                             // Shift+click to add.
                             prefabsSelected.Add(prefab);
                         }
-                        else if ((Event.current.modifiers & EventModifiers.Control) == EventModifiers.Control)
+                        else if ((Event.current.modifiers & EventModifiers.Control) == EventModifiers.Control && !wasAlreadySelected)
                         {
                             // Control+click to remove.
                             prefabsSelected.Remove(prefab);
                         }
-                        else
+                        else if (!wasAlreadySelected)
                         {
                             // Regular click to select only this prefab.
                             prefabsSelected.Clear();
@@ -174,6 +177,21 @@ namespace RoyTheunissen.PrefabPalette
 
                         didClickASpecificPrefab = true;
                         Repaint();
+                    }
+                    else if (Event.current.type == EventType.MouseUp && isMouseOnPrefab && !Event.current.control &&
+                             !Event.current.shift)
+                    {
+                        // Regular click to select only this prefab.
+                        prefabsSelected.Clear();
+                        prefabsSelected.Add(prefab);
+                        Repaint();
+                    }
+                    else if (Event.current.type == EventType.MouseDrag && isMouseOnPrefab)
+                    {
+                        DragAndDrop.PrepareStartDrag();
+                        DragAndDrop.objectReferences =
+                            prefabsSelected.Select(prefabEntry => (Object)prefabEntry.Prefab).ToArray();
+                        DragAndDrop.StartDrag("Drag from Prefab Palette");
                     }
                     bool isSelected = prefabsSelected.Contains(prefab);
                 
@@ -267,8 +285,6 @@ namespace RoyTheunissen.PrefabPalette
                     {
                         foreach (GameObject draggedPrefab in draggedPrefabs)
                         {
-                            Debug.Log($"Dragged prefab {draggedPrefab.name}");
-                            
                             if (HasEntry(draggedPrefab))
                                 continue;
                             
