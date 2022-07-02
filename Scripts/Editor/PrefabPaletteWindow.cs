@@ -13,54 +13,6 @@ namespace RoyTheunissen.PrefabPalette
     /// </summary>
     public class PrefabPaletteWindow : EditorWindow
     {
-        [Serializable]
-        private class PrefabEntry
-        {
-            public const int TextureSize = 100;
-            
-            [SerializeField] private GameObject prefab;
-            public GameObject Prefab => prefab;
-
-            [NonSerialized] private Texture2D cachedPreviewTexture;
-            [NonSerialized] private bool didCachePreviewTexture;
-            public Texture2D PreviewTexture
-            {
-                get
-                {
-                    if (!didCachePreviewTexture)
-                    {
-                        didCachePreviewTexture = true;
-
-                        string path = AssetDatabase.GetAssetPath(Prefab.GetInstanceID());
-                        cachedPreviewTexture = Editor.RenderStaticPreview(path, null, TextureSize, TextureSize);
-                    }
-                    return cachedPreviewTexture;
-                }
-            }
-
-            public bool IsValid => Prefab != null;
-
-            [NonSerialized] private Editor cachedEditor;
-            [NonSerialized] private bool didCacheEditor;
-            private Editor Editor
-            {
-                get
-                {
-                    if (!didCacheEditor)
-                    {
-                        didCacheEditor = true;
-                        Editor.CreateCachedEditor(Prefab, null, ref cachedEditor);
-                    }
-                    return cachedEditor;
-                }
-            }
-
-            public PrefabEntry(GameObject prefab)
-            {
-                this.prefab = prefab;
-            }
-        }
-
         [NonSerialized] private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
         [NonSerialized] private readonly List<PrefabEntry> prefabsSelected = new List<PrefabEntry>();
         
