@@ -13,9 +13,9 @@ namespace RoyTheunissen.PrefabPalette
     public class PrefabPaletteWindow : EditorWindow
     {
         [Serializable]
-        private struct PrefabEntry
+        private class PrefabEntry
         {
-            public const int PreviewSize = 100;
+            public const int TextureSize = 100;
             
             [SerializeField] private GameObject prefab;
             public GameObject Prefab => prefab;
@@ -31,7 +31,7 @@ namespace RoyTheunissen.PrefabPalette
                         didCachePreviewTexture = true;
 
                         string path = AssetDatabase.GetAssetPath(Prefab.GetInstanceID());
-                        cachedPreviewTexture = Editor.RenderStaticPreview(path, null, PreviewSize, PreviewSize);
+                        cachedPreviewTexture = Editor.RenderStaticPreview(path, null, TextureSize, TextureSize);
                     }
                     return cachedPreviewTexture;
                 }
@@ -54,7 +54,7 @@ namespace RoyTheunissen.PrefabPalette
                 }
             }
 
-            public PrefabEntry(GameObject prefab) : this()
+            public PrefabEntry(GameObject prefab)
             {
                 this.prefab = prefab;
             }
@@ -63,6 +63,26 @@ namespace RoyTheunissen.PrefabPalette
         private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
         
         private readonly List<GameObject> draggedPrefabs = new List<GameObject>();
+        
+        private Vector2 prefabPreviewsScrollPosition;
+        
+        [NonSerialized] private GUIStyle cachedPrefabPreviewTextStyle;
+        [NonSerialized] private bool didCachePrefabPreviewTextStyle;
+        private GUIStyle PrefabPreviewTextStyle
+        {
+            get
+            {
+                if (!didCachePrefabPreviewTextStyle)
+                {
+                    didCachePrefabPreviewTextStyle = true;
+                    cachedPrefabPreviewTextStyle = new GUIStyle(EditorStyles.wordWrappedMiniLabel)
+                    {
+                        alignment = TextAnchor.LowerCenter
+                    };
+                }
+                return cachedPrefabPreviewTextStyle;
+            }
+        }
         
         [MenuItem ("Window/General/Prefab Palette")]
         public static void Init() 
@@ -76,11 +96,14 @@ namespace RoyTheunissen.PrefabPalette
 
             DropAreaGUI();
 
-            //DrawPrefabs();
+            DrawPrefabs();
         }
 
         private void DrawPrefabs()
         {
+            prefabPreviewsScrollPosition = GUILayout.BeginScrollView(prefabPreviewsScrollPosition, "Box");
+            EditorGUILayout.BeginHorizontal();
+            
             for (int i = 0; i < prefabsToDisplay.Count; i++)
             {
                 PrefabEntry prefab = prefabsToDisplay[i];
@@ -92,10 +115,21 @@ namespace RoyTheunissen.PrefabPalette
                     i--;
                     continue;
                 }
-                
-                Rect rect = GUILayoutUtility.GetRect(PrefabEntry.PreviewSize, PrefabEntry.PreviewSize);
-                EditorGUI.DrawPreviewTexture(rect, prefab.PreviewTexture);
+
+                Rect rect = GUILayoutUtility.GetRect(
+                    0, 0, GUILayout.Width(PrefabEntry.TextureSize), GUILayout.Height(PrefabEntry.TextureSize));
+                if (prefab.PreviewTexture != null)
+                    EditorGUI.DrawPreviewTexture(rect, prefab.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
+                else
+                {
+                    const float brightness = 0.325f;
+                    EditorGUI.DrawRect(rect, new Color(brightness, brightness, brightness));
+                }
+                EditorGUI.LabelField(rect, prefab.Prefab.name, PrefabPreviewTextStyle);
             }
+            
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndScrollView();
         }
 
         private bool HasEntry(GameObject prefab)
