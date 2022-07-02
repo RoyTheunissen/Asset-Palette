@@ -95,7 +95,20 @@ namespace RoyTheunissen.PrefabPalette
         {
             DropAreaGUI();
 
+            PerformKeyboardShortcuts();
+
             DrawPrefabs();
+        }
+
+        private void PerformKeyboardShortcuts()
+        {
+            // Allow all currently visible prefabs to be selected if CTRL+A is pressed. 
+            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.A)
+            {
+                prefabsSelected.Clear();
+                prefabsSelected.AddRange(prefabsToDisplay);
+                Repaint();
+            }
         }
 
         private void DrawPrefabs()
@@ -110,6 +123,7 @@ namespace RoyTheunissen.PrefabPalette
             int columnCount = Mathf.FloorToInt(containerWidth / (prefabWidth + spacing));
             int rowCount = Mathf.CeilToInt((float)prefabsToDisplay.Count / columnCount);
 
+            bool didClickASpecificPrefab = false;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -157,8 +171,8 @@ namespace RoyTheunissen.PrefabPalette
                             prefabsSelected.Clear();
                             prefabsSelected.Add(prefab);
                         }
-                        
-                        Debug.Log($"Clicked on prefab '{prefab.Prefab.name}'");
+
+                        didClickASpecificPrefab = true;
                         Repaint();
                     }
                     bool isSelected = prefabsSelected.Contains(prefab);
@@ -185,6 +199,13 @@ namespace RoyTheunissen.PrefabPalette
                 
                 if (rowIndex < rowCount - 1)
                     EditorGUILayout.Space(spacing);
+            }
+
+            // If you didn't click a prefab and weren't pressing SHIFT, clear the selection.
+            if (Event.current.type == EventType.MouseDown && !didClickASpecificPrefab && !Event.current.shift)
+            {
+                prefabsSelected.Clear();
+                Repaint();
             }
             
             EditorGUILayout.EndScrollView();
