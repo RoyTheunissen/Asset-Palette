@@ -60,9 +60,10 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
 
-        private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
+        [NonSerialized] private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
+        [NonSerialized] private readonly List<PrefabEntry> prefabsSelected = new List<PrefabEntry>();
         
-        private readonly List<GameObject> draggedPrefabs = new List<GameObject>();
+        [NonSerialized] private readonly List<GameObject> draggedPrefabs = new List<GameObject>();
         
         private Vector2 prefabPreviewsScrollPosition;
         
@@ -136,11 +137,36 @@ namespace RoyTheunissen.PrefabPalette
                     PrefabEntry prefab = prefabsToDisplay[index];
 
                     Rect rect = GUILayoutUtility.GetRect(0, 0, GUILayout.Width(prefabWidth), GUILayout.Height(prefabWidth));
+
+                    // Allow this prefab to selected by clicking it.
+                    if (Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
+                    {
+                        if ((Event.current.modifiers & EventModifiers.Shift) == EventModifiers.Shift)
+                        {
+                            // Shift+click to add.
+                            prefabsSelected.Add(prefab);
+                        }
+                        else if ((Event.current.modifiers & EventModifiers.Control) == EventModifiers.Control)
+                        {
+                            // Control+click to remove.
+                            prefabsSelected.Remove(prefab);
+                        }
+                        else
+                        {
+                            // Regular click to select only this prefab.
+                            prefabsSelected.Clear();
+                            prefabsSelected.Add(prefab);
+                        }
+                        
+                        Debug.Log($"Clicked on prefab '{prefab.Prefab.name}'");
+                        Repaint();
+                    }
+                    bool isSelected = prefabsSelected.Contains(prefab);
                 
-                    Color borderColor = new Color(0.5f, 0.5f, 0.5f);
+                    Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
                     EditorGUI.DrawRect(rect, borderColor);
                 
-                    Rect textureRect = rect.Inset(1);
+                    Rect textureRect = rect.Inset(isSelected ? 2 : 1);
                     if (prefab.PreviewTexture != null)
                         EditorGUI.DrawPreviewTexture(textureRect, prefab.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
                     else
