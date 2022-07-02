@@ -61,6 +61,18 @@ namespace RoyTheunissen.PrefabPalette
                 prefabsSelected.Clear();
                 prefabsSelected.AddRange(prefabsToDisplay);
                 Repaint();
+                return;
+            }
+
+            // Pressing Delete will remove all selected prefabs from the palette.
+            if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Delete)
+            {
+                foreach (PrefabEntry prefabEntry in prefabsSelected)
+                {
+                    prefabsToDisplay.Remove(prefabEntry);
+                }
+                prefabsSelected.Clear();
+                Repaint();
             }
         }
 
