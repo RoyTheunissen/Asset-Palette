@@ -20,7 +20,14 @@ namespace RoyTheunissen.PrefabPalette
         private const float PrefabSizeMax = PrefabEntry.TextureSize;
         private const float PrefabSizeMin = PrefabEntry.TextureSize * 0.45f;
         
-        private const float DividerBrightness = 0.1f;
+        private const float NavigationPanelWidthMin = 100;
+        private const float PrefabPanelWidthMin = 200;
+        private const float PrefabPanelHeightMin = 50;
+        private const float WindowWidthMin = NavigationPanelWidthMin + PrefabPanelWidthMin;
+        private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
+        private static readonly float WindowHeightMin = FooterHeight + PrefabPanelHeightMin;
+        
+        private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
         
         [NonSerialized] private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
@@ -31,9 +38,10 @@ namespace RoyTheunissen.PrefabPalette
         private Vector2 prefabPreviewsScrollPosition;
         private Vector2 navigationPanelScrollPosition;
         
+        [NonSerialized] private bool isResizingNavigationPanel;
+        
         [NonSerialized] private GUIStyle cachedPrefabPreviewTextStyle;
         [NonSerialized] private bool didCachePrefabPreviewTextStyle;
-
         private GUIStyle PrefabPreviewTextStyle
         {
             get
@@ -75,7 +83,9 @@ namespace RoyTheunissen.PrefabPalette
         [MenuItem ("Window/General/Prefab Palette")]
         public static void Init() 
         {
-            GetWindow<PrefabPaletteWindow>(false, "Prefab Palette");
+            PrefabPaletteWindow window = GetWindow<PrefabPaletteWindow>(false, "Prefab Palette");
+            window.minSize = new Vector2(WindowWidthMin, WindowHeightMin);
+            window.wantsMouseMove = true;
         }
 
         private void OnGUI()
@@ -108,28 +118,49 @@ namespace RoyTheunissen.PrefabPalette
             navigationPanelScrollPosition = EditorGUILayout.BeginScrollView(
                 navigationPanelScrollPosition, GUILayout.Width(NavigationPanelWidth));
             EditorGUILayout.EndScrollView();
-            
-            Rect separatorRect = new Rect(NavigationPanelWidth - 1, 0, 1, position.height);
-            EditorGUI.DrawRect(separatorRect, DividerColor);
+
+            const int thickness = 1;
+            Rect dividerRect = new Rect(NavigationPanelWidth - thickness, 0, thickness, position.height);
+            EditorGUI.DrawRect(dividerRect, DividerColor);
+
+            const int expansion = 1;
+            Rect resizeRect = dividerRect;
+            resizeRect.xMin -= expansion;
+            resizeRect.xMax += expansion;
+            EditorGUIUtility.AddCursorRect(resizeRect, MouseCursor.ResizeHorizontal);
+
+            if (Event.current.type == EventType.MouseDown && resizeRect.Contains(Event.current.mousePosition))
+            {
+                isResizingNavigationPanel = true;
+            }
+
+            if (isResizingNavigationPanel &&
+                (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag))
+            {
+                NavigationPanelWidth = Mathf.Clamp(
+                    Event.current.mousePosition.x, NavigationPanelWidthMin, position.width - PrefabPanelWidthMin);
+                Repaint();
+            }
+
+            if (Event.current.type == EventType.MouseUp)
+                isResizingNavigationPanel = false;
         }
 
         private void DrawFooter()
         {
-            float footerHeight = EditorGUIUtility.singleLineHeight + 8;
-            
             Rect separatorRect = new Rect(
                 NavigationPanelWidth,
-                position.height - footerHeight, position.width - NavigationPanelWidth, 1);
+                position.height - FooterHeight, position.width - NavigationPanelWidth, 1);
                 
             EditorGUI.DrawRect(separatorRect, DividerColor);
 
-            EditorGUILayout.BeginVertical(GUILayout.Height(footerHeight));
+            EditorGUILayout.BeginVertical(GUILayout.Height(FooterHeight));
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.FlexibleSpace();
-                    Rect zoomLevelRect = GUILayoutUtility.GetRect(100, EditorGUIUtility.singleLineHeight);
+                    Rect zoomLevelRect = GUILayoutUtility.GetRect(80, EditorGUIUtility.singleLineHeight);
 
                     ZoomLevel = GUI.HorizontalSlider(zoomLevelRect, ZoomLevel, 0.0f, 1.0f);
 
