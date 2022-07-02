@@ -209,7 +209,7 @@ namespace RoyTheunissen.PrefabPalette
             const float padding = 2;
             const float spacing = 2;
 
-            float prefabSize = Mathf.Lerp(PrefabSizeMin, PrefabSizeMax, ZoomLevel);
+            int prefabSize = Mathf.RoundToInt(Mathf.Lerp(PrefabSizeMin, PrefabSizeMax, ZoomLevel));
 
             int columnCount = Mathf.FloorToInt(containerWidth / (prefabSize + spacing));
             int rowCount = Mathf.CeilToInt((float)prefabsToDisplay.Count / columnCount);
