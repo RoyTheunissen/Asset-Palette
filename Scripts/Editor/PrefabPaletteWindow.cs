@@ -153,6 +153,10 @@ namespace RoyTheunissen.PrefabPalette
             }
             set => EditorPrefs.SetFloat(ZoomLevelEditorPref, value);
         }
+        
+        private bool IsMouseInPrefabPanel => Event.current.mousePosition.x > NavigationPanelWidth &&
+                                    Event.current.mousePosition.y > HeaderHeight &&
+                                    Event.current.mousePosition.y < position.height - FooterHeight;
 
         [MenuItem ("Window/General/Prefab Palette")]
         public static void Init() 
@@ -343,10 +347,6 @@ namespace RoyTheunissen.PrefabPalette
 
         private void DrawPrefabs()
         {
-            bool isMouseInPrefabPanel = Event.current.mousePosition.x > NavigationPanelWidth &&
-                                        Event.current.mousePosition.y > HeaderHeight &&
-                                        Event.current.mousePosition.y < FooterHeight;
-            
             prefabPreviewsScrollPosition = GUILayout.BeginScrollView(prefabPreviewsScrollPosition);
             Rect prefabPanelRect = new Rect(0, 0, position.width - NavigationPanelWidth, 90000000);
             EditorGUI.DrawRect(prefabPanelRect, new Color(0, 0, 0, 0.1f));
@@ -428,7 +428,7 @@ namespace RoyTheunissen.PrefabPalette
                         0, 0, GUILayout.Width(prefabSize), GUILayout.Height(prefabSize));
 
                     // Allow this prefab to be selected by clicking it.
-                    bool isMouseOnPrefab = rect.Contains(Event.current.mousePosition) && isMouseInPrefabPanel;
+                    bool isMouseOnPrefab = rect.Contains(Event.current.mousePosition) && IsMouseInPrefabPanel;
                     bool wasAlreadySelected = prefabsSelected.Contains(prefab);
                     if (Event.current.type == EventType.MouseDown && isMouseOnPrefab)
                     {
@@ -485,7 +485,13 @@ namespace RoyTheunissen.PrefabPalette
                         const float brightness = 0.325f;
                         EditorGUI.DrawRect(textureRect, new Color(brightness, brightness, brightness));
                     }
-                    EditorGUI.LabelField(textureRect, prefab.Prefab.name, PrefabPreviewTextStyle);
+
+                    // Draw a label with a nice semi-transparent backdrop.
+                    GUIContent title = new GUIContent(prefab.Prefab.name);
+                    float height = PrefabPreviewTextStyle.CalcHeight(title, textureRect.width);
+                    
+                    EditorGUI.DrawRect(textureRect.GetSubRectFromBottom(height), new Color(0, 0, 0, 0.15f));
+                    EditorGUI.LabelField(textureRect, title, PrefabPreviewTextStyle);
 
                     if (columnIndex < columnCount - 1)
                         EditorGUILayout.Space(spacing);
@@ -528,9 +534,8 @@ namespace RoyTheunissen.PrefabPalette
             {
                 case EventType.DragUpdated:
                 case EventType.DragPerform:
-                    // This is if you only want part of the screen be droppable.
-//                    if (!position.Contains(@event.mousePosition))
-//                        return;
+                    if (!IsMouseInPrefabPanel)
+                        return;
 
                     DragAndDrop.AcceptDrag();
 
