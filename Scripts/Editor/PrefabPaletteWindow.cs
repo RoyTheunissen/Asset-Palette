@@ -197,10 +197,16 @@ namespace RoyTheunissen.PrefabPalette
 
         private void DrawPrefabs()
         {
-            prefabPreviewsScrollPosition = GUILayout.BeginScrollView(prefabPreviewsScrollPosition, "Box");
+            bool isMouseInPrefabPanel = Event.current.mousePosition.x > NavigationPanelWidth &&
+                                        Event.current.mousePosition.y < FooterHeight;
             
+            prefabPreviewsScrollPosition = GUILayout.BeginScrollView(prefabPreviewsScrollPosition);
+            Rect prefabPanelRect = new Rect(0, 0, position.width - NavigationPanelWidth, 90000000);
+            EditorGUI.DrawRect(prefabPanelRect, new Color(0, 0, 0, 0.1f));
+
             // Needs to be shortened because there must be space for a scrollbar and such...
             float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - NavigationPanelWidth - 22;
+            const float padding = 2;
             const float spacing = 2;
 
             float prefabSize = Mathf.Lerp(PrefabSizeMin, PrefabSizeMax, ZoomLevel);
@@ -208,10 +214,13 @@ namespace RoyTheunissen.PrefabPalette
             int columnCount = Mathf.FloorToInt(containerWidth / (prefabSize + spacing));
             int rowCount = Mathf.CeilToInt((float)prefabsToDisplay.Count / columnCount);
                 
+            GUILayout.Space(padding);
+            
             bool didClickASpecificPrefab = false;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
                 EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(padding);
                 for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
                 {
                     int index = rowIndex * columnCount + columnIndex;
@@ -239,7 +248,7 @@ namespace RoyTheunissen.PrefabPalette
                         0, 0, GUILayout.Width(prefabSize), GUILayout.Height(prefabSize));
 
                     // Allow this prefab to be selected by clicking it.
-                    bool isMouseOnPrefab = rect.Contains(Event.current.mousePosition);
+                    bool isMouseOnPrefab = rect.Contains(Event.current.mousePosition) && isMouseInPrefabPanel;
                     bool wasAlreadySelected = prefabsSelected.Contains(prefab);
                     if (Event.current.type == EventType.MouseDown && isMouseOnPrefab)
                     {
@@ -303,11 +312,14 @@ namespace RoyTheunissen.PrefabPalette
                     else
                         GUILayout.FlexibleSpace();
                 }
+                GUILayout.Space(padding);
                 EditorGUILayout.EndHorizontal();
                 
                 if (rowIndex < rowCount - 1)
                     EditorGUILayout.Space(spacing);
             }
+            
+            GUILayout.Space(padding);
 
             // If you didn't click a prefab and weren't pressing SHIFT, clear the selection.
             if (Event.current.type == EventType.MouseDown && !didClickASpecificPrefab && !Event.current.shift)
