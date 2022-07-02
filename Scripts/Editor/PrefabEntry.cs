@@ -10,7 +10,7 @@ namespace RoyTheunissen.PrefabPalette
     [Serializable]
     public class PrefabEntry
     {
-        public const int TextureSize = 100;
+        public const int TextureSize = 128;
             
         [SerializeField] private GameObject prefab;
         public GameObject Prefab => prefab;

@@ -13,6 +13,12 @@ namespace RoyTheunissen.PrefabPalette
     /// </summary>
     public class PrefabPaletteWindow : EditorWindow
     {
+        private const string EditorPrefPrefix = "RoyTheunissen/PrefabPalette/";
+        private const string ZoomLevelEditorPref = EditorPrefPrefix + "ZoomLevel";
+
+        private const float PrefabSizeMax = PrefabEntry.TextureSize;
+        private const float PrefabSizeMin = PrefabEntry.TextureSize * 0.45f;
+        
         [NonSerialized] private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
         [NonSerialized] private readonly List<PrefabEntry> prefabsSelected = new List<PrefabEntry>();
         
@@ -37,7 +43,18 @@ namespace RoyTheunissen.PrefabPalette
                 return cachedPrefabPreviewTextStyle;
             }
         }
-        
+
+        private float ZoomLevel
+        {
+            get
+            {
+                if (!EditorPrefs.HasKey(ZoomLevelEditorPref))
+                    ZoomLevel = 0.25f;
+                return EditorPrefs.GetFloat(ZoomLevelEditorPref);
+            }
+            set => EditorPrefs.SetFloat(ZoomLevelEditorPref, value);
+        }
+
         [MenuItem ("Window/General/Prefab Palette")]
         public static void Init() 
         {
@@ -51,6 +68,22 @@ namespace RoyTheunissen.PrefabPalette
             PerformKeyboardShortcuts();
 
             DrawPrefabs();
+
+            DrawFooter();
+        }
+
+        private void DrawFooter()
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                Rect zoomLevelRect = GUILayoutUtility.GetRect(100, EditorGUIUtility.singleLineHeight);
+
+                ZoomLevel = GUI.HorizontalSlider(zoomLevelRect, ZoomLevel, 0.0f, 1.0f);
+
+                GUILayout.Space(16);
+            }
+            EditorGUILayout.EndHorizontal();
         }
 
         private void PerformKeyboardShortcuts()
@@ -82,12 +115,13 @@ namespace RoyTheunissen.PrefabPalette
 
             //Rect containerRect = GUILayoutUtility.GetRect(0, 0, GUILayout.ExpandWidth(true));
             float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - 14;//containerRect.width;
-            const float prefabWidth = 100;
             const float spacing = 2;
 
-            int columnCount = Mathf.FloorToInt(containerWidth / (prefabWidth + spacing));
-            int rowCount = Mathf.CeilToInt((float)prefabsToDisplay.Count / columnCount);
+            float prefabSize = Mathf.Lerp(PrefabSizeMin, PrefabSizeMax, ZoomLevel);
 
+            int columnCount = Mathf.FloorToInt(containerWidth / (prefabSize + spacing));
+            int rowCount = Mathf.CeilToInt((float)prefabsToDisplay.Count / columnCount);
+                
             bool didClickASpecificPrefab = false;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
@@ -115,19 +149,22 @@ namespace RoyTheunissen.PrefabPalette
                     
                     PrefabEntry prefab = prefabsToDisplay[index];
 
-                    Rect rect = GUILayoutUtility.GetRect(0, 0, GUILayout.Width(prefabWidth), GUILayout.Height(prefabWidth));
+                    Rect rect = GUILayoutUtility.GetRect(
+                        0, 0, GUILayout.Width(prefabSize), GUILayout.Height(prefabSize));
 
                     // Allow this prefab to be selected by clicking it.
                     bool isMouseOnPrefab = rect.Contains(Event.current.mousePosition);
                     bool wasAlreadySelected = prefabsSelected.Contains(prefab);
                     if (Event.current.type == EventType.MouseDown && isMouseOnPrefab)
                     {
-                        if ((Event.current.modifiers & EventModifiers.Shift) == EventModifiers.Shift && !wasAlreadySelected)
+                        if ((Event.current.modifiers & EventModifiers.Shift) == EventModifiers.Shift &&
+                            !wasAlreadySelected)
                         {
                             // Shift+click to add.
                             prefabsSelected.Add(prefab);
                         }
-                        else if ((Event.current.modifiers & EventModifiers.Control) == EventModifiers.Control && !wasAlreadySelected)
+                        else if ((Event.current.modifiers & EventModifiers.Control) == EventModifiers.Control &&
+                                 !wasAlreadySelected)
                         {
                             // Control+click to remove.
                             prefabsSelected.Remove(prefab);
@@ -164,7 +201,10 @@ namespace RoyTheunissen.PrefabPalette
                 
                     Rect textureRect = rect.Inset(isSelected ? 2 : 1);
                     if (prefab.PreviewTexture != null)
-                        EditorGUI.DrawPreviewTexture(textureRect, prefab.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
+                    {
+                        EditorGUI.DrawPreviewTexture(
+                            textureRect, prefab.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
+                    }
                     else
                     {
                         const float brightness = 0.325f;
