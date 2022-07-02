@@ -14,10 +14,14 @@ namespace RoyTheunissen.PrefabPalette
     public class PrefabPaletteWindow : EditorWindow
     {
         private const string EditorPrefPrefix = "RoyTheunissen/PrefabPalette/";
+        private const string NavigationPanelWidthEditorPref = EditorPrefPrefix + "NavigationPanelWidth";
         private const string ZoomLevelEditorPref = EditorPrefPrefix + "ZoomLevel";
 
         private const float PrefabSizeMax = PrefabEntry.TextureSize;
         private const float PrefabSizeMin = PrefabEntry.TextureSize * 0.45f;
+        
+        private const float DividerBrightness = 0.1f;
+        private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
         
         [NonSerialized] private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
         [NonSerialized] private readonly List<PrefabEntry> prefabsSelected = new List<PrefabEntry>();
@@ -25,9 +29,11 @@ namespace RoyTheunissen.PrefabPalette
         [NonSerialized] private readonly List<GameObject> draggedPrefabs = new List<GameObject>();
         
         private Vector2 prefabPreviewsScrollPosition;
+        private Vector2 navigationPanelScrollPosition;
         
         [NonSerialized] private GUIStyle cachedPrefabPreviewTextStyle;
         [NonSerialized] private bool didCachePrefabPreviewTextStyle;
+
         private GUIStyle PrefabPreviewTextStyle
         {
             get
@@ -42,6 +48,17 @@ namespace RoyTheunissen.PrefabPalette
                 }
                 return cachedPrefabPreviewTextStyle;
             }
+        }
+
+        private float NavigationPanelWidth
+        {
+            get
+            {
+                if (!EditorPrefs.HasKey(NavigationPanelWidthEditorPref))
+                    NavigationPanelWidth = 200;
+                return EditorPrefs.GetFloat(NavigationPanelWidthEditorPref);
+            }
+            set => EditorPrefs.SetFloat(NavigationPanelWidthEditorPref, value);
         }
 
         private float ZoomLevel
@@ -63,27 +80,65 @@ namespace RoyTheunissen.PrefabPalette
 
         private void OnGUI()
         {
-            DropAreaGUI();
+            EditorGUILayout.BeginHorizontal();
+            {
+                EditorGUILayout.BeginVertical();
+                {
+                    DrawNavigationPanel();
+                }
+                EditorGUILayout.EndVertical();
 
-            PerformKeyboardShortcuts();
+                EditorGUILayout.BeginVertical();
+                {
+                    DropAreaGUI();
 
-            DrawPrefabs();
+                    PerformKeyboardShortcuts();
 
-            DrawFooter();
+                    DrawPrefabs();
+
+                    DrawFooter();
+                }
+                EditorGUILayout.EndVertical();
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawNavigationPanel()
+        {
+            navigationPanelScrollPosition = EditorGUILayout.BeginScrollView(
+                navigationPanelScrollPosition, GUILayout.Width(NavigationPanelWidth));
+            EditorGUILayout.EndScrollView();
+            
+            Rect separatorRect = new Rect(NavigationPanelWidth - 1, 0, 1, position.height);
+            EditorGUI.DrawRect(separatorRect, DividerColor);
         }
 
         private void DrawFooter()
         {
-            EditorGUILayout.BeginHorizontal();
+            float footerHeight = EditorGUIUtility.singleLineHeight + 8;
+            
+            Rect separatorRect = new Rect(
+                NavigationPanelWidth,
+                position.height - footerHeight, position.width - NavigationPanelWidth, 1);
+                
+            EditorGUI.DrawRect(separatorRect, DividerColor);
+
+            EditorGUILayout.BeginVertical(GUILayout.Height(footerHeight));
             {
                 GUILayout.FlexibleSpace();
-                Rect zoomLevelRect = GUILayoutUtility.GetRect(100, EditorGUIUtility.singleLineHeight);
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    Rect zoomLevelRect = GUILayoutUtility.GetRect(100, EditorGUIUtility.singleLineHeight);
 
-                ZoomLevel = GUI.HorizontalSlider(zoomLevelRect, ZoomLevel, 0.0f, 1.0f);
+                    ZoomLevel = GUI.HorizontalSlider(zoomLevelRect, ZoomLevel, 0.0f, 1.0f);
 
-                GUILayout.Space(16);
+                    GUILayout.Space(16);
+                }
+                EditorGUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
             }
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
         }
 
         private void PerformKeyboardShortcuts()
@@ -112,9 +167,9 @@ namespace RoyTheunissen.PrefabPalette
         private void DrawPrefabs()
         {
             prefabPreviewsScrollPosition = GUILayout.BeginScrollView(prefabPreviewsScrollPosition, "Box");
-
-            //Rect containerRect = GUILayoutUtility.GetRect(0, 0, GUILayout.ExpandWidth(true));
-            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - 14;//containerRect.width;
+            
+            // Needs to be shortened because there must be space for a scrollbar and such...
+            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - NavigationPanelWidth - 22;
             const float spacing = 2;
 
             float prefabSize = Mathf.Lerp(PrefabSizeMin, PrefabSizeMax, ZoomLevel);
@@ -250,6 +305,7 @@ namespace RoyTheunissen.PrefabPalette
             {
                 case EventType.DragUpdated:
                 case EventType.DragPerform:
+                    // This is if you only want part of the screen be droppable.
 //                    if (!position.Contains(@event.mousePosition))
 //                        return;
 
