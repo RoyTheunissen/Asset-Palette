@@ -17,6 +17,7 @@ namespace RoyTheunissen.PrefabPalette
         private const string CurrentCollectionGUIDEditorPref = EditorPrefPrefix + "CurrentCollectionGUID";
         private const string NavigationPanelWidthEditorPref = EditorPrefPrefix + "NavigationPanelWidth";
         private const string ZoomLevelEditorPref = EditorPrefPrefix + "ZoomLevel";
+        private const string SelectedFolderIndexEditorPref = EditorPrefPrefix + "SelectedFolderIndex";
 
         private const float PrefabSizeMax = PrefabEntry.TextureSize;
         private const float PrefabSizeMin = PrefabEntry.TextureSize * 0.45f;
@@ -171,6 +172,35 @@ namespace RoyTheunissen.PrefabPalette
                 return EditorPrefs.GetFloat(ZoomLevelEditorPref);
             }
             set => EditorPrefs.SetFloat(ZoomLevelEditorPref, value);
+        }
+        
+        private int SelectedFolderIndex
+        {
+            get
+            {
+                int index = EditorPrefs.GetInt(SelectedFolderIndexEditorPref);
+                index = Mathf.Clamp(index, 0, CurrentCollection.Folders.Count - 1);
+                return index;
+            }
+            set
+            {
+                EditorPrefs.SetInt(
+                    SelectedFolderIndexEditorPref, Mathf.Clamp(value, 0, CurrentCollection.Folders.Count - 1));
+            }
+        }
+
+        private PaletteFolder SelectedFolder
+        {
+            get
+            {
+                EnsureFolderExists();
+                return CurrentCollection.Folders[SelectedFolderIndex];
+            }
+            set
+            {
+                // TODO: Respect hierarchy.
+                SelectedFolderIndex = CurrentCollection.Folders.IndexOf(value);
+            }
         }
         
         [NonSerialized] private Type[] cachedFolderTypes;
@@ -388,11 +418,8 @@ namespace RoyTheunissen.PrefabPalette
             Repaint();
         }
 
-        private void DrawNavigationPanel()
+        private void EnsureFolderExists()
         {
-            navigationPanelScrollPosition = EditorGUILayout.BeginScrollView(
-                navigationPanelScrollPosition, GUILayout.Width(NavigationPanelWidth));
-
             CurrentCollectionSerializedObject.Update();
             if (CurrentCollection != null)
             {
@@ -401,12 +428,46 @@ namespace RoyTheunissen.PrefabPalette
                     // Make sure there is at least one folder.
                     if (foldersProperty.arraySize == 0)
                         CreateNewFolder<PaletteFolder>(InitialFolderName);
+                }
+            }
+            CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
 
+        private void DrawNavigationPanel()
+        {
+            navigationPanelScrollPosition = EditorGUILayout.BeginScrollView(
+                navigationPanelScrollPosition, GUILayout.Width(NavigationPanelWidth));
+
+            EnsureFolderExists();
+
+            Color selectionColor = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).settings.selectionColor;
+            selectionColor.a = 0.25f;
+            
+            CurrentCollectionSerializedObject.Update();
+            if (CurrentCollection != null)
+            {
+                using (SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders"))
+                {
                     for (int i = 0; i < foldersProperty.arraySize; i++)
                     {
                         SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
+                        float folderHeight = EditorGUI.GetPropertyHeight(folderProperty, GUIContent.none, true);
+                        float folderWidth = NavigationPanelWidth;
+                        Rect folderRect = GUILayoutUtility.GetRect(folderWidth, folderHeight);
                         //PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
-                        EditorGUILayout.PropertyField(folderProperty, GUIContent.none);
+                        bool isSelected = SelectedFolderIndex == i;
+                        if (isSelected)
+                            EditorGUI.DrawRect(folderRect, selectionColor);
+
+                        // Allow users to select a folder by clicking with LMB.
+                        if (Event.current.type == EventType.MouseDown &&
+                            folderRect.Contains(Event.current.mousePosition))
+                        {
+                            SelectedFolderIndex = i;
+                            Repaint();
+                        }
+                        
+                        EditorGUI.PropertyField(folderRect.Indent(1), folderProperty, GUIContent.none);
                     }
                 }
             }
