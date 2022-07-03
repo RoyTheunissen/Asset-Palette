@@ -436,7 +436,8 @@ namespace RoyTheunissen.PrefabPalette
         private void DrawNavigationPanel()
         {
             navigationPanelScrollPosition = EditorGUILayout.BeginScrollView(
-                navigationPanelScrollPosition, GUILayout.Width(NavigationPanelWidth));
+                navigationPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
+                GUILayout.Width(NavigationPanelWidth));
 
             EnsureFolderExists();
 
@@ -559,7 +560,8 @@ namespace RoyTheunissen.PrefabPalette
 
         private void DrawPrefabs()
         {
-            prefabPreviewsScrollPosition = GUILayout.BeginScrollView(prefabPreviewsScrollPosition);
+            prefabPreviewsScrollPosition = GUILayout.BeginScrollView(
+                prefabPreviewsScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
             Rect prefabPanelRect = new Rect(0, 0, position.width - NavigationPanelWidth, 90000000);
             EditorGUI.DrawRect(prefabPanelRect, new Color(0, 0, 0, 0.1f));
 
@@ -595,12 +597,11 @@ namespace RoyTheunissen.PrefabPalette
                 GUILayout.EndScrollView();
                 return;
             }
+            
+            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - NavigationPanelWidth;
 
-            // Needs to be shortened because there must be space for a scrollbar and such...
-            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - NavigationPanelWidth - 22;
             const float padding = 2;
             const float spacing = 2;
-
             int prefabSize = Mathf.RoundToInt(Mathf.Lerp(PrefabSizeMin, PrefabSizeMax, ZoomLevel));
 
             int columnCount = Mathf.FloorToInt(containerWidth / (prefabSize + spacing));
