@@ -236,6 +236,8 @@ namespace RoyTheunissen.PrefabPalette
 
         private void OnGUI()
         {
+            PerformKeyboardShortcuts();
+            
             DrawHeader();
             
             EditorGUILayout.BeginHorizontal();
@@ -249,8 +251,6 @@ namespace RoyTheunissen.PrefabPalette
                 EditorGUILayout.BeginVertical();
                 {
                     DropAreaGUI();
-
-                    PerformKeyboardShortcuts();
 
                     DrawPrefabs();
 
@@ -309,7 +309,9 @@ namespace RoyTheunissen.PrefabPalette
         private void CreateNewFolder(object userdata)
         {
             // Create a new instance of the specified folder type.
-            CreateNewFolderOfType((Type)userdata, GetUniqueFolderName(NewFolderName));
+            PaletteFolder newFolder = CreateNewFolderOfType((Type)userdata, GetUniqueFolderName(NewFolderName));
+            newFolder.StartRename();
+            GUI.FocusControl(newFolder.RenameControlId);
         }
 
         private string GetUniqueFolderName(string desiredName, int previousAttempts = 0)
@@ -442,6 +444,9 @@ namespace RoyTheunissen.PrefabPalette
 
         private void DrawNavigationPanel()
         {
+            // It seems like mouse down events only trigger inside the scroll view if we check it from inside there.
+            bool didClickAnywhereInWindow = Event.current.type == EventType.MouseDown;
+
             navigationPanelScrollPosition = EditorGUILayout.BeginScrollView(
                 navigationPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
                 GUILayout.Width(NavigationPanelWidth));
@@ -462,20 +467,39 @@ namespace RoyTheunissen.PrefabPalette
                         float folderHeight = EditorGUI.GetPropertyHeight(folderProperty, GUIContent.none, true);
                         float folderWidth = NavigationPanelWidth;
                         Rect folderRect = GUILayoutUtility.GetRect(folderWidth, folderHeight);
-                        //PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
                         bool isSelected = SelectedFolderIndex == i;
                         if (isSelected)
                             EditorGUI.DrawRect(folderRect, selectionColor);
 
-                        // Allow users to select a folder by clicking with LMB.
-                        if (Event.current.type == EventType.MouseDown &&
-                            folderRect.Contains(Event.current.mousePosition))
+                        PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
+                        folderRect = folderRect.Indent(1);
+                        if (folder.IsRenaming)
                         {
-                            SelectedFolderIndex = i;
-                            Repaint();
+                            SerializedProperty nameProperty = folderProperty.FindPropertyRelative("name");
+                            
+                            GUI.SetNextControlName(folder.RenameControlId);
+                            nameProperty.stringValue = EditorGUI.TextField(folderRect, nameProperty.stringValue);
+                            GUI.FocusControl(folder.RenameControlId);
                         }
-                        
-                        EditorGUI.PropertyField(folderRect.Indent(1), folderProperty, GUIContent.none);
+                        else
+                        {
+                            EditorGUI.PropertyField(folderRect, folderProperty, GUIContent.none);
+                        }
+
+                        // Allow users to select a folder by clicking with LMB.
+                        if (didClickAnywhereInWindow)
+                        {
+                            bool isMouseOver = folderRect.Contains(Event.current.mousePosition);
+                            if (folder.IsRenaming && !isMouseOver)
+                            {
+                                CancelRename();
+                            }
+                            else if (!PaletteFolder.IsFolderBeingRenamed && isMouseOver)
+                            {
+                                SelectedFolderIndex = i;
+                                Repaint();
+                            }
+                        }
                     }
                 }
             }
@@ -544,8 +568,17 @@ namespace RoyTheunissen.PrefabPalette
 
         private void PerformKeyboardShortcuts()
         {
+            if (Event.current.type != EventType.KeyDown)
+                return;
+            
+            if (Event.current.keyCode == KeyCode.Return && PaletteFolder.IsFolderBeingRenamed)
+            {
+                CancelRename();
+                return;
+            }
+            
             // Allow all currently visible prefabs to be selected if CTRL+A is pressed. 
-            if (Event.current.type == EventType.KeyDown && Event.current.control && Event.current.keyCode == KeyCode.A)
+            if (Event.current.control && Event.current.keyCode == KeyCode.A)
             {
                 prefabsSelected.Clear();
                 prefabsSelected.AddRange(prefabsToDisplay);
@@ -553,7 +586,7 @@ namespace RoyTheunissen.PrefabPalette
                 return;
             }
 
-            if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Delete)
+            if (Event.current.keyCode == KeyCode.Delete)
             {
                 if (IsMouseInPrefabPanel)
                 {
@@ -747,6 +780,35 @@ namespace RoyTheunissen.PrefabPalette
             }
             
             EditorGUILayout.EndScrollView();
+        }
+
+        private void OnLostFocus()
+        {
+            CancelRename();
+        }
+
+        private void OnSelectionChange()
+        {
+            CancelRename();
+        }
+
+        private void OnFocus()
+        {
+            CancelRename();
+        }
+
+        private void OnProjectChange()
+        {
+            CancelRename();
+        }
+
+        private void CancelRename()
+        {
+            if (!PaletteFolder.IsFolderBeingRenamed)
+                return;
+            
+            PaletteFolder.CancelRename();
+            Repaint();
         }
 
         private bool HasEntry(GameObject prefab)
