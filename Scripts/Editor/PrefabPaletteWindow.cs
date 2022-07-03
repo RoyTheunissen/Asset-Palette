@@ -218,9 +218,13 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
         
-        private bool IsMouseInPrefabPanel => Event.current.mousePosition.x > NavigationPanelWidth &&
-                                    Event.current.mousePosition.y > HeaderHeight &&
-                                    Event.current.mousePosition.y < position.height - FooterHeight;
+        private bool IsMouseInHeader => Event.current.mousePosition.y <= HeaderHeight;
+        private bool IsMouseInFooter => Event.current.mousePosition.y >= position.height - FooterHeight;
+
+        private bool IsMouseInNavigationPanel =>
+            !IsMouseInHeader && Event.current.mousePosition.x < NavigationPanelWidth;
+        
+        private bool IsMouseInPrefabPanel => !IsMouseInNavigationPanel && !IsMouseInFooter;
 
         [MenuItem ("Window/General/Prefab Palette")]
         public static void Init() 
@@ -356,6 +360,9 @@ namespace RoyTheunissen.PrefabPalette
             newElement.managedReferenceValue = newFolder;
                 
             CurrentCollectionSerializedObject.ApplyModifiedProperties();
+
+            SelectedFolder = newFolder;
+            
             return newFolder;
         }
         
@@ -546,15 +553,27 @@ namespace RoyTheunissen.PrefabPalette
                 return;
             }
 
-            // Pressing Delete will remove all selected prefabs from the palette.
             if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Delete)
             {
-                foreach (PrefabEntry prefabEntry in prefabsSelected)
+                if (IsMouseInPrefabPanel)
                 {
-                    prefabsToDisplay.Remove(prefabEntry);
+                    // Pressing Delete will remove all selected prefabs from the palette.
+                    foreach (PrefabEntry prefabEntry in prefabsSelected)
+                    {
+                        prefabsToDisplay.Remove(prefabEntry);
+                    }
+
+                    prefabsSelected.Clear();
+                    Repaint();
                 }
-                prefabsSelected.Clear();
-                Repaint();
+                else if (IsMouseInNavigationPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1)
+                {
+                    CurrentCollectionSerializedObject.Update();
+                    SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
+                    foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
+                    CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                    Repaint();
+                }
             }
         }
 
