@@ -103,6 +103,10 @@ namespace RoyTheunissen.PrefabPalette
                 
                 // Need to re-cache the current collection now.
                 cachedCurrentCollection = null;
+                
+                // Need to re-cache the serialized object, too.
+                cachedCurrentCollectionSerializedObject?.Dispose();
+                cachedCurrentCollectionSerializedObject = null;
             }
         }
 
@@ -140,6 +144,17 @@ namespace RoyTheunissen.PrefabPalette
                 }
 
                 CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
+            }
+        }
+        
+        private SerializedObject cachedCurrentCollectionSerializedObject;
+        private SerializedObject CurrentCollectionSerializedObject
+        {
+            get
+            {
+                if (cachedCurrentCollectionSerializedObject == null)
+                    cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
+                return cachedCurrentCollectionSerializedObject;
             }
         }
 
@@ -223,13 +238,13 @@ namespace RoyTheunissen.PrefabPalette
                 DoCollectionDropDown(collectionRect);
 
             // Allow a new folder to be created. Supports derived types of PaletteFolder as an experimental feature.
-            int newFolderButtonWidth = 30;
+            bool hasMultipleFolderTypes = FolderTypes.Length > 1;
+            int newFolderButtonWidth = 76 + (hasMultipleFolderTypes ? 9 : 0);
             Rect newFolderRect = new Rect(
                 NavigationPanelWidth - newFolderButtonWidth, 0, newFolderButtonWidth, headerRect.height);
             GUI.enabled = CurrentCollection != null;
-            bool hasMultipleFolderTypes = FolderTypes.Length > 1;
             bool createNewFolder = GUI.Button(
-                newFolderRect, "+", hasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
+                newFolderRect, "New Folder", hasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
             GUI.enabled = true;
             if (createNewFolder)
             {
@@ -260,18 +275,16 @@ namespace RoyTheunissen.PrefabPalette
             PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(folderType);
 
             // Add it to the current collection's list of folders.
-            using (SerializedObject serializedObject = new SerializedObject(CurrentCollection))
-            {
-                SerializedProperty foldersProperty = serializedObject.FindProperty("folders");
+            CurrentCollectionSerializedObject.Update();
+            SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
                 
-                // Add it to the list.
-                int newIndex = foldersProperty.arraySize;
-                foldersProperty.InsertArrayElementAtIndex(newIndex);
-                SerializedProperty newElement = foldersProperty.GetArrayElementAtIndex(newIndex);
-                newElement.managedReferenceValue = newFolder;
+            // Add it to the list.
+            int newIndex = foldersProperty.arraySize;
+            foldersProperty.InsertArrayElementAtIndex(newIndex);
+            SerializedProperty newElement = foldersProperty.GetArrayElementAtIndex(newIndex);
+            newElement.managedReferenceValue = newFolder;
                 
-                serializedObject.ApplyModifiedProperties();
-            }
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
         }
 
         private void DoCollectionDropDown(Rect collectionRect)
@@ -332,8 +345,29 @@ namespace RoyTheunissen.PrefabPalette
         {
             navigationPanelScrollPosition = EditorGUILayout.BeginScrollView(
                 navigationPanelScrollPosition, GUILayout.Width(NavigationPanelWidth));
+
+            CurrentCollectionSerializedObject.Update();
+            if (CurrentCollection != null)
+            {
+                using (SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders"))
+                {
+                    for (int i = 0; i < foldersProperty.arraySize; i++)
+                    {
+                        SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
+                        //PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
+                        EditorGUILayout.PropertyField(folderProperty, GUIContent.none);
+                    }
+                }
+            }
+            CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+            
             EditorGUILayout.EndScrollView();
 
+            DrawResizableNavigationPanelDivider();
+        }
+
+        private void DrawResizableNavigationPanelDivider()
+        {
             const int thickness = 1;
             Rect dividerRect = new Rect(
                 NavigationPanelWidth - thickness, HeaderHeight, thickness, position.height);
