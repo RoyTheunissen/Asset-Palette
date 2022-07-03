@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace RoyTheunissen.PrefabPalette
@@ -10,5 +9,7 @@ namespace RoyTheunissen.PrefabPalette
     [CreateAssetMenu(fileName = "Prefab Palette Collection", menuName = "ScriptableObject/Prefab Palette Collection")]
     public class PrefabPaletteCollection : ScriptableObject 
     {
+        [SerializeReference] private List<PaletteFolder> folders = new List<PaletteFolder>();
+        public List<PaletteFolder> Folders => folders;
     }
 }

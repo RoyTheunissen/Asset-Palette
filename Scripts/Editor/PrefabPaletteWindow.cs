@@ -154,6 +154,21 @@ namespace RoyTheunissen.PrefabPalette
             set => EditorPrefs.SetFloat(ZoomLevelEditorPref, value);
         }
         
+        [NonSerialized] private Type[] cachedFolderTypes;
+        [NonSerialized] private bool didCacheFolderTypes;
+        private Type[] FolderTypes
+        {
+            get
+            {
+                if (!didCacheFolderTypes)
+                {
+                    didCacheFolderTypes = true;
+                    cachedFolderTypes = typeof(PaletteFolder).GetAllAssignableClasses(false, true);
+                }
+                return cachedFolderTypes;
+            }
+        }
+        
         private bool IsMouseInPrefabPanel => Event.current.mousePosition.x > NavigationPanelWidth &&
                                     Event.current.mousePosition.y > HeaderHeight &&
                                     Event.current.mousePosition.y < position.height - FooterHeight;
@@ -203,9 +218,60 @@ namespace RoyTheunissen.PrefabPalette
             
             // Allow a new collection to be created or loaded.
             Rect collectionRect = headerRect.GetSubRectFromLeft(130);
-            bool didClick = GUI.Button(collectionRect, name, EditorStyles.toolbarDropDown);
-            if (didClick)
+            bool createNewCollection = GUI.Button(collectionRect, name, EditorStyles.toolbarDropDown);
+            if (createNewCollection)
                 DoCollectionDropDown(collectionRect);
+
+            // Allow a new folder to be created. Supports derived types of PaletteFolder as an experimental feature.
+            int newFolderButtonWidth = 30;
+            Rect newFolderRect = new Rect(
+                NavigationPanelWidth - newFolderButtonWidth, 0, newFolderButtonWidth, headerRect.height);
+            GUI.enabled = CurrentCollection != null;
+            bool hasMultipleFolderTypes = FolderTypes.Length > 1;
+            bool createNewFolder = GUI.Button(
+                newFolderRect, "+", hasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
+            GUI.enabled = true;
+            if (createNewFolder)
+            {
+                if (hasMultipleFolderTypes)
+                    DoCreateNewFolderDropDown(newFolderRect);
+                else
+                    CreateNewFolder(typeof(PaletteFolder));
+            }
+        }
+
+        private void DoCreateNewFolderDropDown(Rect position)
+        {
+            GenericMenu dropdownMenu = new GenericMenu();
+            
+            foreach (Type type in FolderTypes)
+            {
+                string name = type.Name.RemoveSuffix("Folder").ToHumanReadable();
+                dropdownMenu.AddItem(new GUIContent(name), false, CreateNewFolder, type);
+            }
+            
+            dropdownMenu.DropDown(position);
+        }
+
+        private void CreateNewFolder(object userdata)
+        {
+            // Create a new instance of the specified folder type.
+            Type folderType = (Type)userdata;
+            PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(folderType);
+
+            // Add it to the current collection's list of folders.
+            using (SerializedObject serializedObject = new SerializedObject(CurrentCollection))
+            {
+                SerializedProperty foldersProperty = serializedObject.FindProperty("folders");
+                
+                // Add it to the list.
+                int newIndex = foldersProperty.arraySize;
+                foldersProperty.InsertArrayElementAtIndex(newIndex);
+                SerializedProperty newElement = foldersProperty.GetArrayElementAtIndex(newIndex);
+                newElement.managedReferenceValue = newFolder;
+                
+                serializedObject.ApplyModifiedProperties();
+            }
         }
 
         private void DoCollectionDropDown(Rect collectionRect)
