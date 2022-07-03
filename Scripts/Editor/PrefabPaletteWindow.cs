@@ -32,6 +32,10 @@ namespace RoyTheunissen.PrefabPalette
         
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
+
+        private const string InitialFolderName = "Default";
+        private const string NewFolderName = "New Folder";
+        private const int MaxUniqueFolderNameAttempts = 100;
         
         [NonSerialized] private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
         [NonSerialized] private readonly List<PrefabEntry> prefabsSelected = new List<PrefabEntry>();
@@ -271,8 +275,45 @@ namespace RoyTheunissen.PrefabPalette
         private void CreateNewFolder(object userdata)
         {
             // Create a new instance of the specified folder type.
-            Type folderType = (Type)userdata;
-            PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(folderType);
+            CreateNewFolderOfType((Type)userdata, GetUniqueFolderName(NewFolderName));
+        }
+
+        private string GetUniqueFolderName(string desiredName, int previousAttempts = 0)
+        {
+            if (previousAttempts > MaxUniqueFolderNameAttempts)
+            {
+                throw new Exception($"Tried to find a unique version of folder name '{desiredName}' but failed " +
+                                    $"after {previousAttempts} attempts.");
+            }
+            
+            bool alreadyTaken = false;
+            
+            // TODO: Respect folder hierarchy
+            foreach (PaletteFolder folder in CurrentCollection.Folders)
+            {
+                if (folder.Name == desiredName)
+                {
+                    alreadyTaken = true;
+                    break;
+                }
+            }
+
+            if (!alreadyTaken)
+                return desiredName;
+
+            bool hadNumberPrefix = desiredName.TryGetNumberSuffix(out int number);
+            if (!hadNumberPrefix)
+                desiredName = desiredName.SetNumberSuffix(1);
+            else
+                desiredName = desiredName.SetNumberSuffix(number + 1);
+            
+            return GetUniqueFolderName(desiredName, previousAttempts + 1);
+        }
+
+        private PaletteFolder CreateNewFolderOfType(Type type, string name)
+        {
+            PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
+            newFolder.Initialize(name);
 
             // Add it to the current collection's list of folders.
             CurrentCollectionSerializedObject.Update();
@@ -285,6 +326,12 @@ namespace RoyTheunissen.PrefabPalette
             newElement.managedReferenceValue = newFolder;
                 
             CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            return newFolder;
+        }
+        
+        private FolderType CreateNewFolder<FolderType>(string name) where FolderType: PaletteFolder
+        {
+            return (FolderType)CreateNewFolderOfType(typeof(FolderType), name);
         }
 
         private void DoCollectionDropDown(Rect collectionRect)
@@ -351,6 +398,10 @@ namespace RoyTheunissen.PrefabPalette
             {
                 using (SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders"))
                 {
+                    // Make sure there is at least one folder.
+                    if (foldersProperty.arraySize == 0)
+                        CreateNewFolder<PaletteFolder>(InitialFolderName);
+
                     for (int i = 0; i < foldersProperty.arraySize; i++)
                     {
                         SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);

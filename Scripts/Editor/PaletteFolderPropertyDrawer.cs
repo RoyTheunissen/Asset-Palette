@@ -11,9 +11,10 @@ namespace RoyTheunissen.PrefabPalette
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            PaletteFolder folder = this.GetActualObject<PaletteFolder>(fieldInfo, property);
-            
-            EditorGUI.LabelField(position, label, new GUIContent(folder.DebugText));
+            //PaletteFolder folder = this.GetActualObject<PaletteFolder>(fieldInfo, property);
+
+            SerializedProperty nameField = property.FindPropertyRelative("name");
+            EditorGUI.LabelField(position, label, new GUIContent(nameField.stringValue));
         }
     }
 }
