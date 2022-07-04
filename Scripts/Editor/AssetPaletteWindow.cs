@@ -796,7 +796,8 @@ namespace RoyTheunissen.PrefabPalette
                         0, 0, GUILayout.Width(entrySize), GUILayout.Height(entrySize));
 
                     // Allow this entry to be selected by clicking it.
-                    bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && IsMouseInEntriesPanel;
+                    bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && !IsMouseInFooter &&
+                                          !IsMouseInHeader;
                     bool wasAlreadySelected = entriesSelected.Contains(entry);
                     if (Event.current.type == EventType.MouseDown && isMouseOnEntry)
                     {
