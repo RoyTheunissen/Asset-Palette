@@ -407,7 +407,8 @@ namespace RoyTheunissen.PrefabPalette
 
         private void CreateNewCollection()
         {
-            string path = EditorUtility.SaveFilePanel("Create New Asset Palette", null, "Asset Palette", "asset");
+            string directory = Application.dataPath;
+            string path = EditorUtility.SaveFilePanel("Create New Asset Palette", directory, "Asset Palette", "asset");
             if (string.IsNullOrEmpty(path))
                 return;
 
@@ -459,96 +460,23 @@ namespace RoyTheunissen.PrefabPalette
                 folderPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
                 GUILayout.Width(FolderPanelWidth));
 
-            EnsureFolderExists();
-
-            Color selectionColor = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).settings.selectionColor;
-            selectionColor.a = 0.25f;
-            
-            currentFolderDragIndex = -1;
-            
-            CurrentCollectionSerializedObject.Update();
+            // Cancel out if there's no collection available.
             if (CurrentCollection != null)
             {
-                using (SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders"))
+                EnsureFolderExists();
+
+                currentFolderDragIndex = -1;
+                
+                if (CurrentCollection != null)
                 {
-                    for (int i = 0; i < foldersProperty.arraySize; i++)
+                    CurrentCollectionSerializedObject.Update();
+                    using (SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders"))
                     {
-                        SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
-                        float folderHeight = EditorGUI.GetPropertyHeight(folderProperty, GUIContent.none, true);
-                        float folderWidth = FolderPanelWidth;
-                        Rect folderRect = GUILayoutUtility.GetRect(folderWidth, folderHeight);
-                        bool isSelected = SelectedFolderIndex == i;
-                        if (isSelected)
-                            EditorGUI.DrawRect(folderRect, selectionColor);
-
-                        PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
-                        folderRect = folderRect.Indent(1);
-                        if (folder.IsRenaming)
-                        {
-                            GUI.SetNextControlName(folder.RenameControlId);
-                            renameText = EditorGUI.TextField(folderRect, renameText);
-                            GUI.FocusControl(folder.RenameControlId);
-                        }
-                        else
-                        {
-                            EditorGUI.PropertyField(folderRect, folderProperty, GUIContent.none);
-                        }
-
-                        bool isMouseOver = folderRect.Contains(Event.current.mousePosition);
-                        
-                        // Dragging and dropping folders.
-                        if (Event.current.type == EventType.MouseDrag && isMouseOver && !isResizingFolderPanel)
-                            StartFolderDrag(folder);
-                        if (isDraggingFolder)
-                        {
-                            bool didFindDragIndex = false;
-                            Rect dragMarkerRect = Rect.zero;
-                            if (Event.current.mousePosition.y <= folderRect.center.y &&
-                                (currentFolderDragIndex == -1 || i < currentFolderDragIndex))
-                            {
-                                currentFolderDragIndex = i;
-                                didFindDragIndex = true;
-                                dragMarkerRect = folderRect.GetSubRectFromTop(2);
-                                Repaint();
-                            }
-                            else if (currentFolderDragIndex == -1 && i == foldersProperty.arraySize - 1)
-                            {
-                                currentFolderDragIndex = i + 1;
-                                didFindDragIndex = true;
-                                dragMarkerRect = folderRect.GetSubRectFromBottom(2);
-                                Repaint();
-                            }
-
-                            if (didFindDragIndex && currentFolderDragIndex != folderToDragIndex &&
-                                currentFolderDragIndex != folderToDragIndex + 1 &&
-                                DragAndDrop.visualMode == DragAndDropVisualMode.Move)
-                            {
-                                EditorGUI.DrawRect(dragMarkerRect, Color.blue);
-                            }
-                        }
-
-                        // Allow users to select a folder by clicking with LMB.
-                        if (didClickAnywhereInWindow)
-                        {
-                            if (folder.IsRenaming && !isMouseOver)
-                            {
-                                StopRename();
-                            }
-                            else if (!PaletteFolder.IsFolderBeingRenamed && isMouseOver)
-                            {
-                                SelectedFolderIndex = i;
-                                
-                                // Allow starting a rename by clicking on it twice.
-                                if (Event.current.clickCount == 2)
-                                    StartRename(folder);
-                                
-                                Repaint();
-                            }
-                        }
+                        DrawFolders(foldersProperty, didClickAnywhereInWindow);
                     }
+                    CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
                 }
             }
-            CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
             
             EditorGUILayout.EndScrollView();
 
@@ -569,6 +497,89 @@ namespace RoyTheunissen.PrefabPalette
             }
 
             DrawResizableFolderPanelDivider();
+        }
+
+        private void DrawFolders(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
+        {
+            Color selectionColor = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).settings.selectionColor;
+            selectionColor.a = 0.25f;
+
+            for (int i = 0; i < foldersProperty.arraySize; i++)
+            {
+                SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
+                float folderHeight = EditorGUI.GetPropertyHeight(folderProperty, GUIContent.none, true);
+                float folderWidth = FolderPanelWidth;
+                Rect folderRect = GUILayoutUtility.GetRect(folderWidth, folderHeight);
+                bool isSelected = SelectedFolderIndex == i;
+                
+                // Draw the actual folder itself.
+                if (isSelected)
+                    EditorGUI.DrawRect(folderRect, selectionColor);
+                PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
+                folderRect = folderRect.Indent(1);
+                if (folder.IsRenaming)
+                {
+                    GUI.SetNextControlName(folder.RenameControlId);
+                    renameText = EditorGUI.TextField(folderRect, renameText);
+                    GUI.FocusControl(folder.RenameControlId);
+                }
+                else
+                {
+                    EditorGUI.PropertyField(folderRect, folderProperty, GUIContent.none);
+                }
+
+                bool isMouseOver = folderRect.Contains(Event.current.mousePosition);
+
+                // Dragging and dropping folders.
+                if (Event.current.type == EventType.MouseDrag && isMouseOver && !isResizingFolderPanel)
+                    StartFolderDrag(folder);
+                if (isDraggingFolder)
+                {
+                    bool didFindDragIndex = false;
+                    Rect dragMarkerRect = Rect.zero;
+                    if (Event.current.mousePosition.y <= folderRect.center.y &&
+                        (currentFolderDragIndex == -1 || i < currentFolderDragIndex))
+                    {
+                        currentFolderDragIndex = i;
+                        didFindDragIndex = true;
+                        dragMarkerRect = folderRect.GetSubRectFromTop(2);
+                        Repaint();
+                    }
+                    else if (currentFolderDragIndex == -1 && i == foldersProperty.arraySize - 1)
+                    {
+                        currentFolderDragIndex = i + 1;
+                        didFindDragIndex = true;
+                        dragMarkerRect = folderRect.GetSubRectFromBottom(2);
+                        Repaint();
+                    }
+
+                    if (didFindDragIndex && currentFolderDragIndex != folderToDragIndex &&
+                        currentFolderDragIndex != folderToDragIndex + 1 &&
+                        DragAndDrop.visualMode == DragAndDropVisualMode.Move)
+                    {
+                        EditorGUI.DrawRect(dragMarkerRect, Color.blue);
+                    }
+                }
+
+                // Allow users to select a folder by clicking with LMB.
+                if (didClickAnywhereInWindow)
+                {
+                    if (folder.IsRenaming && !isMouseOver)
+                    {
+                        StopRename();
+                    }
+                    else if (!PaletteFolder.IsFolderBeingRenamed && isMouseOver)
+                    {
+                        SelectedFolderIndex = i;
+
+                        // Allow starting a rename by clicking on it twice.
+                        if (Event.current.clickCount == 2)
+                            StartRename(folder);
+
+                        Repaint();
+                    }
+                }
+            }
         }
 
         private void StartFolderDrag(PaletteFolder folder)
