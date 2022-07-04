@@ -960,26 +960,36 @@ namespace RoyTheunissen.PrefabPalette
                     draggedAssets.Clear();
                     foreach (Object draggedObject in DragAndDrop.objectReferences)
                     {
-                        if (draggedObject is Object o && (!(draggedObject is GameObject go) || go.IsPrefab()))
-                        {
-                            draggedAssets.Add(o);
-                            continue;
-                        }
-
                         string path = AssetDatabase.GetAssetPath(draggedObject);
                         if (AssetDatabase.IsValidFolder(path))
                         {
-                            // TODO: Recurse through folders instead? We don't care what asset type it is...
-                            string[] files = Directory.GetFiles(path, FileSearchPattern, SearchOption.AllDirectories);
-                            for (int i = 0; i < files.Length; i++)
+                            List<string> assetsInDraggedFolder = new List<string>();
+                            string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
+                            string draggedFolderPath = path + Path.AltDirectorySeparatorChar;
+                            foreach (string assetPath in allAssetPaths)
                             {
-                                Object asset = AssetDatabase.LoadAssetAtPath<Object>(files[i]);
+                                if (!assetPath.StartsWith(draggedFolderPath))
+                                    continue;
+                                
+                                assetsInDraggedFolder.Add(assetPath);
+                            }
+                            assetsInDraggedFolder.Sort();
+                            
+                            for (int i = 0; i < assetsInDraggedFolder.Count; i++)
+                            {
+                                Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetsInDraggedFolder[i]);
                                 draggedAssets.Add(asset);
                             }
 
                             continue;
                         }
                         
+                        if (draggedObject is Object o && (!(draggedObject is GameObject go) || go.IsPrefab()))
+                        {
+                            draggedAssets.Add(o);
+                            continue;
+                        }
+
                         // Unhandled dragged object. Probably a different asset, like a texture.
                     }
 
