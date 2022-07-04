@@ -24,10 +24,13 @@ namespace RoyTheunissen.PrefabPalette
         private const float PrefabSizeMax = PrefabEntry.TextureSize;
         private const float PrefabSizeMin = PrefabEntry.TextureSize * 0.45f;
         
-        private const float FolderPanelWidthMin = 100;
-        private const float PrefabPanelWidthMin = 200;
-        private const float PrefabPanelHeightMin = 50;
-        private const float WindowWidthMin = FolderPanelWidthMin + PrefabPanelWidthMin;
+        private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;
+        private static float PrefabPanelWidthMin => 200;
+        private static float PrefabPanelHeightMin => 50;
+        private static float WindowWidthMin => FolderPanelWidthMin + PrefabPanelWidthMin;
+        public static float CollectionButtonWidth => 130;
+        private static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
+        private static int NewFolderButtonWidth => 76 + (HasMultipleFolderTypes ? 9 : 0);
         
         private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
@@ -49,7 +52,7 @@ namespace RoyTheunissen.PrefabPalette
         private Vector2 folderPanelScrollPosition;
         
         [NonSerialized] private bool isResizingFolderPanel;
-        
+
         [NonSerialized] private GUIStyle cachedPrefabPreviewTextStyle;
         [NonSerialized] private bool didCachePrefabPreviewTextStyle;
         private GUIStyle PrefabPreviewTextStyle
@@ -205,9 +208,9 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
         
-        [NonSerialized] private Type[] cachedFolderTypes;
-        [NonSerialized] private bool didCacheFolderTypes;
-        private Type[] FolderTypes
+        [NonSerialized] private static Type[] cachedFolderTypes;
+        [NonSerialized] private static bool didCacheFolderTypes;
+        private static Type[] FolderTypes
         {
             get
             {
@@ -278,23 +281,21 @@ namespace RoyTheunissen.PrefabPalette
             string name = currentCollection == null ? "[No Collection]" : currentCollection.name;
             
             // Allow a new collection to be created or loaded.
-            Rect collectionRect = headerRect.GetSubRectFromLeft(130);
+            Rect collectionRect = headerRect.GetSubRectFromLeft(CollectionButtonWidth);
             bool createNewCollection = GUI.Button(collectionRect, name, EditorStyles.toolbarDropDown);
             if (createNewCollection)
                 DoCollectionDropDown(collectionRect);
 
             // Allow a new folder to be created. Supports derived types of PaletteFolder as an experimental feature.
-            bool hasMultipleFolderTypes = FolderTypes.Length > 1;
-            int newFolderButtonWidth = 76 + (hasMultipleFolderTypes ? 9 : 0);
             Rect newFolderRect = new Rect(
-                FolderPanelWidth - newFolderButtonWidth, 0, newFolderButtonWidth, headerRect.height);
+                FolderPanelWidth - NewFolderButtonWidth, 0, NewFolderButtonWidth, headerRect.height);
             GUI.enabled = CurrentCollection != null;
             bool createNewFolder = GUI.Button(
-                newFolderRect, "New Folder", hasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
+                newFolderRect, "New Folder", HasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
             GUI.enabled = true;
             if (createNewFolder)
             {
-                if (hasMultipleFolderTypes)
+                if (HasMultipleFolderTypes)
                     DoCreateNewFolderDropDown(newFolderRect);
                 else
                     CreateNewFolder(typeof(PaletteFolder));
