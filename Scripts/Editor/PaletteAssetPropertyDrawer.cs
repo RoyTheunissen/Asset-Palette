@@ -7,7 +7,7 @@ namespace RoyTheunissen.PrefabPalette.Editor
     /// <summary>
     /// Draws an Asset entry in the palette.
     /// </summary>
-    [CustomPropertyDrawer(typeof(PaletteAssetPropertyDrawer))]
+    [CustomPropertyDrawer(typeof(PaletteAsset))]
     public class PaletteAssetPropertyDrawer : PropertyDrawer
     {
         [NonSerialized] private GUIStyle cachedEntryNameTextStyle;

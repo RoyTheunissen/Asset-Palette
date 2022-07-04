@@ -45,7 +45,6 @@ namespace RoyTheunissen.PrefabPalette
         private const string NewFolderName = "New Folder";
         private const int MaxUniqueFolderNameAttempts = 100;
         
-        [NonSerialized] private readonly List<PaletteEntry> entriesToDisplay = new List<PaletteEntry>();
         [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
         [NonSerialized] private readonly List<PaletteEntry> entriesIndividuallySelected = new List<PaletteEntry>();
         
@@ -173,8 +172,15 @@ namespace RoyTheunissen.PrefabPalette
             }
             set
             {
-                EditorPrefs.SetInt(
-                    SelectedFolderIndexEditorPref, Mathf.Clamp(value, 0, CurrentCollection.Folders.Count - 1));
+                int clampedValue = Mathf.Clamp(value, 0, CurrentCollection.Folders.Count - 1);
+                
+                if (SelectedFolderIndex == clampedValue)
+                    return;
+                
+                EditorPrefs.SetInt(SelectedFolderIndexEditorPref, clampedValue);
+                
+                // If you change the folder that's selected, we need to clear the selection.
+                ClearEntrySelection();
             }
         }
 
@@ -192,6 +198,19 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
         
+        private SerializedProperty SelectedFolderSerializedProperty
+        {
+            get
+            {
+                EnsureFolderExists();
+                return CurrentCollectionSerializedObject.FindProperty("folders")
+                    .GetArrayElementAtIndex(SelectedFolderIndex);
+            }
+        }
+
+        private SerializedProperty SelectedFolderEntriesSerializedProperty =>
+            SelectedFolderSerializedProperty.FindPropertyRelative("entries");
+
         [NonSerialized] private static Type[] cachedFolderTypes;
         [NonSerialized] private static bool didCacheFolderTypes;
         private static Type[] FolderTypes
@@ -211,7 +230,6 @@ namespace RoyTheunissen.PrefabPalette
         [NonSerialized] private bool isDraggingFolder;
         [NonSerialized] private int currentFolderDragIndex;
         [NonSerialized] private int folderToDragIndex;
-        private PaletteFolder FolderBeingDragged => (PaletteFolder)DragAndDrop.GetGenericData(FolderDragGenericDataType);
 
         private bool IsMouseInHeader => Event.current.mousePosition.y <= HeaderHeight;
         private bool IsMouseInFooter => Event.current.mousePosition.y >= position.height - FooterHeight;
@@ -349,9 +367,7 @@ namespace RoyTheunissen.PrefabPalette
             SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
                 
             // Add it to the list.
-            int newIndex = foldersProperty.arraySize;
-            foldersProperty.InsertArrayElementAtIndex(newIndex);
-            SerializedProperty newElement = foldersProperty.GetArrayElementAtIndex(newIndex);
+            SerializedProperty newElement = foldersProperty.AddArrayElement();
             newElement.managedReferenceValue = newFolder;
                 
             CurrentCollectionSerializedObject.ApplyModifiedProperties();
@@ -650,6 +666,45 @@ namespace RoyTheunissen.PrefabPalette
             EditorGUILayout.EndVertical();
         }
 
+        private int GetEntryCount()
+        {
+            return SelectedFolder.Entries.Count;
+        }
+        
+        private List<PaletteEntry> GetEntries()
+        {
+            return SelectedFolder.Entries;
+        }
+        
+        private PaletteEntry GetEntry(int index)
+        {
+            return SelectedFolder.Entries[index];
+        }
+        
+        private void AddEntry(PaletteAsset entry)
+        {
+            CurrentCollectionSerializedObject.Update();
+            SerializedProperty newEntryProperty = SelectedFolderEntriesSerializedProperty.AddArrayElement();
+            newEntryProperty.managedReferenceValue = entry;
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            
+            SelectEntry(entry, false);
+        }
+
+        private void RemoveEntry(PaletteEntry entry)
+        {
+            int index = GetEntries().IndexOf(entry);
+            if (index != -1)
+                RemoveEntryAt(index);
+        }
+        
+        private void RemoveEntryAt(int index)
+        {
+            CurrentCollectionSerializedObject.Update();
+            SelectedFolderEntriesSerializedProperty.DeleteArrayElementAtIndex(index);
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+        }
+
         private void PerformKeyboardShortcuts()
         {
             if (Event.current.type != EventType.KeyDown)
@@ -664,9 +719,9 @@ namespace RoyTheunissen.PrefabPalette
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
             if (Event.current.control && Event.current.keyCode == KeyCode.A)
             {
-                SelectEntries(entriesToDisplay, true);
-                if (entriesToDisplay.Count > 0)
-                    entriesIndividuallySelected.Add(entriesToDisplay[^1]);
+                SelectEntries(GetEntries(), true);
+                if (GetEntryCount() > 0)
+                    entriesIndividuallySelected.Add(GetEntry(GetEntryCount() - 1));
                 Repaint();
                 return;
             }
@@ -678,7 +733,7 @@ namespace RoyTheunissen.PrefabPalette
                     // Pressing Delete will remove all selected entries from the palette.
                     foreach (PaletteEntry entry in entriesSelected)
                     {
-                        entriesToDisplay.Remove(entry);
+                        RemoveEntry(entry);
                     }
 
                     ClearEntrySelection();
@@ -708,7 +763,7 @@ namespace RoyTheunissen.PrefabPalette
             // If the current state is invalid, draw a message instead.
             AssetPaletteCollection currentCollection = CurrentCollection;
             bool hasCollection = currentCollection != null;
-            bool hasEntries = hasCollection && entriesToDisplay.Count > 0;
+            bool hasEntries = hasCollection && GetEntryCount() > 0;
             if (!hasCollection || !hasEntries)
             {
                 DrawEntryPanelMessage(hasCollection);
@@ -722,7 +777,7 @@ namespace RoyTheunissen.PrefabPalette
             int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, ZoomLevel));
 
             int columnCount = Mathf.FloorToInt(containerWidth / (entrySize + EntrySpacing));
-            int rowCount = Mathf.CeilToInt((float)entriesToDisplay.Count / columnCount);
+            int rowCount = Mathf.CeilToInt((float)GetEntryCount() / columnCount);
                 
             GUILayout.Space(padding);
             
@@ -736,12 +791,12 @@ namespace RoyTheunissen.PrefabPalette
                     int index = rowIndex * columnCount + columnIndex;
                     
                     // Purge invalid entries.
-                    while (index < entriesToDisplay.Count && !entriesToDisplay[index].IsValid)
+                    while (index < GetEntryCount() && !GetEntry(index).IsValid)
                     {
-                        entriesToDisplay.RemoveAt(index);
+                        RemoveEntryAt(index);
                     }
 
-                    if (index >= entriesToDisplay.Count)
+                    if (index >= GetEntryCount())
                     {
                         GUILayout.FlexibleSpace();
                         break;
@@ -775,7 +830,7 @@ namespace RoyTheunissen.PrefabPalette
 
         private void DrawEntry(int index, int entrySize, ref bool didClickASpecificEntry)
         {
-            PaletteEntry entry = entriesToDisplay[index];
+            PaletteEntry entry = GetEntry(index);
 
             Rect rect = GUILayoutUtility.GetRect(
                 0, 0, GUILayout.Width(entrySize), GUILayout.Height(entrySize));
@@ -801,40 +856,38 @@ namespace RoyTheunissen.PrefabPalette
                             // Might seem convoluted and with weird edge cases, but this is how Unity does it...
                             PaletteEntry firstEntryIndividuallySelected = entriesIndividuallySelected[0];
                             int indexOfFirstIndividuallySelectedEntry =
-                                entriesToDisplay.IndexOf(firstEntryIndividuallySelected);
+                                GetEntries().IndexOf(firstEntryIndividuallySelected);
                             if (index > indexOfFirstIndividuallySelectedEntry)
                             {
                                 PaletteEntry lowestSelectedEntry = null;
-                                for (int i = 0; i < entriesToDisplay.Count; i++)
+                                for (int i = 0; i < GetEntryCount(); i++)
                                 {
-                                    if (entriesSelected.Contains(entriesToDisplay[i]))
+                                    if (entriesSelected.Contains(GetEntry(i)))
                                     {
-                                        lowestSelectedEntry = entriesToDisplay[i];
+                                        lowestSelectedEntry = GetEntry(i);
                                         break;
                                     }
                                 }
 
                                 entriesIndividuallySelected.Clear();
                                 entriesIndividuallySelected.Add(lowestSelectedEntry);
-                                indexOfFirstIndividuallySelectedEntry =
-                                    entriesToDisplay.IndexOf(lowestSelectedEntry);
+                                indexOfFirstIndividuallySelectedEntry = GetEntries().IndexOf(lowestSelectedEntry);
                             }
                             else if (index < indexOfFirstIndividuallySelectedEntry)
                             {
                                 PaletteEntry highestSelectedEntry = null;
-                                for (int i = entriesToDisplay.Count - 1; i >= 0; i--)
+                                for (int i = GetEntryCount() - 1; i >= 0; i--)
                                 {
-                                    if (entriesSelected.Contains(entriesToDisplay[i]))
+                                    if (entriesSelected.Contains(GetEntry(i)))
                                     {
-                                        highestSelectedEntry = entriesToDisplay[i];
+                                        highestSelectedEntry = GetEntry(i);
                                         break;
                                     }
                                 }
 
                                 entriesIndividuallySelected.Clear();
                                 entriesIndividuallySelected.Add(highestSelectedEntry);
-                                indexOfFirstIndividuallySelectedEntry =
-                                    entriesToDisplay.IndexOf(highestSelectedEntry);
+                                indexOfFirstIndividuallySelectedEntry = GetEntries().IndexOf(highestSelectedEntry);
                             }
 
                             SelectEntriesByRange(indexOfFirstIndividuallySelectedEntry, index, true);
@@ -844,7 +897,7 @@ namespace RoyTheunissen.PrefabPalette
                             // Grow the selection from the last individually selected entry.
                             PaletteEntry lastEntryIndividuallySelected = entriesIndividuallySelected[^1];
                             int indexOfLastIndividuallySelectedEntry =
-                                entriesToDisplay.IndexOf(lastEntryIndividuallySelected);
+                                GetEntries().IndexOf(lastEntryIndividuallySelected);
                             SelectEntriesByRange(indexOfLastIndividuallySelectedEntry, index, false);
                         }
                     }
@@ -897,9 +950,10 @@ namespace RoyTheunissen.PrefabPalette
             Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             EditorGUI.DrawRect(rect, borderColor);
 
-            Rect entryVisualsRect = rect.Inset(isSelected ? 2 : 1);
-            // TODO: Draw using property drawer
-            EditorGUI.DrawRect(entryVisualsRect, Color.magenta);
+            // Actually draw the contents of the entry.
+            Rect entryContentsRect = rect.Inset(isSelected ? 2 : 1);
+            SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+            EditorGUI.PropertyField(entryContentsRect, entryProperty, GUIContent.none);
         }
 
         private void DrawEntryPanelMessage(bool hasCollection)
@@ -955,11 +1009,11 @@ namespace RoyTheunissen.PrefabPalette
             int direction = from <= to ? 1 : -1;
             for (int i = from; i != to; i += direction)
             {
-                if (!entriesSelected.Contains(entriesToDisplay[i]))
-                    entriesSelected.Add(entriesToDisplay[i]);
+                if (!entriesSelected.Contains(GetEntry(i)))
+                    entriesSelected.Add(GetEntry(i));
             }
-            if (!entriesSelected.Contains(entriesToDisplay[to]))
-                entriesSelected.Add(entriesToDisplay[to]);
+            if (!entriesSelected.Contains(GetEntry(to)))
+                entriesSelected.Add(GetEntry(to));
         }
         
         private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
@@ -1030,7 +1084,7 @@ namespace RoyTheunissen.PrefabPalette
 
         private bool HasEntry(Object asset)
         {
-            foreach (PaletteEntry entry in entriesToDisplay)
+            foreach (PaletteEntry entry in GetEntries())
             {
                 if (entry is PaletteAsset paletteAsset && paletteAsset.Asset == asset)
                     return true;
@@ -1114,8 +1168,7 @@ namespace RoyTheunissen.PrefabPalette
                     continue;
                     
                 PaletteAsset entry = new PaletteAsset(draggedAsset);
-                entriesToDisplay.Add(entry);
-                SelectEntry(entry, false);
+                AddEntry(entry);
             }
         }
     }

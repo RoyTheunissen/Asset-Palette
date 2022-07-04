@@ -14,7 +14,7 @@ namespace RoyTheunissen.PrefabPalette
             //PaletteFolder folder = this.GetActualObject<PaletteFolder>(fieldInfo, property);
 
             SerializedProperty nameField = property.FindPropertyRelative("name");
-            EditorGUI.LabelField(position, label, new GUIContent(nameField.stringValue));
+            EditorGUI.LabelField(position, GUIContent.none, new GUIContent(nameField.stringValue));
         }
     }
 }

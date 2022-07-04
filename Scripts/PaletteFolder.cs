@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RoyTheunissen.PrefabPalette
@@ -11,6 +12,9 @@ namespace RoyTheunissen.PrefabPalette
         
         [SerializeField] private string guid;
         public string RenameControlId => $"{guid}Rename";
+        
+        [SerializeReference] private List<PaletteEntry> entries = new List<PaletteEntry>();
+        public List<PaletteEntry> Entries => entries;
 
         private static PaletteFolder folderCurrentlyRenaming;
         public static PaletteFolder FolderCurrentlyRenaming => folderCurrentlyRenaming;
