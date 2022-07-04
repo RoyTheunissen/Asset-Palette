@@ -1064,17 +1064,11 @@ namespace RoyTheunissen.PrefabPalette
                 string path = AssetDatabase.GetAssetPath(draggedObject);
                 if (AssetDatabase.IsValidFolder(path))
                 {
-                    bool addLinkToFolder = EditorUtility.DisplayDialog(
+                    bool addAssetsInsideFolder = EditorUtility.DisplayDialog(
                         "Create Folder Entry",
-                        "Do you want to add a link to the folder or the assets within it?", "Link To Folder",
-                        "Assets In Folder");
-                    if (addLinkToFolder)
-                    {
-                        // Just add the folder itself.
-                        Object asset = AssetDatabase.LoadAssetAtPath<Object>(path);
-                        draggedAssets.Add(asset);
-                    }
-                    else
+                        "Do you want to add a shortcut to the folder or the assets within it?",
+                        "Assets Inside Folder", "Shortcut To Folder");
+                    if (addAssetsInsideFolder)
                     {
                         // Find all the assets within this folder.
                         List<string> assetsInDraggedFolder = new List<string>();
@@ -1095,6 +1089,12 @@ namespace RoyTheunissen.PrefabPalette
                             Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetsInDraggedFolder[i]);
                             draggedAssets.Add(asset);
                         }
+                    }
+                    else
+                    {
+                        // Just add the folder itself.
+                        Object asset = AssetDatabase.LoadAssetAtPath<Object>(path);
+                        draggedAssets.Add(asset);
                     }
 
                     continue;
