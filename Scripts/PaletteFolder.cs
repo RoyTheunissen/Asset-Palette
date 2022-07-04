@@ -13,6 +13,8 @@ namespace RoyTheunissen.PrefabPalette
         public string RenameControlId => $"{guid}Rename";
 
         private static PaletteFolder folderCurrentlyRenaming;
+        public static PaletteFolder FolderCurrentlyRenaming => folderCurrentlyRenaming;
+
         public bool IsRenaming => folderCurrentlyRenaming == this;
 
         public static bool IsFolderBeingRenamed => folderCurrentlyRenaming != null;

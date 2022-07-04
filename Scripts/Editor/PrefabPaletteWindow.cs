@@ -217,6 +217,8 @@ namespace RoyTheunissen.PrefabPalette
                 return cachedFolderTypes;
             }
         }
+
+        private string renameText;
         
         private bool IsMouseInHeader => Event.current.mousePosition.y <= HeaderHeight;
         private bool IsMouseInFooter => Event.current.mousePosition.y >= position.height - FooterHeight;
@@ -310,7 +312,7 @@ namespace RoyTheunissen.PrefabPalette
         {
             // Create a new instance of the specified folder type.
             PaletteFolder newFolder = CreateNewFolderOfType((Type)userdata, GetUniqueFolderName(NewFolderName));
-            newFolder.StartRename();
+            StartRename(newFolder);
             GUI.FocusControl(newFolder.RenameControlId);
         }
 
@@ -478,7 +480,7 @@ namespace RoyTheunissen.PrefabPalette
                             SerializedProperty nameProperty = folderProperty.FindPropertyRelative("name");
                             
                             GUI.SetNextControlName(folder.RenameControlId);
-                            nameProperty.stringValue = EditorGUI.TextField(folderRect, nameProperty.stringValue);
+                            renameText = EditorGUI.TextField(folderRect, renameText);
                             GUI.FocusControl(folder.RenameControlId);
                         }
                         else
@@ -492,7 +494,7 @@ namespace RoyTheunissen.PrefabPalette
                             bool isMouseOver = folderRect.Contains(Event.current.mousePosition);
                             if (folder.IsRenaming && !isMouseOver)
                             {
-                                CancelRename();
+                                StopRename();
                             }
                             else if (!PaletteFolder.IsFolderBeingRenamed && isMouseOver)
                             {
@@ -573,7 +575,7 @@ namespace RoyTheunissen.PrefabPalette
             
             if (Event.current.keyCode == KeyCode.Return && PaletteFolder.IsFolderBeingRenamed)
             {
-                CancelRename();
+                StopRename();
                 return;
             }
             
@@ -784,28 +786,47 @@ namespace RoyTheunissen.PrefabPalette
 
         private void OnLostFocus()
         {
-            CancelRename();
+            StopRename();
         }
 
         private void OnSelectionChange()
         {
-            CancelRename();
+            StopRename();
         }
 
         private void OnFocus()
         {
-            CancelRename();
+            StopRename();
         }
 
         private void OnProjectChange()
         {
-            CancelRename();
+            StopRename();
         }
 
-        private void CancelRename()
+        private void StartRename(PaletteFolder folder)
+        {
+            renameText = folder.Name;
+            folder.StartRename();
+        }
+
+        private void StopRename()
         {
             if (!PaletteFolder.IsFolderBeingRenamed)
                 return;
+
+            bool isValidRename = !string.IsNullOrEmpty(renameText) && !string.IsNullOrWhiteSpace(renameText);
+            if (isValidRename)
+            {
+                renameText = GetUniqueFolderName(renameText);
+                CurrentCollectionSerializedObject.Update();
+                SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
+                int index = CurrentCollection.Folders.IndexOf(PaletteFolder.FolderCurrentlyRenaming);
+                SerializedProperty folderBeingRenamedProperty = foldersProperty.GetArrayElementAtIndex(index);
+                SerializedProperty nameProperty = folderBeingRenamedProperty.FindPropertyRelative("name");
+                nameProperty.stringValue = renameText;
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            }
             
             PaletteFolder.CancelRename();
             Repaint();
