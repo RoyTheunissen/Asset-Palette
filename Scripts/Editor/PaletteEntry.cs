@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.PrefabPalette
 {
@@ -8,12 +9,12 @@ namespace RoyTheunissen.PrefabPalette
     /// Represents one entry in the palette and manages its properties.
     /// </summary>
     [Serializable]
-    public class PrefabEntry
+    public class PaletteEntry
     {
         public const int TextureSize = 128;
             
-        [SerializeField] private GameObject prefab;
-        public GameObject Prefab => prefab;
+        [SerializeField] private Object asset;
+        public Object Asset => asset;
 
         [NonSerialized] private Texture2D cachedPreviewTexture;
         [NonSerialized] private bool didCachePreviewTexture;
@@ -25,14 +26,14 @@ namespace RoyTheunissen.PrefabPalette
                 {
                     didCachePreviewTexture = true;
 
-                    string path = AssetDatabase.GetAssetPath(Prefab.GetInstanceID());
+                    string path = AssetDatabase.GetAssetPath(Asset.GetInstanceID());
                     cachedPreviewTexture = Editor.RenderStaticPreview(path, null, TextureSize, TextureSize);
                 }
                 return cachedPreviewTexture;
             }
         }
 
-        public bool IsValid => Prefab != null;
+        public bool IsValid => Asset != null;
 
         [NonSerialized] private Editor cachedEditor;
         [NonSerialized] private bool didCacheEditor;
@@ -43,15 +44,15 @@ namespace RoyTheunissen.PrefabPalette
                 if (!didCacheEditor)
                 {
                     didCacheEditor = true;
-                    Editor.CreateCachedEditor(Prefab, null, ref cachedEditor);
+                    Editor.CreateCachedEditor(Asset, null, ref cachedEditor);
                 }
                 return cachedEditor;
             }
         }
 
-        public PrefabEntry(GameObject prefab)
+        public PaletteEntry(Object asset)
         {
-            this.prefab = prefab;
+            this.asset = asset;
         }
     }
 }

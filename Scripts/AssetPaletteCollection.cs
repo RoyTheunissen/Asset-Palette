@@ -7,7 +7,7 @@ namespace RoyTheunissen.PrefabPalette
     /// Stores prefab palettes.
     /// </summary>
     [CreateAssetMenu(fileName = "Prefab Palette Collection", menuName = "ScriptableObject/Prefab Palette Collection")]
-    public class PrefabPaletteCollection : ScriptableObject 
+    public class AssetPaletteCollection : ScriptableObject 
     {
         [SerializeReference] private List<PaletteFolder> folders = new List<PaletteFolder>();
         public List<PaletteFolder> Folders => folders;

@@ -11,7 +11,7 @@ namespace RoyTheunissen.PrefabPalette
     /// <summary>
     /// Helps organize collections of prefabs and drag them into scenes quickly.
     /// </summary>
-    public class PrefabPaletteWindow : EditorWindow
+    public class AssetPaletteWindow : EditorWindow
     {
         private const string EditorPrefPrefix = "RoyTheunissen/PrefabPalette/";
         private const string CurrentCollectionGUIDEditorPref = EditorPrefPrefix + "CurrentCollectionGUID";
@@ -20,14 +20,16 @@ namespace RoyTheunissen.PrefabPalette
         private const string SelectedFolderIndexEditorPref = EditorPrefPrefix + "SelectedFolderIndex";
 
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
+        
+        private const string FileSearchPattern = "*.asset, *.prefab, *.unity";
 
-        private const float PrefabSizeMax = PrefabEntry.TextureSize;
-        private const float PrefabSizeMin = PrefabEntry.TextureSize * 0.45f;
+        private const float EntrySizeMax = PaletteEntry.TextureSize;
+        private const float EntrySizeMin = PaletteEntry.TextureSize * 0.45f;
         
         private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;
-        private static float PrefabPanelWidthMin => 200;
+        private static float EntriesPanelWidthMin => 200;
         private static float PrefabPanelHeightMin => 50;
-        private static float WindowWidthMin => FolderPanelWidthMin + PrefabPanelWidthMin;
+        private static float WindowWidthMin => FolderPanelWidthMin + EntriesPanelWidthMin;
         public static float CollectionButtonWidth => 130;
         private static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
         private static int NewFolderButtonWidth => 76 + (HasMultipleFolderTypes ? 9 : 0);
@@ -43,32 +45,32 @@ namespace RoyTheunissen.PrefabPalette
         private const string NewFolderName = "New Folder";
         private const int MaxUniqueFolderNameAttempts = 100;
         
-        [NonSerialized] private readonly List<PrefabEntry> prefabsToDisplay = new List<PrefabEntry>();
-        [NonSerialized] private readonly List<PrefabEntry> prefabsSelected = new List<PrefabEntry>();
+        [NonSerialized] private readonly List<PaletteEntry> entriesToDisplay = new List<PaletteEntry>();
+        [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
         
-        [NonSerialized] private readonly List<GameObject> draggedPrefabs = new List<GameObject>();
+        [NonSerialized] private readonly List<Object> draggedAssets = new List<Object>();
         
-        private Vector2 prefabPreviewsScrollPosition;
+        private Vector2 entriesPreviewsScrollPosition;
         private Vector2 folderPanelScrollPosition;
         
         [NonSerialized] private bool isResizingFolderPanel;
 
-        [NonSerialized] private GUIStyle cachedPrefabPreviewTextStyle;
-        [NonSerialized] private bool didCachePrefabPreviewTextStyle;
-        private GUIStyle PrefabPreviewTextStyle
+        [NonSerialized] private GUIStyle cachedEntryNameTextStyle;
+        [NonSerialized] private bool didCacheEntryNameTextStyle;
+        private GUIStyle EntryNameTextStyle
         {
             get
             {
-                if (!didCachePrefabPreviewTextStyle)
+                if (!didCacheEntryNameTextStyle)
                 {
-                    didCachePrefabPreviewTextStyle = true;
-                    cachedPrefabPreviewTextStyle = new GUIStyle(EditorStyles.wordWrappedMiniLabel)
+                    didCacheEntryNameTextStyle = true;
+                    cachedEntryNameTextStyle = new GUIStyle(EditorStyles.wordWrappedMiniLabel)
                     {
                         alignment = TextAnchor.LowerCenter
                     };
-                    cachedPrefabPreviewTextStyle.normal.textColor = Color.white;
+                    cachedEntryNameTextStyle.normal.textColor = Color.white;
                 }
-                return cachedPrefabPreviewTextStyle;
+                return cachedEntryNameTextStyle;
             }
         }
         
@@ -120,8 +122,8 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
 
-        private PrefabPaletteCollection cachedCurrentCollection;
-        private PrefabPaletteCollection CurrentCollection
+        private AssetPaletteCollection cachedCurrentCollection;
+        private AssetPaletteCollection CurrentCollection
         {
             get
             {
@@ -136,7 +138,7 @@ namespace RoyTheunissen.PrefabPalette
                     if (string.IsNullOrEmpty(path))
                         return null;
 
-                    cachedCurrentCollection = AssetDatabase.LoadAssetAtPath<PrefabPaletteCollection>(path);
+                    cachedCurrentCollection = AssetDatabase.LoadAssetAtPath<AssetPaletteCollection>(path);
                 }
 
                 return cachedCurrentCollection;
@@ -235,12 +237,12 @@ namespace RoyTheunissen.PrefabPalette
         private bool IsMouseInFolderPanel =>
             !IsMouseInHeader && Event.current.mousePosition.x < FolderPanelWidth;
         
-        private bool IsMouseInPrefabPanel => !IsMouseInFolderPanel && !IsMouseInFooter;
+        private bool IsMouseInEntriesPanel => !IsMouseInFolderPanel && !IsMouseInFooter;
 
-        [MenuItem ("Window/General/Prefab Palette")]
+        [MenuItem ("Window/General/Asset Palette")]
         public static void Init() 
         {
-            PrefabPaletteWindow window = GetWindow<PrefabPaletteWindow>(false, "Prefab Palette");
+            AssetPaletteWindow window = GetWindow<AssetPaletteWindow>(false, "Asset Palette");
             window.minSize = new Vector2(WindowWidthMin, WindowHeightMin);
             window.wantsMouseMove = true;
         }
@@ -263,7 +265,7 @@ namespace RoyTheunissen.PrefabPalette
                 {
                     DropAreaGUI();
 
-                    DrawPrefabs();
+                    DrawEntriesPanel();
 
                     DrawFooter();
                 }
@@ -277,7 +279,7 @@ namespace RoyTheunissen.PrefabPalette
             Rect headerRect = GUILayoutUtility.GetRect(position.width, HeaderHeight);
             GUI.Box(headerRect, GUIContent.none, EditorStyles.toolbar);
 
-            PrefabPaletteCollection currentCollection = CurrentCollection;
+            AssetPaletteCollection currentCollection = CurrentCollection;
             string name = currentCollection == null ? "[No Collection]" : currentCollection.name;
             
             // Allow a new collection to be created or loaded.
@@ -384,7 +386,7 @@ namespace RoyTheunissen.PrefabPalette
 
         private void DoCollectionDropDown(Rect collectionRect)
         {
-            string[] existingCollectionGuids = AssetDatabase.FindAssets($"t:{typeof(PrefabPaletteCollection).Name}");
+            string[] existingCollectionGuids = AssetDatabase.FindAssets($"t:{typeof(AssetPaletteCollection).Name}");
 
             // Allow a new collection to be created.
             GenericMenu dropdownMenu = new GenericMenu();
@@ -407,17 +409,16 @@ namespace RoyTheunissen.PrefabPalette
 
         private void CreateNewCollection()
         {
-            string path = EditorUtility.SaveFilePanel("Create New Prefab Palette", null, "Prefab Palette", "asset");
+            string path = EditorUtility.SaveFilePanel("Create New Asset Palette", null, "Asset Palette", "asset");
             if (string.IsNullOrEmpty(path))
                 return;
 
             // Make the path relative to the project.
-            string absolutePath = path;
             path = Path.Combine("Assets", Path.GetRelativePath(Application.dataPath, path));
 
             Directory.CreateDirectory(path);
 
-            PrefabPaletteCollection newCollection = CreateInstance<PrefabPaletteCollection>();
+            AssetPaletteCollection newCollection = CreateInstance<AssetPaletteCollection>();
             AssetDatabase.CreateAsset(newCollection, path);
             AssetDatabase.SaveAssets();
             EditorGUIUtility.PingObject(newCollection);
@@ -633,7 +634,7 @@ namespace RoyTheunissen.PrefabPalette
                 (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag))
             {
                 FolderPanelWidth = Mathf.Clamp(
-                    Event.current.mousePosition.x, FolderPanelWidthMin, position.width - PrefabPanelWidthMin);
+                    Event.current.mousePosition.x, FolderPanelWidthMin, position.width - EntriesPanelWidthMin);
                 Repaint();
             }
 
@@ -678,26 +679,26 @@ namespace RoyTheunissen.PrefabPalette
                 return;
             }
             
-            // Allow all currently visible prefabs to be selected if CTRL+A is pressed. 
+            // Allow all currently visible entries to be selected if CTRL+A is pressed. 
             if (Event.current.control && Event.current.keyCode == KeyCode.A)
             {
-                prefabsSelected.Clear();
-                prefabsSelected.AddRange(prefabsToDisplay);
+                entriesSelected.Clear();
+                entriesSelected.AddRange(entriesToDisplay);
                 Repaint();
                 return;
             }
 
             if (Event.current.keyCode == KeyCode.Delete)
             {
-                if (IsMouseInPrefabPanel)
+                if (IsMouseInEntriesPanel)
                 {
-                    // Pressing Delete will remove all selected prefabs from the palette.
-                    foreach (PrefabEntry prefabEntry in prefabsSelected)
+                    // Pressing Delete will remove all selected entries from the palette.
+                    foreach (PaletteEntry entry in entriesSelected)
                     {
-                        prefabsToDisplay.Remove(prefabEntry);
+                        entriesToDisplay.Remove(entry);
                     }
 
-                    prefabsSelected.Clear();
+                    entriesSelected.Clear();
                     Repaint();
                 }
                 else if (IsMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1 &&
@@ -712,26 +713,26 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
 
-        private void DrawPrefabs()
+        private void DrawEntriesPanel()
         {
-            prefabPreviewsScrollPosition = GUILayout.BeginScrollView(
-                prefabPreviewsScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
-            Rect prefabPanelRect = new Rect(0, 0, position.width - FolderPanelWidth, 90000000);
-            EditorGUI.DrawRect(prefabPanelRect, new Color(0, 0, 0, 0.1f));
+            entriesPreviewsScrollPosition = GUILayout.BeginScrollView(
+                entriesPreviewsScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
+            Rect entriesPanelRect = new Rect(0, 0, position.width - FolderPanelWidth, 90000000);
+            EditorGUI.DrawRect(entriesPanelRect, new Color(0, 0, 0, 0.1f));
 
-            PrefabPaletteCollection currentCollection = CurrentCollection;
+            AssetPaletteCollection currentCollection = CurrentCollection;
             
             bool hasCollection = currentCollection != null;
-            bool hasPrefabs = hasCollection && prefabsToDisplay.Count > 0;
+            bool hasEntries = hasCollection && entriesToDisplay.Count > 0;
             
-            if (!hasCollection || !hasPrefabs)
+            if (!hasCollection || !hasEntries)
             {
                 GUILayout.FlexibleSpace();
 
                 if (!hasCollection)
                 {
                     EditorGUILayout.LabelField(
-                        "To begin organizing prefabs, create a collection.", MessageTextStyle);
+                        "To begin organizing assets, create a collection.", MessageTextStyle);
                     EditorGUILayout.BeginHorizontal();
                     {
                         GUILayout.FlexibleSpace();
@@ -745,7 +746,7 @@ namespace RoyTheunissen.PrefabPalette
                 }
                 else
                 {
-                    EditorGUILayout.LabelField("Drag prefabs here!", MessageTextStyle);
+                    EditorGUILayout.LabelField("Drag assets here!", MessageTextStyle);
                 }
                 GUILayout.FlexibleSpace();
                 GUILayout.EndScrollView();
@@ -756,14 +757,14 @@ namespace RoyTheunissen.PrefabPalette
 
             const float padding = 2;
             const float spacing = 2;
-            int prefabSize = Mathf.RoundToInt(Mathf.Lerp(PrefabSizeMin, PrefabSizeMax, ZoomLevel));
+            int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, ZoomLevel));
 
-            int columnCount = Mathf.FloorToInt(containerWidth / (prefabSize + spacing));
-            int rowCount = Mathf.CeilToInt((float)prefabsToDisplay.Count / columnCount);
+            int columnCount = Mathf.FloorToInt(containerWidth / (entrySize + spacing));
+            int rowCount = Mathf.CeilToInt((float)entriesToDisplay.Count / columnCount);
                 
             GUILayout.Space(padding);
             
-            bool didClickASpecificPrefab = false;
+            bool didClickASpecificEntry = false;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -771,81 +772,80 @@ namespace RoyTheunissen.PrefabPalette
                 for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
                 {
                     int index = rowIndex * columnCount + columnIndex;
-                    if (index >= prefabsToDisplay.Count)
+                    if (index >= entriesToDisplay.Count)
                     {
                         GUILayout.FlexibleSpace();
                         break;
                     }
 
                     // Purge invalid entries.
-                    while (!prefabsToDisplay[index].IsValid && index < prefabsToDisplay.Count)
+                    while (!entriesToDisplay[index].IsValid && index < entriesToDisplay.Count)
                     {
-                        prefabsToDisplay.RemoveAt(index);
+                        entriesToDisplay.RemoveAt(index);
                     }
                     
-                    if (index >= prefabsToDisplay.Count)
+                    if (index >= entriesToDisplay.Count)
                     {
                         GUILayout.FlexibleSpace();
                         break;
                     }
                     
-                    PrefabEntry prefab = prefabsToDisplay[index];
+                    PaletteEntry entry = entriesToDisplay[index];
 
                     Rect rect = GUILayoutUtility.GetRect(
-                        0, 0, GUILayout.Width(prefabSize), GUILayout.Height(prefabSize));
+                        0, 0, GUILayout.Width(entrySize), GUILayout.Height(entrySize));
 
-                    // Allow this prefab to be selected by clicking it.
-                    bool isMouseOnPrefab = rect.Contains(Event.current.mousePosition) && IsMouseInPrefabPanel;
-                    bool wasAlreadySelected = prefabsSelected.Contains(prefab);
-                    if (Event.current.type == EventType.MouseDown && isMouseOnPrefab)
+                    // Allow this entry to be selected by clicking it.
+                    bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && IsMouseInEntriesPanel;
+                    bool wasAlreadySelected = entriesSelected.Contains(entry);
+                    if (Event.current.type == EventType.MouseDown && isMouseOnEntry)
                     {
                         if ((Event.current.modifiers & EventModifiers.Shift) == EventModifiers.Shift &&
                             !wasAlreadySelected)
                         {
                             // Shift+click to add.
-                            prefabsSelected.Add(prefab);
+                            entriesSelected.Add(entry);
                         }
                         else if ((Event.current.modifiers & EventModifiers.Control) == EventModifiers.Control &&
                                  !wasAlreadySelected)
                         {
                             // Control+click to remove.
-                            prefabsSelected.Remove(prefab);
+                            entriesSelected.Remove(entry);
                         }
                         else if (!wasAlreadySelected)
                         {
-                            // Regular click to select only this prefab.
-                            prefabsSelected.Clear();
-                            prefabsSelected.Add(prefab);
+                            // Regular click to select only this entry.
+                            entriesSelected.Clear();
+                            entriesSelected.Add(entry);
                         }
 
-                        didClickASpecificPrefab = true;
+                        didClickASpecificEntry = true;
                         Repaint();
                     }
-                    else if (Event.current.type == EventType.MouseUp && isMouseOnPrefab && !Event.current.control &&
+                    else if (Event.current.type == EventType.MouseUp && isMouseOnEntry && !Event.current.control &&
                              !Event.current.shift)
                     {
-                        // Regular click to select only this prefab.
-                        prefabsSelected.Clear();
-                        prefabsSelected.Add(prefab);
+                        // Regular click to select only this entry.
+                        entriesSelected.Clear();
+                        entriesSelected.Add(entry);
                         Repaint();
                     }
-                    else if (Event.current.type == EventType.MouseDrag && isMouseOnPrefab)
+                    else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry)
                     {
                         DragAndDrop.PrepareStartDrag();
-                        DragAndDrop.objectReferences =
-                            prefabsSelected.Select(prefabEntry => (Object)prefabEntry.Prefab).ToArray();
-                        DragAndDrop.StartDrag("Drag from Prefab Palette");
+                        DragAndDrop.objectReferences = entriesSelected.Select(entry => entry.Asset).ToArray();
+                        DragAndDrop.StartDrag("Drag from Asset Palette");
                     }
-                    bool isSelected = prefabsSelected.Contains(prefab);
+                    bool isSelected = entriesSelected.Contains(entry);
                 
                     Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
                     EditorGUI.DrawRect(rect, borderColor);
                 
                     Rect textureRect = rect.Inset(isSelected ? 2 : 1);
-                    if (prefab.PreviewTexture != null)
+                    if (entry.PreviewTexture != null)
                     {
                         EditorGUI.DrawPreviewTexture(
-                            textureRect, prefab.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
+                            textureRect, entry.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
                     }
                     else
                     {
@@ -854,11 +854,11 @@ namespace RoyTheunissen.PrefabPalette
                     }
 
                     // Draw a label with a nice semi-transparent backdrop.
-                    GUIContent title = new GUIContent(prefab.Prefab.name);
-                    float height = PrefabPreviewTextStyle.CalcHeight(title, textureRect.width);
+                    GUIContent title = new GUIContent(entry.Asset.name);
+                    float height = EntryNameTextStyle.CalcHeight(title, textureRect.width);
                     
                     EditorGUI.DrawRect(textureRect.GetSubRectFromBottom(height), new Color(0, 0, 0, 0.15f));
-                    EditorGUI.LabelField(textureRect, title, PrefabPreviewTextStyle);
+                    EditorGUI.LabelField(textureRect, title, EntryNameTextStyle);
 
                     if (columnIndex < columnCount - 1)
                         EditorGUILayout.Space(spacing);
@@ -874,10 +874,10 @@ namespace RoyTheunissen.PrefabPalette
             
             GUILayout.Space(padding);
 
-            // If you didn't click a prefab and weren't pressing SHIFT, clear the selection.
-            if (Event.current.type == EventType.MouseDown && !didClickASpecificPrefab && !Event.current.shift)
+            // If you didn't click an entry and weren't pressing SHIFT, clear the selection.
+            if (Event.current.type == EventType.MouseDown && !didClickASpecificEntry && !Event.current.shift)
             {
-                prefabsSelected.Clear();
+                entriesSelected.Clear();
                 Repaint();
             }
             
@@ -933,11 +933,11 @@ namespace RoyTheunissen.PrefabPalette
             Repaint();
         }
 
-        private bool HasEntry(GameObject prefab)
+        private bool HasEntry(Object asset)
         {
-            foreach (PrefabEntry prefabEntry in prefabsToDisplay)
+            foreach (PaletteEntry entry in entriesToDisplay)
             {
-                if (prefabEntry.Prefab == prefab)
+                if (entry.Asset == asset)
                     return true;
             }
             return false;
@@ -950,29 +950,30 @@ namespace RoyTheunissen.PrefabPalette
             {
                 case EventType.DragUpdated:
                 case EventType.DragPerform:
-                    if (!IsMouseInPrefabPanel)
+                    if (!IsMouseInEntriesPanel)
                         return;
 
                     DragAndDrop.AcceptDrag();
 
-                    // Find dragged prefabs.
-                    draggedPrefabs.Clear();
+                    // Find dragged assets.
+                    draggedAssets.Clear();
                     foreach (Object draggedObject in DragAndDrop.objectReferences)
                     {
-                        if (draggedObject is GameObject go && go.IsPrefab())
+                        if (draggedObject is Object o && (!(draggedObject is GameObject go) || go.IsPrefab()))
                         {
-                            draggedPrefabs.Add(go);
+                            draggedAssets.Add(o);
                             continue;
                         }
 
                         string path = AssetDatabase.GetAssetPath(draggedObject);
                         if (AssetDatabase.IsValidFolder(path))
                         {
-                            string[] files = Directory.GetFiles(path, "*.prefab", SearchOption.AllDirectories);
+                            // TODO: Recurse through folders instead? We don't care what asset type it is...
+                            string[] files = Directory.GetFiles(path, FileSearchPattern, SearchOption.AllDirectories);
                             for (int i = 0; i < files.Length; i++)
                             {
-                                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(files[i]);
-                                draggedPrefabs.Add(prefab);
+                                Object asset = AssetDatabase.LoadAssetAtPath<Object>(files[i]);
+                                draggedAssets.Add(asset);
                             }
 
                             continue;
@@ -981,19 +982,19 @@ namespace RoyTheunissen.PrefabPalette
                         // Unhandled dragged object. Probably a different asset, like a texture.
                     }
 
-                    DragAndDrop.visualMode = draggedPrefabs.Count > 0
+                    DragAndDrop.visualMode = draggedAssets.Count > 0
                         ? DragAndDropVisualMode.Copy
                         : DragAndDropVisualMode.Rejected;
 
                     if (@event.type == EventType.DragPerform)
                     {
-                        foreach (GameObject draggedPrefab in draggedPrefabs)
+                        foreach (Object draggedAsset in draggedAssets)
                         {
-                            if (HasEntry(draggedPrefab))
+                            if (HasEntry(draggedAsset))
                                 continue;
                             
-                            PrefabEntry entry = new PrefabEntry(draggedPrefab);
-                            prefabsToDisplay.Add(entry);
+                            PaletteEntry entry = new PaletteEntry(draggedAsset);
+                            entriesToDisplay.Add(entry);
                         }
                     }
                     
