@@ -896,7 +896,7 @@ namespace RoyTheunissen.PrefabPalette
                         SelectEntry(entry, true);
                         Repaint();
                     }
-                    else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry)
+                    else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry && !isResizingFolderPanel)
                     {
                         DragAndDrop.PrepareStartDrag();
                         DragAndDrop.objectReferences = entriesSelected.Select(entry => entry.Asset).ToArray();
