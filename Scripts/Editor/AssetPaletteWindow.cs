@@ -47,6 +47,7 @@ namespace RoyTheunissen.PrefabPalette
         
         [NonSerialized] private readonly List<PaletteEntry> entriesToDisplay = new List<PaletteEntry>();
         [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
+        [NonSerialized] private readonly List<PaletteEntry> entriesIndividuallySelected = new List<PaletteEntry>();
         
         [NonSerialized] private readonly List<Object> draggedAssets = new List<Object>();
         
@@ -684,6 +685,9 @@ namespace RoyTheunissen.PrefabPalette
             {
                 entriesSelected.Clear();
                 entriesSelected.AddRange(entriesToDisplay);
+                entriesIndividuallySelected.Clear();
+                if (entriesToDisplay.Count > 0)
+                    entriesIndividuallySelected.Add(entriesToDisplay[^1]);
                 Repaint();
                 return;
             }
@@ -699,6 +703,7 @@ namespace RoyTheunissen.PrefabPalette
                     }
 
                     entriesSelected.Clear();
+                    entriesIndividuallySelected.Clear();
                     Repaint();
                 }
                 else if (IsMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1 &&
@@ -801,15 +806,82 @@ namespace RoyTheunissen.PrefabPalette
                     bool wasAlreadySelected = entriesSelected.Contains(entry);
                     if (Event.current.type == EventType.MouseDown && isMouseOnEntry)
                     {
-                        if (Event.current.shift && !wasAlreadySelected)
+                        if (Event.current.shift)
                         {
-                            // Shift+click to add.
-                            entriesSelected.Add(entry);
+                            // Shift+click to grow selection until this point.
+                            if (entriesSelected.Count == 0)
+                            {
+                                entriesSelected.Add(entry);
+                                entriesIndividuallySelected.Add(entry);
+                            }
+                            else
+                            {
+                                if (wasAlreadySelected)
+                                {
+                                    // Define a new extremity away from the first individually selected entry.
+                                    // Might seem convoluted and with weird edge cases, but this is how Unity does it...
+                                    PaletteEntry firstEntryIndividuallySelected = entriesIndividuallySelected[0];
+                                    int indexOfFirstIndividuallySelectedEntry =
+                                        entriesToDisplay.IndexOf(firstEntryIndividuallySelected);
+                                    if (index > indexOfFirstIndividuallySelectedEntry)
+                                    {
+                                        PaletteEntry lowestSelectedEntry = null;
+                                        for (int i = 0; i < entriesToDisplay.Count; i++)
+                                        {
+                                            if (entriesSelected.Contains(entriesToDisplay[i]))
+                                            {
+                                                lowestSelectedEntry = entriesToDisplay[i];
+                                                break;
+                                            }
+                                        }
+                                        entriesIndividuallySelected.Clear();
+                                        entriesIndividuallySelected.Add(lowestSelectedEntry);
+                                        indexOfFirstIndividuallySelectedEntry =
+                                            entriesToDisplay.IndexOf(lowestSelectedEntry);
+                                    }
+                                    else if (index < indexOfFirstIndividuallySelectedEntry)
+                                    {
+                                        PaletteEntry highestSelectedEntry = null;
+                                        for (int i = entriesToDisplay.Count - 1; i >= 0; i--)
+                                        {
+                                            if (entriesSelected.Contains(entriesToDisplay[i]))
+                                            {
+                                                highestSelectedEntry = entriesToDisplay[i];
+                                                break;
+                                            }
+                                        }
+                                        entriesIndividuallySelected.Clear();
+                                        entriesIndividuallySelected.Add(highestSelectedEntry);
+                                        indexOfFirstIndividuallySelectedEntry =
+                                            entriesToDisplay.IndexOf(highestSelectedEntry);
+                                    }
+
+                                    entriesSelected.Clear();
+                                    SelectEntries(indexOfFirstIndividuallySelectedEntry, index);
+                                }
+                                else
+                                {
+                                    // Grow the selection from the last individually selected entry.
+                                    PaletteEntry lastEntryIndividuallySelected = entriesIndividuallySelected[^1];
+                                    int indexOfLastIndividuallySelectedEntry =
+                                        entriesToDisplay.IndexOf(lastEntryIndividuallySelected);
+                                    SelectEntries(indexOfLastIndividuallySelectedEntry, index);
+                                }
+                            }
                         }
-                        else if (Event.current.control && !wasAlreadySelected)
+                        else if (Event.current.control)
                         {
-                            // Control+click to remove.
-                            entriesSelected.Remove(entry);
+                            // Control+click to add specific files to the selection.
+                            if (!wasAlreadySelected)
+                            {
+                                entriesSelected.Add(entry);
+                                entriesIndividuallySelected.Add(entry);
+                            }
+                            else
+                            {
+                                entriesSelected.Remove(entry);
+                                entriesIndividuallySelected.Remove(entry);
+                            }
                         }
                         else
                         {
@@ -818,6 +890,8 @@ namespace RoyTheunissen.PrefabPalette
                             {
                                 entriesSelected.Clear();
                                 entriesSelected.Add(entry);
+                                entriesIndividuallySelected.Clear();
+                                entriesIndividuallySelected.Add(entry);
                             }
 
                             // Allow assets to be opened by double clicking on them.
@@ -837,6 +911,8 @@ namespace RoyTheunissen.PrefabPalette
                         // Regular click to select only this entry.
                         entriesSelected.Clear();
                         entriesSelected.Add(entry);
+                        entriesIndividuallySelected.Clear();
+                        entriesIndividuallySelected.Add(entry);
                         Repaint();
                     }
                     else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry)
@@ -887,10 +963,23 @@ namespace RoyTheunissen.PrefabPalette
             if (Event.current.type == EventType.MouseDown && !didClickASpecificEntry && !Event.current.shift)
             {
                 entriesSelected.Clear();
+                entriesIndividuallySelected.Clear();
                 Repaint();
             }
             
             EditorGUILayout.EndScrollView();
+        }
+
+        private void SelectEntries(int from, int to)
+        {
+            int direction = from <= to ? 1 : -1;
+            for (int i = from; i != to; i += direction)
+            {
+                if (!entriesSelected.Contains(entriesToDisplay[i]))
+                    entriesSelected.Add(entriesToDisplay[i]);
+            }
+            if (!entriesSelected.Contains(entriesToDisplay[to]))
+                entriesSelected.Add(entriesToDisplay[to]);
         }
 
         private void OnLostFocus()
