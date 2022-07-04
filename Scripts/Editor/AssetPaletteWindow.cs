@@ -1086,6 +1086,11 @@ namespace RoyTheunissen.PrefabPalette
                         "Create Folder Entry",
                         "Do you want to add a shortcut to the folder or the assets within it?",
                         "Assets Inside Folder", "Shortcut To Folder");
+                    
+                    // Focus the window again straight away, this way you can drag assets into the window, have them
+                    // all be selected and be able to delete them all straight away if it was done by accident.
+                    Focus();
+                    
                     if (addAssetsInsideFolder)
                     {
                         // Find all the assets within this folder.
@@ -1123,6 +1128,7 @@ namespace RoyTheunissen.PrefabPalette
                     draggedAssets.Add(draggedObject);
             }
 
+            ClearEntrySelection();
             foreach (Object draggedAsset in draggedAssets)
             {
                 if (HasEntry(draggedAsset))
@@ -1130,6 +1136,7 @@ namespace RoyTheunissen.PrefabPalette
                     
                 PaletteEntry entry = new PaletteEntry(draggedAsset);
                 entriesToDisplay.Add(entry);
+                SelectEntry(entry, false);
             }
         }
     }
