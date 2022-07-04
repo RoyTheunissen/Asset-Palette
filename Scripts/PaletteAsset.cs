@@ -1,21 +1,23 @@
 using System;
-using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.PrefabPalette
 {
     /// <summary>
-    /// Represents one entry in the palette and manages its properties.
+    /// Represents an asset that is added to the palette.
     /// </summary>
     [Serializable]
-    public class PaletteEntry
+    public class PaletteAsset : PaletteEntry
     {
-        public const int TextureSize = 128;
-            
+        private const int TextureSize = 128;
+        
         [SerializeField] private Object asset;
         public Object Asset => asset;
 
+        public override bool IsValid => Asset != null;
+
+#if UNITY_EDITOR
         [NonSerialized] private Texture2D cachedPreviewTexture;
         [NonSerialized] private bool didCachePreviewTexture;
         public Texture2D PreviewTexture
@@ -26,33 +28,40 @@ namespace RoyTheunissen.PrefabPalette
                 {
                     didCachePreviewTexture = true;
 
-                    string path = AssetDatabase.GetAssetPath(Asset.GetInstanceID());
+                    string path = UnityEditor.AssetDatabase.GetAssetPath(Asset.GetInstanceID());
                     cachedPreviewTexture = Editor.RenderStaticPreview(path, null, TextureSize, TextureSize);
                 }
                 return cachedPreviewTexture;
             }
         }
 
-        public bool IsValid => Asset != null;
-
-        [NonSerialized] private Editor cachedEditor;
+        [NonSerialized] private UnityEditor.Editor cachedEditor;
         [NonSerialized] private bool didCacheEditor;
-        private Editor Editor
+        private UnityEditor.Editor Editor
         {
             get
             {
                 if (!didCacheEditor)
                 {
                     didCacheEditor = true;
-                    Editor.CreateCachedEditor(Asset, null, ref cachedEditor);
+                    UnityEditor.Editor.CreateCachedEditor(Asset, null, ref cachedEditor);
                 }
                 return cachedEditor;
             }
         }
+#endif // UNITY_EDITOR
 
-        public PaletteEntry(Object asset)
+        public PaletteAsset(Object asset)
         {
             this.asset = asset;
+        }
+
+        public override void Open()
+        {
+#if UNITY_EDITOR
+            Debug.Log($"Opening asset {Asset}");
+            UnityEditor.AssetDatabase.OpenAsset(Asset);
+#endif // UNITY_EDITOR
         }
     }
 }

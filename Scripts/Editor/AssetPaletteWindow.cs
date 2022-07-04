@@ -20,11 +20,9 @@ namespace RoyTheunissen.PrefabPalette
         private const string SelectedFolderIndexEditorPref = EditorPrefPrefix + "SelectedFolderIndex";
 
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
-        
-        private const string FileSearchPattern = "*.asset, *.prefab, *.unity";
 
-        private const float EntrySizeMax = PaletteEntry.TextureSize;
-        private const float EntrySizeMin = PaletteEntry.TextureSize * 0.45f;
+        public const int EntrySizeMax = 128;
+        private const float EntrySizeMin = EntrySizeMax * 0.45f;
         
         private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;
         private static float EntriesPanelWidthMin => 200;
@@ -37,6 +35,8 @@ namespace RoyTheunissen.PrefabPalette
         private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
         private static readonly float WindowHeightMin = FooterHeight + HeaderHeight + PrefabPanelHeightMin;
+
+        private const float EntrySpacing = 2;
         
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
@@ -56,25 +56,6 @@ namespace RoyTheunissen.PrefabPalette
         
         [NonSerialized] private bool isResizingFolderPanel;
 
-        [NonSerialized] private GUIStyle cachedEntryNameTextStyle;
-        [NonSerialized] private bool didCacheEntryNameTextStyle;
-        private GUIStyle EntryNameTextStyle
-        {
-            get
-            {
-                if (!didCacheEntryNameTextStyle)
-                {
-                    didCacheEntryNameTextStyle = true;
-                    cachedEntryNameTextStyle = new GUIStyle(EditorStyles.wordWrappedMiniLabel)
-                    {
-                        alignment = TextAnchor.LowerCenter
-                    };
-                    cachedEntryNameTextStyle.normal.textColor = Color.white;
-                }
-                return cachedEntryNameTextStyle;
-            }
-        }
-        
         private GUIStyle cachedMessageTextStyle;
         private bool didCacheMessageTextStyle;
         private GUIStyle MessageTextStyle
@@ -719,38 +700,18 @@ namespace RoyTheunissen.PrefabPalette
         {
             entriesPreviewsScrollPosition = GUILayout.BeginScrollView(
                 entriesPreviewsScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
+            
+            // Draw a dark background for the entries panel.
             Rect entriesPanelRect = new Rect(0, 0, position.width - FolderPanelWidth, 90000000);
             EditorGUI.DrawRect(entriesPanelRect, new Color(0, 0, 0, 0.1f));
-
-            AssetPaletteCollection currentCollection = CurrentCollection;
             
+            // If the current state is invalid, draw a message instead.
+            AssetPaletteCollection currentCollection = CurrentCollection;
             bool hasCollection = currentCollection != null;
             bool hasEntries = hasCollection && entriesToDisplay.Count > 0;
-            
             if (!hasCollection || !hasEntries)
             {
-                GUILayout.FlexibleSpace();
-
-                if (!hasCollection)
-                {
-                    EditorGUILayout.LabelField(
-                        "To begin organizing assets, create a collection.", MessageTextStyle);
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        GUILayout.FlexibleSpace();
-                        bool shouldCreate = GUILayout.Button("Create", GUILayout.Width(100));
-                        GUILayout.FlexibleSpace();
-                        
-                        if (shouldCreate)
-                            CreateNewCollection();
-                    }
-                    EditorGUILayout.EndHorizontal();
-                }
-                else
-                {
-                    EditorGUILayout.LabelField("Drag assets here!", MessageTextStyle);
-                }
-                GUILayout.FlexibleSpace();
+                DrawEntryPanelMessage(hasCollection);
                 GUILayout.EndScrollView();
                 return;
             }
@@ -758,10 +719,9 @@ namespace RoyTheunissen.PrefabPalette
             float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - FolderPanelWidth;
 
             const float padding = 2;
-            const float spacing = 2;
             int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, ZoomLevel));
 
-            int columnCount = Mathf.FloorToInt(containerWidth / (entrySize + spacing));
+            int columnCount = Mathf.FloorToInt(containerWidth / (entrySize + EntrySpacing));
             int rowCount = Mathf.CeilToInt((float)entriesToDisplay.Count / columnCount);
                 
             GUILayout.Space(padding);
@@ -774,160 +734,23 @@ namespace RoyTheunissen.PrefabPalette
                 for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
                 {
                     int index = rowIndex * columnCount + columnIndex;
-                    if (index >= entriesToDisplay.Count)
-                    {
-                        GUILayout.FlexibleSpace();
-                        break;
-                    }
-
+                    
                     // Purge invalid entries.
-                    while (!entriesToDisplay[index].IsValid && index < entriesToDisplay.Count)
+                    while (index < entriesToDisplay.Count && !entriesToDisplay[index].IsValid)
                     {
                         entriesToDisplay.RemoveAt(index);
                     }
-                    
+
                     if (index >= entriesToDisplay.Count)
                     {
                         GUILayout.FlexibleSpace();
                         break;
                     }
                     
-                    PaletteEntry entry = entriesToDisplay[index];
-
-                    Rect rect = GUILayoutUtility.GetRect(
-                        0, 0, GUILayout.Width(entrySize), GUILayout.Height(entrySize));
-
-                    // Allow this entry to be selected by clicking it.
-                    bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && !IsMouseInFooter &&
-                                          !IsMouseInHeader;
-                    bool wasAlreadySelected = entriesSelected.Contains(entry);
-                    if (Event.current.type == EventType.MouseDown && isMouseOnEntry)
-                    {
-                        if (Event.current.shift)
-                        {
-                            // Shift+click to grow selection until this point.
-                            if (entriesSelected.Count == 0)
-                            {
-                                SelectEntry(entry, true);
-                            }
-                            else
-                            {
-                                if (wasAlreadySelected)
-                                {
-                                    // Define a new extremity away from the first individually selected entry.
-                                    // Might seem convoluted and with weird edge cases, but this is how Unity does it...
-                                    PaletteEntry firstEntryIndividuallySelected = entriesIndividuallySelected[0];
-                                    int indexOfFirstIndividuallySelectedEntry =
-                                        entriesToDisplay.IndexOf(firstEntryIndividuallySelected);
-                                    if (index > indexOfFirstIndividuallySelectedEntry)
-                                    {
-                                        PaletteEntry lowestSelectedEntry = null;
-                                        for (int i = 0; i < entriesToDisplay.Count; i++)
-                                        {
-                                            if (entriesSelected.Contains(entriesToDisplay[i]))
-                                            {
-                                                lowestSelectedEntry = entriesToDisplay[i];
-                                                break;
-                                            }
-                                        }
-                                        entriesIndividuallySelected.Clear();
-                                        entriesIndividuallySelected.Add(lowestSelectedEntry);
-                                        indexOfFirstIndividuallySelectedEntry =
-                                            entriesToDisplay.IndexOf(lowestSelectedEntry);
-                                    }
-                                    else if (index < indexOfFirstIndividuallySelectedEntry)
-                                    {
-                                        PaletteEntry highestSelectedEntry = null;
-                                        for (int i = entriesToDisplay.Count - 1; i >= 0; i--)
-                                        {
-                                            if (entriesSelected.Contains(entriesToDisplay[i]))
-                                            {
-                                                highestSelectedEntry = entriesToDisplay[i];
-                                                break;
-                                            }
-                                        }
-                                        entriesIndividuallySelected.Clear();
-                                        entriesIndividuallySelected.Add(highestSelectedEntry);
-                                        indexOfFirstIndividuallySelectedEntry =
-                                            entriesToDisplay.IndexOf(highestSelectedEntry);
-                                    }
-                                    
-                                    SelectEntriesByRange(indexOfFirstIndividuallySelectedEntry, index, true);
-                                }
-                                else
-                                {
-                                    // Grow the selection from the last individually selected entry.
-                                    PaletteEntry lastEntryIndividuallySelected = entriesIndividuallySelected[^1];
-                                    int indexOfLastIndividuallySelectedEntry =
-                                        entriesToDisplay.IndexOf(lastEntryIndividuallySelected);
-                                    SelectEntriesByRange(indexOfLastIndividuallySelectedEntry, index, false);
-                                }
-                            }
-                        }
-                        else if (Event.current.control)
-                        {
-                            // Control+click to add specific files to the selection.
-                            if (!wasAlreadySelected)
-                                SelectEntry(entry, false);
-                            else
-                                DeselectEntry(entry);
-                        }
-                        else
-                        {
-                            // Regular click to select only this entry.
-                            if (!wasAlreadySelected)
-                                SelectEntry(entry, true);
-
-                            // Allow assets to be opened by double clicking on them.
-                            if (Event.current.clickCount == 2)
-                            {
-                                Debug.Log($"Opening asset {entry.Asset}");
-                                AssetDatabase.OpenAsset(entry.Asset);
-                            }
-                        }
-
-                        didClickASpecificEntry = true;
-                        Repaint();
-                    }
-                    else if (Event.current.type == EventType.MouseUp && isMouseOnEntry && !Event.current.control &&
-                             !Event.current.shift)
-                    {
-                        // Regular click to select only this entry.
-                        SelectEntry(entry, true);
-                        Repaint();
-                    }
-                    else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry && !isResizingFolderPanel)
-                    {
-                        DragAndDrop.PrepareStartDrag();
-                        DragAndDrop.objectReferences = entriesSelected.Select(entry => entry.Asset).ToArray();
-                        DragAndDrop.StartDrag("Drag from Asset Palette");
-                    }
-                    bool isSelected = entriesSelected.Contains(entry);
-                
-                    Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-                    EditorGUI.DrawRect(rect, borderColor);
-                
-                    Rect textureRect = rect.Inset(isSelected ? 2 : 1);
-                    if (entry.PreviewTexture != null)
-                    {
-                        EditorGUI.DrawPreviewTexture(
-                            textureRect, entry.PreviewTexture, null, ScaleMode.ScaleToFit, 0.0f);
-                    }
-                    else
-                    {
-                        const float brightness = 0.325f;
-                        EditorGUI.DrawRect(textureRect, new Color(brightness, brightness, brightness));
-                    }
-
-                    // Draw a label with a nice semi-transparent backdrop.
-                    GUIContent title = new GUIContent(entry.Asset.name);
-                    float height = EntryNameTextStyle.CalcHeight(title, textureRect.width);
+                    DrawEntry(index, entrySize, ref didClickASpecificEntry);
                     
-                    EditorGUI.DrawRect(textureRect.GetSubRectFromBottom(height), new Color(0, 0, 0, 0.15f));
-                    EditorGUI.LabelField(textureRect, title, EntryNameTextStyle);
-
                     if (columnIndex < columnCount - 1)
-                        EditorGUILayout.Space(spacing);
+                        EditorGUILayout.Space(EntrySpacing);
                     else
                         GUILayout.FlexibleSpace();
                 }
@@ -935,7 +758,7 @@ namespace RoyTheunissen.PrefabPalette
                 EditorGUILayout.EndHorizontal();
                 
                 if (rowIndex < rowCount - 1)
-                    EditorGUILayout.Space(spacing);
+                    EditorGUILayout.Space(EntrySpacing);
             }
             
             GUILayout.Space(padding);
@@ -948,6 +771,162 @@ namespace RoyTheunissen.PrefabPalette
             }
             
             EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawEntry(int index, int entrySize, ref bool didClickASpecificEntry)
+        {
+            PaletteEntry entry = entriesToDisplay[index];
+
+            Rect rect = GUILayoutUtility.GetRect(
+                0, 0, GUILayout.Width(entrySize), GUILayout.Height(entrySize));
+
+            // Allow this entry to be selected by clicking it.
+            bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && !IsMouseInFooter &&
+                                  !IsMouseInHeader;
+            bool wasAlreadySelected = entriesSelected.Contains(entry);
+            if (Event.current.type == EventType.MouseDown && isMouseOnEntry)
+            {
+                if (Event.current.shift)
+                {
+                    // Shift+click to grow selection until this point.
+                    if (entriesSelected.Count == 0)
+                    {
+                        SelectEntry(entry, true);
+                    }
+                    else
+                    {
+                        if (wasAlreadySelected)
+                        {
+                            // Define a new extremity away from the first individually selected entry.
+                            // Might seem convoluted and with weird edge cases, but this is how Unity does it...
+                            PaletteEntry firstEntryIndividuallySelected = entriesIndividuallySelected[0];
+                            int indexOfFirstIndividuallySelectedEntry =
+                                entriesToDisplay.IndexOf(firstEntryIndividuallySelected);
+                            if (index > indexOfFirstIndividuallySelectedEntry)
+                            {
+                                PaletteEntry lowestSelectedEntry = null;
+                                for (int i = 0; i < entriesToDisplay.Count; i++)
+                                {
+                                    if (entriesSelected.Contains(entriesToDisplay[i]))
+                                    {
+                                        lowestSelectedEntry = entriesToDisplay[i];
+                                        break;
+                                    }
+                                }
+
+                                entriesIndividuallySelected.Clear();
+                                entriesIndividuallySelected.Add(lowestSelectedEntry);
+                                indexOfFirstIndividuallySelectedEntry =
+                                    entriesToDisplay.IndexOf(lowestSelectedEntry);
+                            }
+                            else if (index < indexOfFirstIndividuallySelectedEntry)
+                            {
+                                PaletteEntry highestSelectedEntry = null;
+                                for (int i = entriesToDisplay.Count - 1; i >= 0; i--)
+                                {
+                                    if (entriesSelected.Contains(entriesToDisplay[i]))
+                                    {
+                                        highestSelectedEntry = entriesToDisplay[i];
+                                        break;
+                                    }
+                                }
+
+                                entriesIndividuallySelected.Clear();
+                                entriesIndividuallySelected.Add(highestSelectedEntry);
+                                indexOfFirstIndividuallySelectedEntry =
+                                    entriesToDisplay.IndexOf(highestSelectedEntry);
+                            }
+
+                            SelectEntriesByRange(indexOfFirstIndividuallySelectedEntry, index, true);
+                        }
+                        else
+                        {
+                            // Grow the selection from the last individually selected entry.
+                            PaletteEntry lastEntryIndividuallySelected = entriesIndividuallySelected[^1];
+                            int indexOfLastIndividuallySelectedEntry =
+                                entriesToDisplay.IndexOf(lastEntryIndividuallySelected);
+                            SelectEntriesByRange(indexOfLastIndividuallySelectedEntry, index, false);
+                        }
+                    }
+                }
+                else if (Event.current.control)
+                {
+                    // Control+click to add specific files to the selection.
+                    if (!wasAlreadySelected)
+                        SelectEntry(entry, false);
+                    else
+                        DeselectEntry(entry);
+                }
+                else
+                {
+                    // Regular click to select only this entry.
+                    if (!wasAlreadySelected)
+                        SelectEntry(entry, true);
+
+                    // Allow assets to be opened by double clicking on them.
+                    if (Event.current.clickCount == 2)
+                        entry.Open();
+                }
+
+                didClickASpecificEntry = true;
+                Repaint();
+            }
+            else if (Event.current.type == EventType.MouseUp && isMouseOnEntry && !Event.current.control &&
+                     !Event.current.shift)
+            {
+                // Regular click to select only this entry.
+                SelectEntry(entry, true);
+                Repaint();
+            }
+            else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry && !isResizingFolderPanel)
+            {
+                DragAndDrop.PrepareStartDrag();
+                List<Object> selectedAssets = new List<Object>();
+                foreach (PaletteEntry selectedEntry in entriesSelected)
+                {
+                    if (selectedEntry is PaletteAsset paletteAsset)
+                        selectedAssets.Add(paletteAsset.Asset);
+                }
+
+                DragAndDrop.objectReferences = selectedAssets.ToArray();
+                DragAndDrop.StartDrag("Drag from Asset Palette");
+            }
+
+            bool isSelected = entriesSelected.Contains(entry);
+
+            Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            EditorGUI.DrawRect(rect, borderColor);
+
+            Rect entryVisualsRect = rect.Inset(isSelected ? 2 : 1);
+            // TODO: Draw using property drawer
+            EditorGUI.DrawRect(entryVisualsRect, Color.magenta);
+        }
+
+        private void DrawEntryPanelMessage(bool hasCollection)
+        {
+            GUILayout.FlexibleSpace();
+
+            if (!hasCollection)
+            {
+                EditorGUILayout.LabelField(
+                    "To begin organizing assets, create a collection.", MessageTextStyle);
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    bool shouldCreate = GUILayout.Button("Create", GUILayout.Width(100));
+                    GUILayout.FlexibleSpace();
+
+                    if (shouldCreate)
+                        CreateNewCollection();
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.LabelField("Drag assets here!", MessageTextStyle);
+            }
+
+            GUILayout.FlexibleSpace();
         }
 
         private void DeselectEntry(PaletteEntry entry)
@@ -1053,7 +1032,7 @@ namespace RoyTheunissen.PrefabPalette
         {
             foreach (PaletteEntry entry in entriesToDisplay)
             {
-                if (entry.Asset == asset)
+                if (entry is PaletteAsset paletteAsset && paletteAsset.Asset == asset)
                     return true;
             }
             return false;
@@ -1134,7 +1113,7 @@ namespace RoyTheunissen.PrefabPalette
                 if (HasEntry(draggedAsset))
                     continue;
                     
-                PaletteEntry entry = new PaletteEntry(draggedAsset);
+                PaletteAsset entry = new PaletteAsset(draggedAsset);
                 entriesToDisplay.Add(entry);
                 SelectEntry(entry, false);
             }
