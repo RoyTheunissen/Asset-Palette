@@ -498,7 +498,7 @@ namespace RoyTheunissen.PrefabPalette
                         bool isMouseOver = folderRect.Contains(Event.current.mousePosition);
                         
                         // Dragging and dropping folders.
-                        if (Event.current.type == EventType.MouseDrag && isMouseOver)
+                        if (Event.current.type == EventType.MouseDrag && isMouseOver && !isResizingFolderPanel)
                             StartFolderDrag(folder);
                         if (isDraggingFolder)
                         {
@@ -700,7 +700,8 @@ namespace RoyTheunissen.PrefabPalette
                     prefabsSelected.Clear();
                     Repaint();
                 }
-                else if (IsMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1)
+                else if (IsMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1 &&
+                         !isDraggingFolder && !PaletteFolder.IsFolderBeingRenamed)
                 {
                     CurrentCollectionSerializedObject.Update();
                     SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
