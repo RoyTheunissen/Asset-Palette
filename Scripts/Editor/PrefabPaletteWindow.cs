@@ -499,6 +499,11 @@ namespace RoyTheunissen.PrefabPalette
                             else if (!PaletteFolder.IsFolderBeingRenamed && isMouseOver)
                             {
                                 SelectedFolderIndex = i;
+                                
+                                // Allow starting a rename by clicking on it twice.
+                                if (Event.current.clickCount == 2)
+                                    StartRename(folder);
+                                
                                 Repaint();
                             }
                         }
