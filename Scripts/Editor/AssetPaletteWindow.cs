@@ -947,69 +947,74 @@ namespace RoyTheunissen.PrefabPalette
         private void DropAreaGUI()
         {
             Event @event = Event.current;
-            switch (@event.type)
+            if (@event.type != EventType.DragUpdated && @event.type != EventType.DragPerform)
+                return;
+
+            bool isValidDrag = IsMouseInEntriesPanel && DragAndDrop.objectReferences.Length > 0;
+            if (!isValidDrag)
+                return;
+
+            DragAndDrop.AcceptDrag();
+            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+
+            if (@event.type != EventType.DragPerform)
+                return;
+
+            // Find dragged assets.
+            draggedAssets.Clear();
+            foreach (Object draggedObject in DragAndDrop.objectReferences)
             {
-                case EventType.DragUpdated:
-                case EventType.DragPerform:
-                    if (!IsMouseInEntriesPanel)
-                        return;
-
-                    DragAndDrop.AcceptDrag();
-
-                    // Find dragged assets.
-                    draggedAssets.Clear();
-                    foreach (Object draggedObject in DragAndDrop.objectReferences)
+                string path = AssetDatabase.GetAssetPath(draggedObject);
+                if (AssetDatabase.IsValidFolder(path))
+                {
+                    bool addLinkToFolder = EditorUtility.DisplayDialog(
+                        "Create Folder Entry",
+                        "Do you want to add a link to the folder or the assets within it?", "Link To Folder",
+                        "Assets In Folder");
+                    if (addLinkToFolder)
                     {
-                        string path = AssetDatabase.GetAssetPath(draggedObject);
-                        if (AssetDatabase.IsValidFolder(path))
-                        {
-                            List<string> assetsInDraggedFolder = new List<string>();
-                            string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
-                            string draggedFolderPath = path + Path.AltDirectorySeparatorChar;
-                            foreach (string assetPath in allAssetPaths)
-                            {
-                                if (!assetPath.StartsWith(draggedFolderPath))
-                                    continue;
-                                
-                                assetsInDraggedFolder.Add(assetPath);
-                            }
-                            assetsInDraggedFolder.Sort();
-                            
-                            for (int i = 0; i < assetsInDraggedFolder.Count; i++)
-                            {
-                                Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetsInDraggedFolder[i]);
-                                draggedAssets.Add(asset);
-                            }
-
-                            continue;
-                        }
-                        
-                        if (draggedObject is Object o && (!(draggedObject is GameObject go) || go.IsPrefab()))
-                        {
-                            draggedAssets.Add(o);
-                            continue;
-                        }
-
-                        // Unhandled dragged object. Probably a different asset, like a texture.
+                        // Just add the folder itself.
+                        Object asset = AssetDatabase.LoadAssetAtPath<Object>(path);
+                        draggedAssets.Add(asset);
                     }
-
-                    DragAndDrop.visualMode = draggedAssets.Count > 0
-                        ? DragAndDropVisualMode.Copy
-                        : DragAndDropVisualMode.Rejected;
-
-                    if (@event.type == EventType.DragPerform)
+                    else
                     {
-                        foreach (Object draggedAsset in draggedAssets)
+                        // Find all the assets within this folder.
+                        List<string> assetsInDraggedFolder = new List<string>();
+                        string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
+                        string draggedFolderPath = path + Path.AltDirectorySeparatorChar;
+                        foreach (string assetPath in allAssetPaths)
                         {
-                            if (HasEntry(draggedAsset))
+                            if (!assetPath.StartsWith(draggedFolderPath) || AssetDatabase.IsValidFolder(assetPath))
                                 continue;
-                            
-                            PaletteEntry entry = new PaletteEntry(draggedAsset);
-                            entriesToDisplay.Add(entry);
+
+                            assetsInDraggedFolder.Add(assetPath);
+                        }
+
+                        assetsInDraggedFolder.Sort();
+
+                        for (int i = 0; i < assetsInDraggedFolder.Count; i++)
+                        {
+                            Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetsInDraggedFolder[i]);
+                            draggedAssets.Add(asset);
                         }
                     }
+
+                    continue;
+                }
+                
+                // Basically any Object is fine as long as it's not a scene GameObject.
+                if (!(draggedObject is GameObject go) || go.IsPrefab())
+                    draggedAssets.Add(draggedObject);
+            }
+
+            foreach (Object draggedAsset in draggedAssets)
+            {
+                if (HasEntry(draggedAsset))
+                    continue;
                     
-                    break;
+                PaletteEntry entry = new PaletteEntry(draggedAsset);
+                entriesToDisplay.Add(entry);
             }
         }
     }
