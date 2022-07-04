@@ -815,7 +815,8 @@ namespace RoyTheunissen.PrefabPalette
             if (!PaletteFolder.IsFolderBeingRenamed)
                 return;
 
-            bool isValidRename = !string.IsNullOrEmpty(renameText) && !string.IsNullOrWhiteSpace(renameText);
+            bool isValidRename = !string.IsNullOrEmpty(renameText) && !string.IsNullOrWhiteSpace(renameText) &&
+                                 PaletteFolder.FolderCurrentlyRenaming.Name != renameText;
             if (isValidRename)
             {
                 renameText = GetUniqueFolderName(renameText);
