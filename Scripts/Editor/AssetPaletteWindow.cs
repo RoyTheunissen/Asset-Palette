@@ -683,9 +683,7 @@ namespace RoyTheunissen.PrefabPalette
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
             if (Event.current.control && Event.current.keyCode == KeyCode.A)
             {
-                entriesSelected.Clear();
-                entriesSelected.AddRange(entriesToDisplay);
-                entriesIndividuallySelected.Clear();
+                SelectEntries(entriesToDisplay, true);
                 if (entriesToDisplay.Count > 0)
                     entriesIndividuallySelected.Add(entriesToDisplay[^1]);
                 Repaint();
@@ -702,8 +700,7 @@ namespace RoyTheunissen.PrefabPalette
                         entriesToDisplay.Remove(entry);
                     }
 
-                    entriesSelected.Clear();
-                    entriesIndividuallySelected.Clear();
+                    ClearEntrySelection();
                     Repaint();
                 }
                 else if (IsMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1 &&
@@ -811,8 +808,7 @@ namespace RoyTheunissen.PrefabPalette
                             // Shift+click to grow selection until this point.
                             if (entriesSelected.Count == 0)
                             {
-                                entriesSelected.Add(entry);
-                                entriesIndividuallySelected.Add(entry);
+                                SelectEntry(entry, true);
                             }
                             else
                             {
@@ -855,9 +851,8 @@ namespace RoyTheunissen.PrefabPalette
                                         indexOfFirstIndividuallySelectedEntry =
                                             entriesToDisplay.IndexOf(highestSelectedEntry);
                                     }
-
-                                    entriesSelected.Clear();
-                                    SelectEntries(indexOfFirstIndividuallySelectedEntry, index);
+                                    
+                                    SelectEntriesByRange(indexOfFirstIndividuallySelectedEntry, index, true);
                                 }
                                 else
                                 {
@@ -865,7 +860,7 @@ namespace RoyTheunissen.PrefabPalette
                                     PaletteEntry lastEntryIndividuallySelected = entriesIndividuallySelected[^1];
                                     int indexOfLastIndividuallySelectedEntry =
                                         entriesToDisplay.IndexOf(lastEntryIndividuallySelected);
-                                    SelectEntries(indexOfLastIndividuallySelectedEntry, index);
+                                    SelectEntriesByRange(indexOfLastIndividuallySelectedEntry, index, false);
                                 }
                             }
                         }
@@ -873,26 +868,15 @@ namespace RoyTheunissen.PrefabPalette
                         {
                             // Control+click to add specific files to the selection.
                             if (!wasAlreadySelected)
-                            {
-                                entriesSelected.Add(entry);
-                                entriesIndividuallySelected.Add(entry);
-                            }
+                                SelectEntry(entry, false);
                             else
-                            {
-                                entriesSelected.Remove(entry);
-                                entriesIndividuallySelected.Remove(entry);
-                            }
+                                DeselectEntry(entry);
                         }
                         else
                         {
                             // Regular click to select only this entry.
                             if (!wasAlreadySelected)
-                            {
-                                entriesSelected.Clear();
-                                entriesSelected.Add(entry);
-                                entriesIndividuallySelected.Clear();
-                                entriesIndividuallySelected.Add(entry);
-                            }
+                                SelectEntry(entry, true);
 
                             // Allow assets to be opened by double clicking on them.
                             if (Event.current.clickCount == 2)
@@ -909,10 +893,7 @@ namespace RoyTheunissen.PrefabPalette
                              !Event.current.shift)
                     {
                         // Regular click to select only this entry.
-                        entriesSelected.Clear();
-                        entriesSelected.Add(entry);
-                        entriesIndividuallySelected.Clear();
-                        entriesIndividuallySelected.Add(entry);
+                        SelectEntry(entry, true);
                         Repaint();
                     }
                     else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry)
@@ -962,16 +943,36 @@ namespace RoyTheunissen.PrefabPalette
             // If you didn't click an entry and weren't pressing SHIFT, clear the selection.
             if (Event.current.type == EventType.MouseDown && !didClickASpecificEntry && !Event.current.shift)
             {
-                entriesSelected.Clear();
-                entriesIndividuallySelected.Clear();
+                ClearEntrySelection();
                 Repaint();
             }
             
             EditorGUILayout.EndScrollView();
         }
 
-        private void SelectEntries(int from, int to)
+        private void DeselectEntry(PaletteEntry entry)
         {
+            entriesSelected.Remove(entry);
+            entriesIndividuallySelected.Remove(entry);
+        }
+
+        private void SelectEntry(PaletteEntry entry, bool exclusively)
+        {
+            if (exclusively)
+                ClearEntrySelection();
+            entriesSelected.Add(entry);
+            entriesIndividuallySelected.Add(entry);
+        }
+
+        private void SelectEntriesByRange(int from, int to, bool exclusively)
+        {
+            if (exclusively)
+            {
+                entriesSelected.Clear();
+                // NOTE: Do NOT clear the individually selected entries. These are used to determine from what point we 
+                // define the range. Used for SHIFT-selecting ranges of entries.
+            }
+
             int direction = from <= to ? 1 : -1;
             for (int i = from; i != to; i += direction)
             {
@@ -980,6 +981,23 @@ namespace RoyTheunissen.PrefabPalette
             }
             if (!entriesSelected.Contains(entriesToDisplay[to]))
                 entriesSelected.Add(entriesToDisplay[to]);
+        }
+        
+        private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
+        {
+            if (exclusively)
+                ClearEntrySelection();
+
+            foreach (PaletteEntry entry in entries)
+            {
+                entriesSelected.Add(entry);
+            }
+        }
+
+        private void ClearEntrySelection()
+        {
+            entriesSelected.Clear();
+            entriesIndividuallySelected.Clear();
         }
 
         private void OnLostFocus()
