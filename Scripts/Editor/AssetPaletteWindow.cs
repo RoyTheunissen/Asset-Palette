@@ -801,23 +801,31 @@ namespace RoyTheunissen.PrefabPalette
                     bool wasAlreadySelected = entriesSelected.Contains(entry);
                     if (Event.current.type == EventType.MouseDown && isMouseOnEntry)
                     {
-                        if ((Event.current.modifiers & EventModifiers.Shift) == EventModifiers.Shift &&
-                            !wasAlreadySelected)
+                        if (Event.current.shift && !wasAlreadySelected)
                         {
                             // Shift+click to add.
                             entriesSelected.Add(entry);
                         }
-                        else if ((Event.current.modifiers & EventModifiers.Control) == EventModifiers.Control &&
-                                 !wasAlreadySelected)
+                        else if (Event.current.control && !wasAlreadySelected)
                         {
                             // Control+click to remove.
                             entriesSelected.Remove(entry);
                         }
-                        else if (!wasAlreadySelected)
+                        else
                         {
                             // Regular click to select only this entry.
-                            entriesSelected.Clear();
-                            entriesSelected.Add(entry);
+                            if (!wasAlreadySelected)
+                            {
+                                entriesSelected.Clear();
+                                entriesSelected.Add(entry);
+                            }
+
+                            // Allow assets to be opened by double clicking on them.
+                            if (Event.current.clickCount == 2)
+                            {
+                                Debug.Log($"Opening asset {entry.Asset}");
+                                AssetDatabase.OpenAsset(entry.Asset);
+                            }
                         }
 
                         didClickASpecificEntry = true;
