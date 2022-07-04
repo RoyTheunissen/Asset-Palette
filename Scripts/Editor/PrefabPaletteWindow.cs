@@ -15,17 +15,17 @@ namespace RoyTheunissen.PrefabPalette
     {
         private const string EditorPrefPrefix = "RoyTheunissen/PrefabPalette/";
         private const string CurrentCollectionGUIDEditorPref = EditorPrefPrefix + "CurrentCollectionGUID";
-        private const string NavigationPanelWidthEditorPref = EditorPrefPrefix + "NavigationPanelWidth";
+        private const string FolderPanelWidthEditorPref = EditorPrefPrefix + "FolderPanelWidth";
         private const string ZoomLevelEditorPref = EditorPrefPrefix + "ZoomLevel";
         private const string SelectedFolderIndexEditorPref = EditorPrefPrefix + "SelectedFolderIndex";
 
         private const float PrefabSizeMax = PrefabEntry.TextureSize;
         private const float PrefabSizeMin = PrefabEntry.TextureSize * 0.45f;
         
-        private const float NavigationPanelWidthMin = 100;
+        private const float FolderPanelWidthMin = 100;
         private const float PrefabPanelWidthMin = 200;
         private const float PrefabPanelHeightMin = 50;
-        private const float WindowWidthMin = NavigationPanelWidthMin + PrefabPanelWidthMin;
+        private const float WindowWidthMin = FolderPanelWidthMin + PrefabPanelWidthMin;
         
         private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
@@ -44,9 +44,9 @@ namespace RoyTheunissen.PrefabPalette
         [NonSerialized] private readonly List<GameObject> draggedPrefabs = new List<GameObject>();
         
         private Vector2 prefabPreviewsScrollPosition;
-        private Vector2 navigationPanelScrollPosition;
+        private Vector2 folderPanelScrollPosition;
         
-        [NonSerialized] private bool isResizingNavigationPanel;
+        [NonSerialized] private bool isResizingFolderPanel;
         
         [NonSerialized] private GUIStyle cachedPrefabPreviewTextStyle;
         [NonSerialized] private bool didCachePrefabPreviewTextStyle;
@@ -85,15 +85,15 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
 
-        private float NavigationPanelWidth
+        private float FolderPanelWidth
         {
             get
             {
-                if (!EditorPrefs.HasKey(NavigationPanelWidthEditorPref))
-                    NavigationPanelWidth = NavigationPanelWidthMin;
-                return Mathf.Max(EditorPrefs.GetFloat(NavigationPanelWidthEditorPref), NavigationPanelWidthMin);
+                if (!EditorPrefs.HasKey(FolderPanelWidthEditorPref))
+                    FolderPanelWidth = FolderPanelWidthMin;
+                return Mathf.Max(EditorPrefs.GetFloat(FolderPanelWidthEditorPref), FolderPanelWidthMin);
             }
-            set => EditorPrefs.SetFloat(NavigationPanelWidthEditorPref, value);
+            set => EditorPrefs.SetFloat(FolderPanelWidthEditorPref, value);
         }
         
         private string CurrentCollectionGuid
@@ -223,10 +223,10 @@ namespace RoyTheunissen.PrefabPalette
         private bool IsMouseInHeader => Event.current.mousePosition.y <= HeaderHeight;
         private bool IsMouseInFooter => Event.current.mousePosition.y >= position.height - FooterHeight;
 
-        private bool IsMouseInNavigationPanel =>
-            !IsMouseInHeader && Event.current.mousePosition.x < NavigationPanelWidth;
+        private bool IsMouseInFolderPanel =>
+            !IsMouseInHeader && Event.current.mousePosition.x < FolderPanelWidth;
         
-        private bool IsMouseInPrefabPanel => !IsMouseInNavigationPanel && !IsMouseInFooter;
+        private bool IsMouseInPrefabPanel => !IsMouseInFolderPanel && !IsMouseInFooter;
 
         [MenuItem ("Window/General/Prefab Palette")]
         public static void Init() 
@@ -246,7 +246,7 @@ namespace RoyTheunissen.PrefabPalette
             {
                 EditorGUILayout.BeginVertical();
                 {
-                    DrawNavigationPanel();
+                    DrawFolderPanel();
                 }
                 EditorGUILayout.EndVertical();
 
@@ -281,7 +281,7 @@ namespace RoyTheunissen.PrefabPalette
             bool hasMultipleFolderTypes = FolderTypes.Length > 1;
             int newFolderButtonWidth = 76 + (hasMultipleFolderTypes ? 9 : 0);
             Rect newFolderRect = new Rect(
-                NavigationPanelWidth - newFolderButtonWidth, 0, newFolderButtonWidth, headerRect.height);
+                FolderPanelWidth - newFolderButtonWidth, 0, newFolderButtonWidth, headerRect.height);
             GUI.enabled = CurrentCollection != null;
             bool createNewFolder = GUI.Button(
                 newFolderRect, "New Folder", hasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
@@ -444,14 +444,14 @@ namespace RoyTheunissen.PrefabPalette
             CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private void DrawNavigationPanel()
+        private void DrawFolderPanel()
         {
             // It seems like mouse down events only trigger inside the scroll view if we check it from inside there.
             bool didClickAnywhereInWindow = Event.current.type == EventType.MouseDown;
 
-            navigationPanelScrollPosition = EditorGUILayout.BeginScrollView(
-                navigationPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
-                GUILayout.Width(NavigationPanelWidth));
+            folderPanelScrollPosition = EditorGUILayout.BeginScrollView(
+                folderPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
+                GUILayout.Width(FolderPanelWidth));
 
             EnsureFolderExists();
 
@@ -467,7 +467,7 @@ namespace RoyTheunissen.PrefabPalette
                     {
                         SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
                         float folderHeight = EditorGUI.GetPropertyHeight(folderProperty, GUIContent.none, true);
-                        float folderWidth = NavigationPanelWidth;
+                        float folderWidth = FolderPanelWidth;
                         Rect folderRect = GUILayoutUtility.GetRect(folderWidth, folderHeight);
                         bool isSelected = SelectedFolderIndex == i;
                         if (isSelected)
@@ -514,14 +514,14 @@ namespace RoyTheunissen.PrefabPalette
             
             EditorGUILayout.EndScrollView();
 
-            DrawResizableNavigationPanelDivider();
+            DrawResizableFolderPanelDivider();
         }
 
-        private void DrawResizableNavigationPanelDivider()
+        private void DrawResizableFolderPanelDivider()
         {
             const int thickness = 1;
             Rect dividerRect = new Rect(
-                NavigationPanelWidth - thickness, HeaderHeight, thickness, position.height);
+                FolderPanelWidth - thickness, HeaderHeight, thickness, position.height);
             EditorGUI.DrawRect(dividerRect, DividerColor);
 
             const int expansion = 1;
@@ -532,26 +532,26 @@ namespace RoyTheunissen.PrefabPalette
 
             if (Event.current.type == EventType.MouseDown && resizeRect.Contains(Event.current.mousePosition))
             {
-                isResizingNavigationPanel = true;
+                isResizingFolderPanel = true;
             }
 
-            if (isResizingNavigationPanel &&
+            if (isResizingFolderPanel &&
                 (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag))
             {
-                NavigationPanelWidth = Mathf.Clamp(
-                    Event.current.mousePosition.x, NavigationPanelWidthMin, position.width - PrefabPanelWidthMin);
+                FolderPanelWidth = Mathf.Clamp(
+                    Event.current.mousePosition.x, FolderPanelWidthMin, position.width - PrefabPanelWidthMin);
                 Repaint();
             }
 
             if (Event.current.type == EventType.MouseUp)
-                isResizingNavigationPanel = false;
+                isResizingFolderPanel = false;
         }
 
         private void DrawFooter()
         {
             Rect separatorRect = new Rect(
-                NavigationPanelWidth,
-                position.height - FooterHeight, position.width - NavigationPanelWidth, 1);
+                FolderPanelWidth,
+                position.height - FooterHeight, position.width - FolderPanelWidth, 1);
                 
             EditorGUI.DrawRect(separatorRect, DividerColor);
 
@@ -606,7 +606,7 @@ namespace RoyTheunissen.PrefabPalette
                     prefabsSelected.Clear();
                     Repaint();
                 }
-                else if (IsMouseInNavigationPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1)
+                else if (IsMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1)
                 {
                     CurrentCollectionSerializedObject.Update();
                     SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
@@ -621,7 +621,7 @@ namespace RoyTheunissen.PrefabPalette
         {
             prefabPreviewsScrollPosition = GUILayout.BeginScrollView(
                 prefabPreviewsScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
-            Rect prefabPanelRect = new Rect(0, 0, position.width - NavigationPanelWidth, 90000000);
+            Rect prefabPanelRect = new Rect(0, 0, position.width - FolderPanelWidth, 90000000);
             EditorGUI.DrawRect(prefabPanelRect, new Color(0, 0, 0, 0.1f));
 
             PrefabPaletteCollection currentCollection = CurrentCollection;
@@ -657,7 +657,7 @@ namespace RoyTheunissen.PrefabPalette
                 return;
             }
             
-            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - NavigationPanelWidth;
+            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - FolderPanelWidth;
 
             const float padding = 2;
             const float spacing = 2;
