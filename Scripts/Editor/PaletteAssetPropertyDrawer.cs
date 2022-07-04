@@ -31,8 +31,9 @@ namespace RoyTheunissen.PrefabPalette.Editor
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            // Draw the texture.
             PaletteAsset entry = property.GetValue<PaletteAsset>();
+
+            // Draw the texture.
             if (entry.PreviewTexture != null)
             {
                 EditorGUI.DrawPreviewTexture(
@@ -42,13 +43,22 @@ namespace RoyTheunissen.PrefabPalette.Editor
             {
                 const float brightness = 0.325f;
                 EditorGUI.DrawRect(position, new Color(brightness, brightness, brightness));
+                
+                // If we don't have a nice rendered preview, draw an icon instead.
+                Texture2D iconTexture = AssetPreview.GetMiniThumbnail(entry.Asset);
+                float width = Mathf.Min(iconTexture.width, position.width * 0.75f);
+                Vector2 size = new Vector2(width, width);
+                Rect iconRect = new Rect(position.center - size / 2, size);
+                
+                if (iconTexture != null)
+                    GUI.DrawTexture(iconRect, iconTexture, ScaleMode.ScaleToFit);
             }
             
             // Draw a label with a nice semi-transparent backdrop.
             GUIContent title = new GUIContent(entry.Asset.name);
             float height = EntryNameTextStyle.CalcHeight(title, position.width);
-                    
-            EditorGUI.DrawRect(position.GetSubRectFromBottom(height), new Color(0, 0, 0, 0.15f));
+            Rect labelRect = position.GetSubRectFromBottom(height);
+            EditorGUI.DrawRect(labelRect, new Color(0, 0, 0, 0.15f));
             EditorGUI.LabelField(position, title, EntryNameTextStyle);
         }
     }
