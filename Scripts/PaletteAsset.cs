@@ -59,7 +59,6 @@ namespace RoyTheunissen.PrefabPalette
         public override void Open()
         {
 #if UNITY_EDITOR
-            Debug.Log($"Opening asset {Asset}");
             UnityEditor.AssetDatabase.OpenAsset(Asset);
 #endif // UNITY_EDITOR
         }
