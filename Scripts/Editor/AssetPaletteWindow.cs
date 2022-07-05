@@ -59,7 +59,7 @@ namespace RoyTheunissen.PrefabPalette
         [NonSerialized] private bool isResizingFolderPanel;
 
         [NonSerialized] private GUIStyle cachedMessageTextStyle;
-        private bool didCacheMessageTextStyle;
+        [NonSerialized] private bool didCacheMessageTextStyle;
         private GUIStyle MessageTextStyle
         {
             get
