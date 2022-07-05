@@ -13,6 +13,13 @@ namespace RoyTheunissen.PrefabPalette
     /// </summary>
     public class AssetPaletteWindow : EditorWindow
     {
+        public enum AddFolderBehaviour
+        {
+            Undefined,
+            AddShortcutToFolder,
+            AddFolderContents,
+        }
+        
         private const string EditorPrefPrefix = "RoyTheunissen/PrefabPalette/";
         private const string CurrentCollectionGUIDEditorPref = EditorPrefPrefix + "CurrentCollectionGUID";
         private const string FolderPanelWidthEditorPref = EditorPrefPrefix + "FolderPanelWidth";
@@ -50,9 +57,7 @@ namespace RoyTheunissen.PrefabPalette
         
         [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
         [NonSerialized] private readonly List<PaletteEntry> entriesIndividuallySelected = new List<PaletteEntry>();
-        
-        [NonSerialized] private readonly List<Object> draggedAssets = new List<Object>();
-        
+
         private Vector2 entriesPreviewsScrollPosition;
         private Vector2 folderPanelScrollPosition;
         
@@ -258,11 +263,15 @@ namespace RoyTheunissen.PrefabPalette
         [NonSerialized] private bool isDraggingFolder;
         [NonSerialized] private int currentFolderDragIndex;
         [NonSerialized] private int folderToDragIndex;
+        
+        [NonSerialized] private AddFolderBehaviour addFolderBehaviour;
+        [NonSerialized] private readonly List<Object> draggedObjectsToProcess = new List<Object>();
+        [NonSerialized] private readonly List<PaletteEntry> entriesToAddFromDraggedAssets = new List<PaletteEntry>();
 
-        private bool isMouseInHeader;
-        private bool isMouseInFooter;
-        private bool isMouseInFolderPanel;
-        private bool isMouseInEntriesPanel;
+        [NonSerialized] private bool isMouseInHeader;
+        [NonSerialized] private bool isMouseInFooter;
+        [NonSerialized] private bool isMouseInFolderPanel;
+        [NonSerialized] private bool isMouseInEntriesPanel;
 
         [MenuItem ("Window/General/Asset Palette")]
         public static void Init() 
@@ -290,7 +299,7 @@ namespace RoyTheunissen.PrefabPalette
 
                 EditorGUILayout.BeginVertical();
                 {
-                    DropAreaGUI();
+                    HandleAssetDropping();
 
                     DrawEntriesPanel();
 
@@ -741,12 +750,16 @@ namespace RoyTheunissen.PrefabPalette
             return SelectedFolder.Entries[index];
         }
         
-        private void AddEntry(PaletteAsset entry)
+        private void AddEntry(PaletteEntry entry, bool partOfMultipleAdditions)
         {
-            CurrentCollectionSerializedObject.Update();
+            if (!partOfMultipleAdditions)
+                CurrentCollectionSerializedObject.Update();
+            
             SerializedProperty newEntryProperty = SelectedFolderEntriesSerializedProperty.AddArrayElement();
             newEntryProperty.managedReferenceValue = entry;
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            
+            if (!partOfMultipleAdditions)
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
             
             SelectEntry(entry, false);
         }
@@ -1148,7 +1161,7 @@ namespace RoyTheunissen.PrefabPalette
             Repaint();
         }
 
-        private bool HasEntry(Object asset)
+        private bool HasEntryForAsset(Object asset)
         {
             foreach (PaletteEntry entry in GetEntries())
             {
@@ -1158,7 +1171,7 @@ namespace RoyTheunissen.PrefabPalette
             return false;
         }
 
-        private void DropAreaGUI()
+        private void HandleAssetDropping()
         {
             Event @event = Event.current;
             if (@event.type != EventType.DragUpdated && @event.type != EventType.DragPerform)
@@ -1176,73 +1189,139 @@ namespace RoyTheunissen.PrefabPalette
             if (@event.type != EventType.DragPerform)
                 return;
 
-            // Find dragged assets.
-            draggedAssets.Clear();
-            foreach (Object draggedObject in DragAndDrop.objectReferences)
+            // Determine what entries are to be added as a result of these assets being dropped. Note that we may have
+            // to ask the user how they want to handle certain special assets like folders. Because of a Unity bug this
+            // means that processing will stop, a context menu will be displayed, two frames will have to be waited,
+            // and THEN processing can resume. This bug doesn't seem to happen with Dialogs, only context menus. I
+            // prefer to use context menus regardless because it's faster and less jarring for the user.
+            draggedObjectsToProcess.Clear();
+            draggedObjectsToProcess.AddRange(DragAndDrop.objectReferences);
+            entriesToAddFromDraggedAssets.Clear();
+            addFolderBehaviour = AddFolderBehaviour.Undefined;
+            ProcessDraggedObjects();
+        }
+
+        private void ResumeDraggedObjectProcessing()
+        {
+            // BUG: We need to wait two frames before we resume. Not sure why. It has something to do with GenericMenu
+            // and serialized objects, I think. Might be related to threads? I couldn't find anything online.
+            // If we don't wait, the new entries will be added but will disappear again immediately, without any call
+            // being mode to remove the entries.
+            EditorApplication.delayCall += () => EditorApplication.delayCall += ProcessDraggedObjects;
+        }
+
+        private void ProcessDraggedObjects()
+        {
+            while (draggedObjectsToProcess.Count > 0)
             {
-                string path = AssetDatabase.GetAssetPath(draggedObject);
-                if (AssetDatabase.IsValidFolder(path))
-                {
-                    bool addAssetsInsideFolder = EditorUtility.DisplayDialog(
-                        "Create Folder Entry",
-                        "Do you want to add a shortcut to the folder or the assets within it?",
-                        "Assets Inside Folder", "Shortcut To Folder");
-                    
-                    // Focus the window again straight away, this way you can drag assets into the window, have them
-                    // all be selected and be able to delete them all straight away if it was done by accident.
-                    Focus();
-                    
-                    if (addAssetsInsideFolder)
-                    {
-                        // Find all the assets within this folder.
-                        List<string> assetsInDraggedFolder = new List<string>();
-                        string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
-                        string draggedFolderPath = path + Path.AltDirectorySeparatorChar;
-                        foreach (string assetPath in allAssetPaths)
-                        {
-                            if (!assetPath.StartsWith(draggedFolderPath) || AssetDatabase.IsValidFolder(assetPath))
-                                continue;
+                Object draggedObject = draggedObjectsToProcess[0];
 
-                            assetsInDraggedFolder.Add(assetPath);
-                        }
-
-                        assetsInDraggedFolder.Sort();
-
-                        for (int i = 0; i < assetsInDraggedFolder.Count; i++)
-                        {
-                            Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetsInDraggedFolder[i]);
-                            draggedAssets.Add(asset);
-                        }
-                    }
-                    else
-                    {
-                        // Just add the folder itself.
-                        Object asset = AssetDatabase.LoadAssetAtPath<Object>(path);
-                        draggedAssets.Add(asset);
-                    }
-
-                    continue;
-                }
+                TryProcessDraggedObject(draggedObject, out bool needsToAskForUserInputFirst);
                 
-                // Basically any Object is fine as long as it's not a scene GameObject.
-                if (!(draggedObject is GameObject go) || go.IsPrefab())
-                    draggedAssets.Add(draggedObject);
+                if (needsToAskForUserInputFirst)
+                    return;
+                
+                // We processed it!
+                draggedObjectsToProcess.RemoveAt(0);
             }
 
-            bool addedAnEntry = false;
-            foreach (Object draggedAsset in draggedAssets)
-            {
-                if (HasEntry(draggedAsset))
-                    continue;
+            AddEntriesFromDraggedAssets();
+        }
 
+        private void TryProcessDraggedObject(Object draggedObject, out bool needsToAskForUserInputFirst)
+        {
+            needsToAskForUserInputFirst = false;
+            
+            string path = AssetDatabase.GetAssetPath(draggedObject);
+            if (AssetDatabase.IsValidFolder(path))
+            {
+                // If we don't know what to do with folders, figure that out first.
+                if (addFolderBehaviour == AddFolderBehaviour.Undefined)
+                {
+                    GenericMenu menu = new GenericMenu();
+                    menu.AddItem(
+                        new GUIContent("Add Folder Contents"), false, SetAddFolderBehaviourAndResumeProcessing,
+                        AddFolderBehaviour.AddFolderContents);
+                    menu.AddItem(
+                        new GUIContent("Add Shortcut To Folder"), false, SetAddFolderBehaviourAndResumeProcessing,
+                        AddFolderBehaviour.AddShortcutToFolder);
+                    menu.ShowAsContext();
+                    needsToAskForUserInputFirst = true;
+                    return;
+                }
+                
+                if (addFolderBehaviour == AddFolderBehaviour.AddFolderContents)
+                    AddFolderContents(draggedObject);
+                else if (addFolderBehaviour == AddFolderBehaviour.AddShortcutToFolder)
+                    AddShortcutToFolder(draggedObject);
+                return;
+            }
+
+            // Basically any Object is fine as long as it's not a scene GameObject.
+            if ((!(draggedObject is GameObject go) || go.IsPrefab()) && !HasEntryForAsset(draggedObject))
+                entriesToAddFromDraggedAssets.Add(new PaletteAsset(draggedObject));
+        }
+
+        private void AddEntriesFromDraggedAssets()
+        {
+            if (entriesToAddFromDraggedAssets.Count == 0)
+                return;
+            
+            bool addedAnEntry = false;
+            CurrentCollectionSerializedObject.Update();
+            foreach (PaletteEntry entry in entriesToAddFromDraggedAssets)
+            {
                 if (!addedAnEntry)
                 {
                     ClearEntrySelection();
                     addedAnEntry = true;
                 }
-                    
-                PaletteAsset entry = new PaletteAsset(draggedAsset);
-                AddEntry(entry);
+                
+                AddEntry(entry, true);
+            }
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            entriesToAddFromDraggedAssets.Clear();
+            
+            Repaint();
+        }
+        
+        private void SetAddFolderBehaviourAndResumeProcessing(object userdata)
+        {
+            addFolderBehaviour = (AddFolderBehaviour)userdata;
+            
+            ResumeDraggedObjectProcessing();
+        }
+
+        private void AddShortcutToFolder(Object folder)
+        {
+            entriesToAddFromDraggedAssets.Add(new PaletteAsset(folder));
+        }
+
+        private void AddFolderContents(Object folder)
+        {
+            string path = AssetDatabase.GetAssetPath(folder);
+
+            // Find all the assets within this folder.
+            List<string> assetsInDraggedFolder = new List<string>();
+            string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
+            string draggedFolderPath = path + Path.AltDirectorySeparatorChar;
+            foreach (string assetPath in allAssetPaths)
+            {
+                if (!assetPath.StartsWith(draggedFolderPath) || AssetDatabase.IsValidFolder(assetPath))
+                    continue;
+
+                assetsInDraggedFolder.Add(assetPath);
+            }
+
+            assetsInDraggedFolder.Sort();
+
+            for (int i = 0; i < assetsInDraggedFolder.Count; i++)
+            {
+                Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetsInDraggedFolder[i]);
+                if (HasEntryForAsset(asset))
+                    continue;
+                
+                entriesToAddFromDraggedAssets.Add(new PaletteAsset(asset));
             }
         }
     }
