@@ -45,6 +45,8 @@ namespace RoyTheunissen.PrefabPalette
         private const string NewFolderName = "New Folder";
         private const int MaxUniqueFolderNameAttempts = 100;
         
+        private const string ZoomLevelControlName = "AssetPaletteEntriesZoomLevelControl";
+        
         [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
         [NonSerialized] private readonly List<PaletteEntry> entriesIndividuallySelected = new List<PaletteEntry>();
         
@@ -164,6 +166,8 @@ namespace RoyTheunissen.PrefabPalette
             }
             set => EditorPrefs.SetFloat(ZoomLevelEditorPref, value);
         }
+
+        private bool IsZoomLevelFocused => GUI.GetNameOfFocusedControl() == ZoomLevelControlName;
         
         private int SelectedFolderIndex
         {
@@ -254,13 +258,10 @@ namespace RoyTheunissen.PrefabPalette
         [NonSerialized] private int currentFolderDragIndex;
         [NonSerialized] private int folderToDragIndex;
 
-        private bool IsMouseInHeader => Event.current.mousePosition.y <= HeaderHeight;
-        private bool IsMouseInFooter => Event.current.mousePosition.y >= position.height - FooterHeight;
-
-        private bool IsMouseInFolderPanel =>
-            !IsMouseInHeader && Event.current.mousePosition.x < FolderPanelWidth;
-        
-        private bool IsMouseInEntriesPanel => !IsMouseInFolderPanel && !IsMouseInFooter;
+        private bool isMouseInHeader;
+        private bool isMouseInFooter;
+        private bool isMouseInFolderPanel;
+        private bool isMouseInEntriesPanel;
 
         [MenuItem ("Window/General/Asset Palette")]
         public static void Init() 
@@ -272,8 +273,10 @@ namespace RoyTheunissen.PrefabPalette
 
         private void OnGUI()
         {
-            PerformKeyboardShortcuts();
+            UpdateMouseOverStates();
             
+            PerformKeyboardShortcuts();
+
             DrawHeader();
             
             EditorGUILayout.BeginHorizontal();
@@ -295,6 +298,17 @@ namespace RoyTheunissen.PrefabPalette
                 EditorGUILayout.EndVertical();
             }
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void UpdateMouseOverStates()
+        {
+            // Need to do this here, because Event.current.mousePosition is relative to any scrollviews, so doing these
+            // same checks within say the entries panel will yield different results.
+            isMouseInHeader = Event.current.mousePosition.y <= HeaderHeight;
+            isMouseInFooter = Event.current.mousePosition.y >= position.height - FooterHeight;
+            isMouseInFolderPanel = !isMouseInHeader && Event.current.mousePosition.x < FolderPanelWidth;
+
+            isMouseInEntriesPanel = !isMouseInHeader && !isMouseInFooter && !isMouseInFolderPanel;
         }
 
         private void DrawHeader()
@@ -471,7 +485,7 @@ namespace RoyTheunissen.PrefabPalette
 
         private void DrawFolderPanel()
         {
-            // It seems like mouse down events only trigger inside the scroll view if we check it from inside there.
+            // It seems like mouse events are relative to scroll views.
             bool didClickAnywhereInWindow = Event.current.type == EventType.MouseDown;
 
             folderPanelScrollPosition = EditorGUILayout.BeginScrollView(
@@ -501,7 +515,7 @@ namespace RoyTheunissen.PrefabPalette
             if (isDraggingFolder && Event.current.type == EventType.DragUpdated ||
                 Event.current.type == EventType.DragPerform)
             {
-                if (!IsMouseInFolderPanel)
+                if (!isMouseInFolderPanel)
                     DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
                 else
                 {
@@ -685,6 +699,7 @@ namespace RoyTheunissen.PrefabPalette
                     GUILayout.FlexibleSpace();
                     Rect zoomLevelRect = GUILayoutUtility.GetRect(80, EditorGUIUtility.singleLineHeight);
 
+                    GUI.SetNextControlName(ZoomLevelControlName);
                     ZoomLevel = GUI.HorizontalSlider(zoomLevelRect, ZoomLevel, 0.0f, 1.0f);
 
                     GUILayout.Space(16);
@@ -757,7 +772,7 @@ namespace RoyTheunissen.PrefabPalette
 
             if (Event.current.keyCode == KeyCode.Delete)
             {
-                if (IsMouseInEntriesPanel)
+                if (isMouseInEntriesPanel)
                 {
                     // Pressing Delete will remove all selected entries from the palette.
                     foreach (PaletteEntry entry in entriesSelected)
@@ -768,7 +783,7 @@ namespace RoyTheunissen.PrefabPalette
                     ClearEntrySelection();
                     Repaint();
                 }
-                else if (IsMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1 &&
+                else if (isMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1 &&
                          !isDraggingFolder && !PaletteFolder.IsFolderBeingRenamed)
                 {
                     CurrentCollectionSerializedObject.Update();
@@ -784,7 +799,7 @@ namespace RoyTheunissen.PrefabPalette
         {
             entriesPreviewsScrollPosition = GUILayout.BeginScrollView(
                 entriesPreviewsScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
-            
+
             // Draw a dark background for the entries panel.
             Rect entriesPanelRect = new Rect(0, 0, position.width - FolderPanelWidth, 90000000);
             EditorGUI.DrawRect(entriesPanelRect, new Color(0, 0, 0, 0.1f));
@@ -865,8 +880,7 @@ namespace RoyTheunissen.PrefabPalette
                 0, 0, GUILayout.Width(entrySize), GUILayout.Height(entrySize));
 
             // Allow this entry to be selected by clicking it.
-            bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && !IsMouseInFooter &&
-                                  !IsMouseInHeader;
+            bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && isMouseInEntriesPanel;
             bool wasAlreadySelected = entriesSelected.Contains(entry);
             if (Event.current.type == EventType.MouseDown && isMouseOnEntry)
             {
@@ -961,8 +975,9 @@ namespace RoyTheunissen.PrefabPalette
                 Repaint();
             }
             else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry && !isResizingFolderPanel &&
-                     IsMouseInEntriesPanel)
+                     isMouseInEntriesPanel && !IsZoomLevelFocused)
             {
+                bool isMouseInFooter = this.isMouseInFooter;
                 DragAndDrop.PrepareStartDrag();
                 List<Object> selectedAssets = new List<Object>();
                 foreach (PaletteEntry selectedEntry in entriesSelected)
@@ -1128,7 +1143,7 @@ namespace RoyTheunissen.PrefabPalette
             if (@event.type != EventType.DragUpdated && @event.type != EventType.DragPerform)
                 return;
 
-            bool isValidDrag = IsMouseInEntriesPanel && DragAndDrop.objectReferences.Length > 0;
+            bool isValidDrag = isMouseInEntriesPanel && DragAndDrop.objectReferences.Length > 0;
             if (!isValidDrag)
                 return;
 
