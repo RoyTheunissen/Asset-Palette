@@ -37,7 +37,7 @@ namespace RoyTheunissen.PrefabPalette
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
         private static readonly float WindowHeightMin = FooterHeight + HeaderHeight + PrefabPanelHeightMin;
 
-        private const float EntrySpacing = 2;
+        private const float EntrySpacing = 4;
         
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
@@ -534,7 +534,7 @@ namespace RoyTheunissen.PrefabPalette
 
         private void DrawFolders(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
         {
-            Color selectionColor = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).settings.selectionColor;
+            Color selectionColor = SelectionColor;
             selectionColor.a = 0.25f;
 
             for (int i = 0; i < foldersProperty.arraySize; i++)
@@ -612,6 +612,21 @@ namespace RoyTheunissen.PrefabPalette
                         Repaint();
                     }
                 }
+            }
+        }
+
+        private Color cachedSelectionColor;
+        private bool didCacheSelectionColor;
+        private Color SelectionColor
+        {
+            get
+            {
+                if (!didCacheSelectionColor)
+                {
+                    didCacheSelectionColor = true;
+                    cachedSelectionColor = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).settings.selectionColor;
+                }
+                return cachedSelectionColor;
             }
         }
 
@@ -995,10 +1010,14 @@ namespace RoyTheunissen.PrefabPalette
             bool isSelected = entriesSelected.Contains(entry);
 
             Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            EditorGUI.DrawRect(rect, borderColor);
+            float borderWidth = isSelected ? 2 : 1;
+            Rect borderRect = rect.Expand(borderWidth);
+            GUI.DrawTexture(
+                borderRect, EditorGUIUtility.whiteTexture, ScaleMode.ScaleToFit, true, 0.0f, borderColor, borderWidth,
+                borderWidth);
 
             // Actually draw the contents of the entry.
-            Rect entryContentsRect = rect.Inset(isSelected ? 2 : 1);
+            Rect entryContentsRect = rect;
             SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
             EditorGUI.PropertyField(entryContentsRect, entryProperty, GUIContent.none);
         }
