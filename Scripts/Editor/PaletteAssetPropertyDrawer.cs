@@ -31,6 +31,10 @@ namespace RoyTheunissen.PrefabPalette.Editor
         
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            // OPTIMIZATION: Don't bother with any of this if we're not currently drawing.
+            if (Event.current.type != EventType.Repaint)
+                return;
+            
             PaletteAsset entry = property.GetValue<PaletteAsset>();
 
             // Draw the texture.

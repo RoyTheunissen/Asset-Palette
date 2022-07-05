@@ -55,7 +55,7 @@ namespace RoyTheunissen.PrefabPalette
         
         [NonSerialized] private bool isResizingFolderPanel;
 
-        private GUIStyle cachedMessageTextStyle;
+        [NonSerialized] private GUIStyle cachedMessageTextStyle;
         private bool didCacheMessageTextStyle;
         private GUIStyle MessageTextStyle
         {
@@ -103,7 +103,7 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
 
-        private AssetPaletteCollection cachedCurrentCollection;
+        [NonSerialized] private AssetPaletteCollection cachedCurrentCollection;
         private AssetPaletteCollection CurrentCollection
         {
             get
@@ -135,12 +135,15 @@ namespace RoyTheunissen.PrefabPalette
                     CurrentCollectionGuid = null;
                     return;
                 }
+                
+                // Need to cache the serialized property now.
+                didCacheSelectedFolderSerializedProperty = false;
 
                 CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
             }
         }
         
-        private SerializedObject cachedCurrentCollectionSerializedObject;
+        [NonSerialized] private SerializedObject cachedCurrentCollectionSerializedObject;
         private SerializedObject CurrentCollectionSerializedObject
         {
             get
@@ -179,6 +182,9 @@ namespace RoyTheunissen.PrefabPalette
                 
                 EditorPrefs.SetInt(SelectedFolderIndexEditorPref, clampedValue);
                 
+                // Need to clear the cached serializedproperty now.
+                didCacheSelectedFolderSerializedProperty = false;
+                
                 // If you change the folder that's selected, we need to clear the selection.
                 ClearEntrySelection();
             }
@@ -191,25 +197,42 @@ namespace RoyTheunissen.PrefabPalette
                 EnsureFolderExists();
                 return CurrentCollection.Folders[SelectedFolderIndex];
             }
-            set
-            {
-                // TODO: Respect hierarchy.
-                SelectedFolderIndex = CurrentCollection.Folders.IndexOf(value);
-            }
+            set => SelectedFolderIndex = CurrentCollection.Folders.IndexOf(value);
         }
-        
+
+        [NonSerialized] private bool didCacheSelectedFolderSerializedProperty;
+        [NonSerialized] private SerializedProperty cachedSelectedFolderSerializedProperty;
         private SerializedProperty SelectedFolderSerializedProperty
         {
             get
             {
-                EnsureFolderExists();
-                return CurrentCollectionSerializedObject.FindProperty("folders")
-                    .GetArrayElementAtIndex(SelectedFolderIndex);
+                if (!didCacheSelectedFolderSerializedProperty)
+                {
+                    EnsureFolderExists();
+                    didCacheSelectedFolderSerializedProperty = true;
+                    cachedSelectedFolderSerializedProperty = CurrentCollectionSerializedObject.FindProperty("folders")
+                        .GetArrayElementAtIndex(SelectedFolderIndex);
+                }
+
+                return cachedSelectedFolderSerializedProperty;
             }
         }
-
-        private SerializedProperty SelectedFolderEntriesSerializedProperty =>
-            SelectedFolderSerializedProperty.FindPropertyRelative("entries");
+        
+        [NonSerialized] private bool didCacheSelectedFolderEntriesSerializedProperty;
+        [NonSerialized] private SerializedProperty cachedSelectedFolderEntriesSerializedProperty;
+        private SerializedProperty SelectedFolderEntriesSerializedProperty
+        {
+            get
+            {
+                if (!didCacheSelectedFolderEntriesSerializedProperty)
+                {
+                    didCacheSelectedFolderEntriesSerializedProperty = true;
+                    cachedSelectedFolderEntriesSerializedProperty =
+                        SelectedFolderSerializedProperty.FindPropertyRelative("entries");
+                }
+                return cachedSelectedFolderEntriesSerializedProperty;
+            }
+        }
 
         [NonSerialized] private static Type[] cachedFolderTypes;
         [NonSerialized] private static bool didCacheFolderTypes;
@@ -335,7 +358,6 @@ namespace RoyTheunissen.PrefabPalette
             
             bool alreadyTaken = false;
             
-            // TODO: Respect folder hierarchy
             foreach (PaletteFolder folder in CurrentCollection.Folders)
             {
                 if (folder.Name == desiredName)
@@ -438,16 +460,12 @@ namespace RoyTheunissen.PrefabPalette
 
         private void EnsureFolderExists()
         {
+            if (CurrentCollection.Folders.Count > 0)
+                return;
+            
+            // Make sure there is at least one folder.
             CurrentCollectionSerializedObject.Update();
-            if (CurrentCollection != null)
-            {
-                using (SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders"))
-                {
-                    // Make sure there is at least one folder.
-                    if (foldersProperty.arraySize == 0)
-                        CreateNewFolder<PaletteFolder>(InitialFolderName);
-                }
-            }
+            CreateNewFolder<PaletteFolder>(InitialFolderName);
             CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 
