@@ -20,6 +20,7 @@ namespace RoyTheunissen.PrefabPalette
         private const string SelectedFolderIndexEditorPref = EditorPrefPrefix + "SelectedFolderIndex";
 
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
+        private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
 
         public const int EntrySizeMax = 128;
         private const float EntrySizeMin = EntrySizeMax * 0.45f;
@@ -977,7 +978,6 @@ namespace RoyTheunissen.PrefabPalette
             else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry && !isResizingFolderPanel &&
                      isMouseInEntriesPanel && !IsZoomLevelFocused)
             {
-                bool isMouseInFooter = this.isMouseInFooter;
                 DragAndDrop.PrepareStartDrag();
                 List<Object> selectedAssets = new List<Object>();
                 foreach (PaletteEntry selectedEntry in entriesSelected)
@@ -987,6 +987,8 @@ namespace RoyTheunissen.PrefabPalette
                 }
 
                 DragAndDrop.objectReferences = selectedAssets.ToArray();
+                // Mark the drag as being an asset palette entry drag, so we know not to accept it again ourselves.
+                DragAndDrop.SetGenericData(EntryDragGenericDataType, true);
                 DragAndDrop.StartDrag("Drag from Asset Palette");
             }
 
@@ -1143,7 +1145,9 @@ namespace RoyTheunissen.PrefabPalette
             if (@event.type != EventType.DragUpdated && @event.type != EventType.DragPerform)
                 return;
 
-            bool isValidDrag = isMouseInEntriesPanel && DragAndDrop.objectReferences.Length > 0;
+            // NOTE: Ignore assets that are being dragged OUT of the entries panel as opposed to being dragged INTO it.
+            bool isValidDrag = isMouseInEntriesPanel && DragAndDrop.objectReferences.Length > 0 &&
+                               DragAndDrop.GetGenericData(EntryDragGenericDataType) == null;
             if (!isValidDrag)
                 return;
 
@@ -1206,11 +1210,17 @@ namespace RoyTheunissen.PrefabPalette
                     draggedAssets.Add(draggedObject);
             }
 
-            ClearEntrySelection();
+            bool addedAnEntry = false;
             foreach (Object draggedAsset in draggedAssets)
             {
                 if (HasEntry(draggedAsset))
                     continue;
+
+                if (!addedAnEntry)
+                {
+                    ClearEntrySelection();
+                    addedAnEntry = true;
+                }
                     
                 PaletteAsset entry = new PaletteAsset(draggedAsset);
                 AddEntry(entry);
