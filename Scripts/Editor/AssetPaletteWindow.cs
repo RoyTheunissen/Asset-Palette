@@ -144,7 +144,7 @@ namespace RoyTheunissen.AssetPalette
                     ClearEntrySelection();
                     Repaint();
                 }
-                else if (isMouseInFolderPanel && CurrentCollection != null && CurrentCollection.Folders.Count > 1 &&
+                else if (isMouseInFolderPanel && HasCollection && CurrentCollection.Folders.Count > 1 &&
                          !isDraggingFolder && !PaletteFolder.IsFolderBeingRenamed)
                 {
                     CurrentCollectionSerializedObject.Update();

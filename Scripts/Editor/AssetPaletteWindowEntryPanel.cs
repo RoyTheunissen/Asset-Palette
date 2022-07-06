@@ -104,8 +104,7 @@ namespace RoyTheunissen.AssetPalette
             EditorGUI.DrawRect(entriesPanelRect, new Color(0, 0, 0, 0.1f));
 
             // If the current state is invalid, draw a message instead.
-            AssetPaletteCollection currentCollection = CurrentCollection;
-            bool hasCollection = currentCollection != null;
+            bool hasCollection = HasCollection;
             bool hasEntries = hasCollection && GetEntryCount() > 0;
             if (!hasCollection || !hasEntries)
             {

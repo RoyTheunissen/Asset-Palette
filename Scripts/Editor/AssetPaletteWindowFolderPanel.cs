@@ -170,13 +170,13 @@ namespace RoyTheunissen.AssetPalette
                 GUILayout.Width(FolderPanelWidth));
 
             // Cancel out if there's no collection available.
-            if (CurrentCollection != null)
+            if (HasCollection)
             {
                 EnsureFolderExists();
 
                 currentFolderDragIndex = -1;
                 
-                if (CurrentCollection != null)
+                if (HasCollection)
                 {
                     CurrentCollectionSerializedObject.Update();
                     using (SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders"))

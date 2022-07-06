@@ -65,6 +65,8 @@ namespace RoyTheunissen.AssetPalette
                 CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
             }
         }
+
+        private bool HasCollection => CurrentCollection != null;
         
         [NonSerialized] private SerializedObject cachedCurrentCollectionSerializedObject;
         private SerializedObject CurrentCollectionSerializedObject
