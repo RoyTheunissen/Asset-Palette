@@ -72,7 +72,13 @@ namespace RoyTheunissen.PrefabPalette
             get
             {
                 if (cachedCurrentCollectionSerializedObject == null)
+                {
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
+                    
+                    // Need to re-cache these now.
+                    didCacheSelectedFolderSerializedProperty = false;
+                    didCacheSelectedFolderEntriesSerializedProperty = false;
+                }
                 return cachedCurrentCollectionSerializedObject;
             }
         }
