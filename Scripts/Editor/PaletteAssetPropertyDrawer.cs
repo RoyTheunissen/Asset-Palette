@@ -1,4 +1,5 @@
 using System;
+using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
 
