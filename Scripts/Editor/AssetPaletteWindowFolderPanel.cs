@@ -50,9 +50,8 @@ namespace RoyTheunissen.AssetPalette
                     return;
                 
                 EditorPrefs.SetInt(SelectedFolderIndexEditorPref, clampedValue);
-                
-                // Need to clear the cached serializedproperty now.
-                didCacheSelectedFolderSerializedProperty = false;
+
+                ClearCachedFolderSerializedProperties();
                 
                 // If you change the folder that's selected, we need to clear the selection.
                 ClearEntrySelection();
@@ -96,6 +95,12 @@ namespace RoyTheunissen.AssetPalette
             CurrentCollectionSerializedObject.Update();
             CreateNewFolder<PaletteFolder>(InitialFolderName);
             CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+        
+        private void ClearCachedFolderSerializedProperties()
+        {
+            didCacheSelectedFolderSerializedProperty = false;
+            didCacheSelectedFolderEntriesSerializedProperty = false;
         }
 
         private string GetUniqueFolderName(string desiredName, int previousAttempts = 0)

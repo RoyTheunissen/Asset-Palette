@@ -151,6 +151,9 @@ namespace RoyTheunissen.AssetPalette
                     SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
                     foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
                     CurrentCollectionSerializedObject.ApplyModifiedProperties();
+
+                    ClearCachedFolderSerializedProperties();
+                    
                     Repaint();
                 }
             }
