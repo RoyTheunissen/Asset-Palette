@@ -19,6 +19,7 @@ namespace RoyTheunissen.AssetPalette
         private const string FolderPanelWidthEditorPref = EditorPrefPrefix + "FolderPanelWidth";
         private const string ZoomLevelEditorPref = EditorPrefPrefix + "ZoomLevel";
         private const string SelectedFolderIndexEditorPref = EditorPrefPrefix + "SelectedFolderIndex";
+        private const string EntriesSortModeEditorPref = EditorPrefPrefix + "EntriesSortMode";
 
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
         private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
@@ -30,6 +31,7 @@ namespace RoyTheunissen.AssetPalette
         private static float CollectionButtonWidth => 130;
         private static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
         private static int NewFolderButtonWidth => 76 + (HasMultipleFolderTypes ? 9 : 0);
+        private static int SortModeButtonWidth => 140;
         
         private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;

@@ -139,6 +139,7 @@ namespace RoyTheunissen.AssetPalette
                 AddEntry(entry, true);
             }
 
+            SortEntriesInSerializedObject();
             CurrentCollectionSerializedObject.ApplyModifiedProperties();
             entriesToAddFromDraggedAssets.Clear();
 

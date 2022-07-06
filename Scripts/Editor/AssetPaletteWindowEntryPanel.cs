@@ -17,6 +17,12 @@ namespace RoyTheunissen.AssetPalette
 
         private Vector2 entriesPanelScrollPosition;
         
+        private SortModes SortMode
+        {
+            get => (SortModes)EditorPrefs.GetInt(EntriesSortModeEditorPref);
+            set => EditorPrefs.SetInt(EntriesSortModeEditorPref, (int)value);
+        }
+        
         [NonSerialized] private bool didCacheSelectedFolderEntriesSerializedProperty;
         [NonSerialized] private SerializedProperty cachedSelectedFolderEntriesSerializedProperty;
         private SerializedProperty SelectedFolderEntriesSerializedProperty
@@ -66,6 +72,35 @@ namespace RoyTheunissen.AssetPalette
             return SelectedFolder.Entries[index];
         }
         
+        private void SortEntriesInSerializedObject()
+        {
+            if (SortMode == SortModes.Unsorted)
+                return;
+            
+            // Create a list of all the Palette Entries currently in the serialized object. Doing it this way means
+            // that you can sort the list while adding new entries, without the sorting operation being a separate Undo
+            List<PaletteEntry> entries = new List<PaletteEntry>();
+            for (int i = 0; i < SelectedFolderEntriesSerializedProperty.arraySize; i++)
+            {
+                SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(i);
+                PaletteEntry entry = (PaletteEntry)entryProperty.managedReferenceValue;
+                entries.Add(entry);
+            }
+            
+            // Now sort that list of Palette Entries.
+            entries.Sort();
+            if (SortMode == SortModes.ReverseAlphabetical)
+                entries.Reverse();
+            
+            // Now make sure that the actual list as it exists in the serialized object has all its values in the same
+            // position as that sorted list.
+            for (int i = 0; i < entries.Count; i++)
+            {
+                SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(i);
+                entryProperty.managedReferenceValue = entries[i];
+            }
+        }
+        
         private void AddEntry(PaletteEntry entry, bool partOfMultipleAdditions)
         {
             if (!partOfMultipleAdditions)
@@ -75,7 +110,11 @@ namespace RoyTheunissen.AssetPalette
             newEntryProperty.managedReferenceValue = entry;
             
             if (!partOfMultipleAdditions)
+            {
+                SortEntriesInSerializedObject();
+                
                 CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            }
             
             SelectEntry(entry, false);
         }

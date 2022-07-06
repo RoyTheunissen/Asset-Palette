@@ -108,16 +108,24 @@ namespace RoyTheunissen.AssetPalette
             AssetPaletteCollection currentCollection = CurrentCollection;
             string name = currentCollection == null ? "[No Collection]" : currentCollection.name;
 
+            Rect folderPanelHeaderRect = headerRect.GetSubRectFromLeft(FolderPanelWidth);
+            DrawFolderPanelHeader(folderPanelHeaderRect, name);
+            
+            Rect entryPanelHeaderRect = headerRect.GetSubRectFromRight(position.width - FolderPanelWidth);
+            DrawEntryPanelHeader(entryPanelHeaderRect);
+        }
+
+        private void DrawFolderPanelHeader(Rect rect, string name)
+        {
             // Allow a new collection to be created or loaded.
-            Rect collectionRect = headerRect.GetSubRectFromLeft(CollectionButtonWidth);
+            Rect collectionRect = rect.GetSubRectFromLeft(CollectionButtonWidth);
             bool createNewCollection = GUI.Button(collectionRect, name, EditorStyles.toolbarDropDown);
             if (createNewCollection)
                 DoCollectionDropDown(collectionRect);
 
             // Allow a new folder to be created. Supports derived types of PaletteFolder as an experimental feature.
-            Rect newFolderRect = new Rect(
-                FolderPanelWidth - NewFolderButtonWidth, 0, NewFolderButtonWidth, headerRect.height);
-            GUI.enabled = CurrentCollection != null;
+            Rect newFolderRect = rect.GetSubRectFromRight(NewFolderButtonWidth);
+            GUI.enabled = HasCollection;
             bool createNewFolder = GUI.Button(
                 newFolderRect, "New Folder",
                 HasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
@@ -129,6 +137,49 @@ namespace RoyTheunissen.AssetPalette
                 else
                     CreateNewFolderFromDropDown(typeof(PaletteFolder));
             }
+        }
+
+        private void DrawEntryPanelHeader(Rect headerRect)
+        {
+            Rect sortModeButtonRect = headerRect.GetSubRectFromRight(SortModeButtonWidth);
+            GUI.enabled = HasCollection;
+            bool showSortModeRect = GUI.Button(
+                sortModeButtonRect, SortMode.ToString().ToHumanReadable(), EditorStyles.toolbarDropDown);
+            GUI.enabled = true;
+            if (showSortModeRect)
+                DoSortModeDropDown(sortModeButtonRect);
+        }
+
+        private void DoSortModeDropDown(Rect buttonRect)
+        {
+            GenericMenu menu = new GenericMenu();
+            Array sortModesNames = Enum.GetNames(typeof(SortModes));
+            Array sortModesValues = Enum.GetValues(typeof(SortModes));
+            for (int i = 0; i < sortModesNames.Length; i++)
+            {
+                string name = ((string)sortModesNames.GetValue(i)).ToHumanReadable();
+                GUIContent label = new GUIContent(name);
+                int value = (int)sortModesValues.GetValue(i);
+                
+                // Note that we need to set the sort mode after a delay of one frame because there seems to be a bug
+                // with modifying serialized objects straight out of a Generic Menu.
+                menu.AddItem(
+                    label, false,
+                    userData => EditorApplication.delayCall +=
+                        EditorApplication.delayCall += () => SetSortModeAndSortCurrentEntries((SortModes)value), value);
+            }
+
+            menu.DropDown(buttonRect);
+        }
+
+        private void SetSortModeAndSortCurrentEntries(SortModes sortMode)
+        {
+            SortMode = sortMode;
+            
+            // TODO: Maybe we should consider sorting the entries in ALL the folders at this time.. ?
+            CurrentCollectionSerializedObject.Update();
+            SortEntriesInSerializedObject();
+            CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private void DoCollectionDropDown(Rect collectionRect)

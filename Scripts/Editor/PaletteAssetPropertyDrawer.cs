@@ -59,7 +59,7 @@ namespace RoyTheunissen.AssetPalette.Editor
             }
             
             // Draw a label with a nice semi-transparent backdrop.
-            GUIContent title = new GUIContent(entry.Asset.name);
+            GUIContent title = new GUIContent(entry.Name);
             float height = EntryNameTextStyle.CalcHeight(title, position.width);
             Rect labelRect = position.GetSubRectFromBottom(height);
             EditorGUI.DrawRect(labelRect, new Color(0, 0, 0, 0.15f));

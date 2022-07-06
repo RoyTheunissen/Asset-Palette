@@ -55,6 +55,12 @@ namespace RoyTheunissen.AssetPalette
                 
                 // If you change the folder that's selected, we need to clear the selection.
                 ClearEntrySelection();
+                
+                // Now is actually also a good time to make sure it's sorted correctly, because sorting modes configured
+                // while on another folder are meant to apply to newly selected folders too.
+                CurrentCollectionSerializedObject.Update();
+                SortEntriesInSerializedObject();
+                CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
             }
         }
 
