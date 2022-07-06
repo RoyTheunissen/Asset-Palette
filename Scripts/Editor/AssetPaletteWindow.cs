@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using RoyTheunissen.PrefabPalette.Utilities;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -54,10 +55,17 @@ namespace RoyTheunissen.PrefabPalette
             }
         }
 
+        private static EditorAssetReference<Texture2D> lightModeIcon = new EditorAssetReference<Texture2D>(
+                "Assets/Asset-Palette/Textures/Editor/Resources/AssetPaletteWindow Icon.psd");
+        private static EditorAssetReference<Texture2D> darkModeIcon = new EditorAssetReference<Texture2D>(
+            "Assets/Asset-Palette/Textures/Editor/Resources/d_AssetPaletteWindow Icon.psd");
+
         [MenuItem ("Window/General/Asset Palette")]
         public static void Init() 
         {
-            AssetPaletteWindow window = GetWindow<AssetPaletteWindow>(false, "Asset Palette");
+            AssetPaletteWindow window = GetWindow<AssetPaletteWindow>(false);
+            window.titleContent = new GUIContent(
+                "Asset Palette", EditorGUIUtility.isProSkin ? darkModeIcon : lightModeIcon);
             window.minSize = new Vector2(WindowWidthMin, WindowHeightMin);
             window.wantsMouseMove = true;
         }
