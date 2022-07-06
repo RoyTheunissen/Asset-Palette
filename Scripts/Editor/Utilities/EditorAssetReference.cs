@@ -1,7 +1,7 @@
 using UnityEditor;
 using Object = UnityEngine.Object;
 
-namespace RoyTheunissen.PrefabPalette.Utilities
+namespace RoyTheunissen.AssetPalette.Utilities
 {
     /// <summary>
     /// Helps you access an asset at editor time, for automated workflows and the like.

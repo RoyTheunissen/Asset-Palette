@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using RoyTheunissen.PrefabPalette.Utilities;
+using RoyTheunissen.AssetPalette.Utilities;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace RoyTheunissen.PrefabPalette
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Helps organize collections of prefabs and drag them into scenes quickly.

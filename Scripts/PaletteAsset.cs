@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace RoyTheunissen.PrefabPalette
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Represents an asset that is added to the palette.

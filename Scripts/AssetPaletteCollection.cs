@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace RoyTheunissen.PrefabPalette
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Stores prefab palettes.

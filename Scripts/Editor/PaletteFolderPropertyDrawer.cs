@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.PrefabPalette
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Draws a folder.

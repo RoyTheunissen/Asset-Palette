@@ -1,6 +1,6 @@
 using System;
 
-namespace RoyTheunissen.PrefabPalette
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Represents one entry in the palette and manages its properties.

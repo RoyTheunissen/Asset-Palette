@@ -2,7 +2,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.PrefabPalette.Editor
+namespace RoyTheunissen.AssetPalette.Editor
 {
     /// <summary>
     /// Draws an Asset entry in the palette.
