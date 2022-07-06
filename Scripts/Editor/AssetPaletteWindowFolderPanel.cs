@@ -33,23 +33,29 @@ namespace RoyTheunissen.AssetPalette
             }
             set => EditorPrefs.SetFloat(FolderPanelWidthEditorPref, value);
         }
+
+        private int SelectedFolderIndexRaw
+        {
+            get => EditorPrefs.GetInt(SelectedFolderIndexEditorPref);
+            set => EditorPrefs.SetInt(SelectedFolderIndexEditorPref, value);
+        }
         
         private int SelectedFolderIndex
         {
             get
             {
-                int index = EditorPrefs.GetInt(SelectedFolderIndexEditorPref);
+                int index = SelectedFolderIndexRaw;
                 index = Mathf.Clamp(index, 0, CurrentCollection.Folders.Count - 1);
                 return index;
             }
             set
             {
                 int clampedValue = Mathf.Clamp(value, 0, CurrentCollection.Folders.Count - 1);
-                
-                if (SelectedFolderIndex == clampedValue)
+
+                if (SelectedFolderIndexRaw == clampedValue)
                     return;
-                
-                EditorPrefs.SetInt(SelectedFolderIndexEditorPref, clampedValue);
+
+                SelectedFolderIndexRaw = clampedValue;
 
                 ClearCachedFolderSerializedProperties();
                 

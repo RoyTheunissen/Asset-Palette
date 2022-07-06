@@ -154,7 +154,8 @@ namespace RoyTheunissen.AssetPalette
                     foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
                     CurrentCollectionSerializedObject.ApplyModifiedProperties();
 
-                    ClearCachedFolderSerializedProperties();
+                    // Select the last folder.
+                    SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
                     
                     Repaint();
                 }
