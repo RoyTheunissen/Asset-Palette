@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
+using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
 namespace RoyTheunissen.AssetPalette
 {
@@ -106,8 +107,9 @@ namespace RoyTheunissen.AssetPalette
         {
             if (!partOfMultipleAdditions)
                 CurrentCollectionSerializedObject.Update();
-            
-            SerializedProperty newEntryProperty = SelectedFolderEntriesSerializedProperty.AddArrayElement();
+
+            SerializedProperty newEntryProperty =
+                SerializedPropertyExtensions.AddArrayElement(SelectedFolderEntriesSerializedProperty);
             newEntryProperty.managedReferenceValue = entry;
             
             if (!partOfMultipleAdditions)
@@ -334,7 +336,7 @@ namespace RoyTheunissen.AssetPalette
 
             Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
             float borderWidth = isSelected ? 2 : 1;
-            Rect borderRect = rect.Expand(borderWidth);
+            Rect borderRect = RectExtensions.Expand(rect, borderWidth);
             GUI.DrawTexture(
                 borderRect, EditorGUIUtility.whiteTexture, ScaleMode.ScaleToFit, true, 0.0f, borderColor, borderWidth,
                 borderWidth);

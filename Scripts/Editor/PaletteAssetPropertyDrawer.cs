@@ -1,7 +1,8 @@
 using System;
-using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
+using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
+using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
 namespace RoyTheunissen.AssetPalette.Editor
 {
@@ -36,7 +37,7 @@ namespace RoyTheunissen.AssetPalette.Editor
             if (Event.current.type != EventType.Repaint)
                 return;
             
-            PaletteAsset entry = property.GetValue<PaletteAsset>();
+            PaletteAsset entry = SerializedPropertyExtensions.GetValue<PaletteAsset>(property);
 
             // Draw the texture.
             if (entry.PreviewTexture != null)
@@ -62,7 +63,7 @@ namespace RoyTheunissen.AssetPalette.Editor
             // Draw a label with a nice semi-transparent backdrop.
             GUIContent title = new GUIContent(entry.Name);
             float height = EntryNameTextStyle.CalcHeight(title, position.width);
-            Rect labelRect = position.GetSubRectFromBottom(height);
+            Rect labelRect = RectExtensions.GetSubRectFromBottom(position, height);
             EditorGUI.DrawRect(labelRect, new Color(0, 0, 0, 0.15f));
             EditorGUI.LabelField(position, title, EntryNameTextStyle);
         }

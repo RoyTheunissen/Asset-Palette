@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
+using GameObjectExtensions = RoyTheunissen.AssetPalette.Extensions.GameObjectExtensions;
 using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette
@@ -118,8 +118,11 @@ namespace RoyTheunissen.AssetPalette
             }
 
             // Basically any Object is fine as long as it's not a scene GameObject.
-            if ((!(draggedObject is GameObject go) || go.IsPrefab()) && !HasEntryForAsset(draggedObject))
+            if ((!(draggedObject is GameObject go) || GameObjectExtensions.IsPrefab(go)) &&
+                !HasEntryForAsset(draggedObject))
+            {
                 entriesToAddFromDraggedAssets.Add(new PaletteAsset(draggedObject));
+            }
         }
 
         private void AddEntriesFromDraggedAssets()

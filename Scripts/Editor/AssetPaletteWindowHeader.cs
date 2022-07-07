@@ -1,8 +1,9 @@
 using System;
 using System.IO;
-using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
+using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
+using TypeExtensions = RoyTheunissen.AssetPalette.Extensions.TypeExtensions;
 
 namespace RoyTheunissen.AssetPalette
 {
@@ -95,7 +96,7 @@ namespace RoyTheunissen.AssetPalette
                 if (!didCacheFolderTypes)
                 {
                     didCacheFolderTypes = true;
-                    cachedFolderTypes = typeof(PaletteFolder).GetAllAssignableClasses(false, true);
+                    cachedFolderTypes = TypeExtensions.GetAllAssignableClasses(typeof(PaletteFolder), false, true);
                 }
                 return cachedFolderTypes;
             }
@@ -109,23 +110,24 @@ namespace RoyTheunissen.AssetPalette
             AssetPaletteCollection currentCollection = CurrentCollection;
             string name = currentCollection == null ? "[No Collection]" : currentCollection.name;
 
-            Rect folderPanelHeaderRect = headerRect.GetSubRectFromLeft(FolderPanelWidth);
+            Rect folderPanelHeaderRect = RectExtensions.GetSubRectFromLeft(headerRect, FolderPanelWidth);
             DrawFolderPanelHeader(folderPanelHeaderRect, name);
-            
-            Rect entryPanelHeaderRect = headerRect.GetSubRectFromRight(position.width - FolderPanelWidth);
+
+            Rect entryPanelHeaderRect =
+                RectExtensions.GetSubRectFromRight(headerRect, position.width - FolderPanelWidth);
             DrawEntryPanelHeader(entryPanelHeaderRect);
         }
 
         private void DrawFolderPanelHeader(Rect rect, string name)
         {
             // Allow a new collection to be created or loaded.
-            Rect collectionRect = rect.GetSubRectFromLeft(CollectionButtonWidth);
+            Rect collectionRect = RectExtensions.GetSubRectFromLeft(rect, CollectionButtonWidth);
             bool createNewCollection = GUI.Button(collectionRect, name, EditorStyles.toolbarDropDown);
             if (createNewCollection)
                 DoCollectionDropDown(collectionRect);
 
             // Allow a new folder to be created. Supports derived types of PaletteFolder as an experimental feature.
-            Rect newFolderRect = rect.GetSubRectFromRight(NewFolderButtonWidth);
+            Rect newFolderRect = RectExtensions.GetSubRectFromRight(rect, NewFolderButtonWidth);
             GUI.enabled = HasCollection;
             bool createNewFolder = GUI.Button(
                 newFolderRect, "New Folder",
@@ -142,7 +144,7 @@ namespace RoyTheunissen.AssetPalette
 
         private void DrawEntryPanelHeader(Rect headerRect)
         {
-            Rect sortModeButtonRect = headerRect.GetSubRectFromRight(SortModeButtonWidth);
+            Rect sortModeButtonRect = RectExtensions.GetSubRectFromRight(headerRect, SortModeButtonWidth);
             GUI.enabled = HasCollection;
             bool showSortModeRect = GUI.Button(
                 sortModeButtonRect, SortMode.ToString().ToHumanReadable(), EditorStyles.toolbarDropDown);

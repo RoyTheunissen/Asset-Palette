@@ -1,7 +1,8 @@
 using System;
-using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
+using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
+using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
 namespace RoyTheunissen.AssetPalette
 {
@@ -158,7 +159,7 @@ namespace RoyTheunissen.AssetPalette
             SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
 
             // Add it to the list.
-            SerializedProperty newElement = foldersProperty.AddArrayElement();
+            SerializedProperty newElement = SerializedPropertyExtensions.AddArrayElement(foldersProperty);
             newElement.managedReferenceValue = newFolder;
 
             CurrentCollectionSerializedObject.ApplyModifiedProperties();
@@ -237,8 +238,8 @@ namespace RoyTheunissen.AssetPalette
                 // Draw the actual folder itself.
                 if (isSelected)
                     EditorGUI.DrawRect(folderRect, selectionColor);
-                PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
-                folderRect = folderRect.Indent(1);
+                PaletteFolder folder = SerializedPropertyExtensions.GetValue<PaletteFolder>(folderProperty);
+                folderRect = RectExtensions.Indent(folderRect, 1);
                 if (folder.IsRenaming)
                 {
                     GUI.SetNextControlName(folder.RenameControlId);
@@ -264,14 +265,14 @@ namespace RoyTheunissen.AssetPalette
                     {
                         currentFolderDragIndex = i;
                         didFindDragIndex = true;
-                        dragMarkerRect = folderRect.GetSubRectFromTop(2);
+                        dragMarkerRect = RectExtensions.GetSubRectFromTop(folderRect, 2);
                         Repaint();
                     }
                     else if (currentFolderDragIndex == -1 && i == foldersProperty.arraySize - 1)
                     {
                         currentFolderDragIndex = i + 1;
                         didFindDragIndex = true;
-                        dragMarkerRect = folderRect.GetSubRectFromBottom(2);
+                        dragMarkerRect = RectExtensions.GetSubRectFromBottom(folderRect, 2);
                         Repaint();
                     }
 
