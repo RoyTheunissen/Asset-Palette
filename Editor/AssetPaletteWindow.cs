@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using RoyTheunissen.AssetPalette.Utilities;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
