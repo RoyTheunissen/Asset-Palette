@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
