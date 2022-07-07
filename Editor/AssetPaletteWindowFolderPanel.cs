@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
@@ -228,19 +229,91 @@ namespace RoyTheunissen.AssetPalette
             Color selectionColor = SelectionColor;
             selectionColor.a = 0.25f;
 
+            Color highlightColor = new Color(1, 1, 1, 0.1f);
+
+            bool isDraggingAssets = DragAndDrop.objectReferences.Length > 0;
+            string folderDraggedFrom = (string)DragAndDrop.GetGenericData(EntryDragGenericDataType);
+            bool isDraggingEntriesFromAFolder = folderDraggedFrom != null;
+
             for (int i = 0; i < foldersProperty.arraySize; i++)
             {
                 SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
                 float folderHeight = EditorGUI.GetPropertyHeight(folderProperty, GUIContent.none, true);
                 float folderWidth = FolderPanelWidth;
                 Rect folderRect = GUILayoutUtility.GetRect(folderWidth, folderHeight);
-                bool isSelected = SelectedFolderIndex == i;
-                
-                // Draw the actual folder itself.
-                if (isSelected)
-                    EditorGUI.DrawRect(folderRect, selectionColor);
-                PaletteFolder folder = SerializedPropertyExtensions.GetValue<PaletteFolder>(folderProperty);
                 folderRect = RectExtensions.Indent(folderRect, 1);
+                bool isSelected = SelectedFolderIndex == i;
+
+                PaletteFolder folder = SerializedPropertyExtensions.GetValue<PaletteFolder>(folderProperty);
+                bool isMouseOver = isMouseInFolderPanel && folderRect.Contains(Event.current.mousePosition);
+                
+                // Dragging and dropping assets into folders. Need to handle this early because it affects the way we
+                // draw the folder (might have to be highlighted).
+                bool isHighlighted = false;
+                if (isDraggingAssets && isMouseOver)
+                {
+                    bool isValidDrag = !isDraggingEntriesFromAFolder || folderDraggedFrom != folder.Name;
+                    if (isValidDrag)
+                    {
+                        isHighlighted = true;
+
+                        if (Event.current.type == EventType.DragUpdated || Event.current.type == EventType.DragPerform)
+                        {
+                            DragAndDrop.AcceptDrag();
+                            DragAndDrop.visualMode = isDraggingEntriesFromAFolder
+                                ? DragAndDropVisualMode.Move
+                                : DragAndDropVisualMode.Copy;
+                            
+                            // Need to repaint now to draw a highlight underneath the hovered folder.
+                            Repaint();
+
+                            if (Event.current.type == EventType.DragPerform)
+                            {
+                                if (isDraggingEntriesFromAFolder)
+                                {
+                                    // First remove all of the selected entries from the current folder.
+                                    List<PaletteEntry> entriesToMove = new List<PaletteEntry>(entriesSelected);
+                                    RemoveEntries(entriesToMove);
+
+                                    // Make the recipient folder the current folder.
+                                    SelectedFolder = folder;
+                                    
+                                    // Now add all of the entries to the recipient folder.
+                                    AddEntries(entriesToMove);
+                                }
+                                else
+                                {
+                                    // Make the recipient folder the current folder.
+                                    SelectedFolder = folder;
+                                    
+                                    // Just act as if these assets were dropped into the entries panel.
+                                    HandleAssetDropping(DragAndDrop.objectReferences);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Draw a background for the folder. Can be both selected and highlighted.
+                Color bgColor = Color.clear;
+                if (isSelected)
+                    bgColor = selectionColor;
+                if (isHighlighted)
+                {
+                    if (!isSelected)
+                        bgColor = highlightColor;
+                    else
+                    {
+                        // Blend the selection color with the highlight color, and respect the selection alpha.
+                        Color highlightColorWithCurrentAlpha = new Color(
+                            highlightColor.r, highlightColor.g, highlightColor.b, bgColor.a);
+                        bgColor = Color.Lerp(bgColor, highlightColorWithCurrentAlpha, 0.25f);
+                    }
+                }
+                if (bgColor.a > 0)
+                    EditorGUI.DrawRect(folderRect, bgColor);
+
+                // Draw the actual folder itself.
                 if (folder.IsRenaming)
                 {
                     GUI.SetNextControlName(folder.RenameControlId);
@@ -252,11 +325,13 @@ namespace RoyTheunissen.AssetPalette
                     EditorGUI.PropertyField(folderRect, folderProperty, GUIContent.none);
                 }
 
-                bool isMouseOver = folderRect.Contains(Event.current.mousePosition);
-
                 // Dragging and dropping folders.
-                if (Event.current.type == EventType.MouseDrag && isMouseOver && !isResizingFolderPanel)
+                if (Event.current.type == EventType.MouseDrag && isMouseOver && !isResizingFolderPanel &&
+                    !isDraggingAssets)
+                {
                     StartFolderDrag(folder);
+                }
+
                 if (isDraggingFolder)
                 {
                     bool didFindDragIndex = false;
@@ -347,6 +422,9 @@ namespace RoyTheunissen.AssetPalette
 
         private void StopFolderDrag()
         {
+            if (!isDraggingFolder)
+                return;
+            
             isDraggingFolder = false;
 
             bool isValidDrop = DragAndDrop.visualMode == DragAndDropVisualMode.Move;

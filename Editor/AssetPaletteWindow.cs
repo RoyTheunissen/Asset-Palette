@@ -93,7 +93,7 @@ namespace RoyTheunissen.AssetPalette
 
                 EditorGUILayout.BeginVertical();
                 {
-                    HandleAssetDropping();
+                    HandleAssetDroppingInEntryPanel();
 
                     DrawEntriesPanel();
 

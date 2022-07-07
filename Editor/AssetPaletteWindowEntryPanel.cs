@@ -103,37 +103,83 @@ namespace RoyTheunissen.AssetPalette
             }
         }
         
-        private void AddEntry(PaletteEntry entry, bool partOfMultipleAdditions)
+        private void AddEntry(PaletteEntry entry, bool apply)
         {
-            if (!partOfMultipleAdditions)
+            if (apply)
                 CurrentCollectionSerializedObject.Update();
 
             SerializedProperty newEntryProperty =
                 SerializedPropertyExtensions.AddArrayElement(SelectedFolderEntriesSerializedProperty);
             newEntryProperty.managedReferenceValue = entry;
             
-            if (!partOfMultipleAdditions)
+            if (apply)
             {
                 SortEntriesInSerializedObject();
-                
                 CurrentCollectionSerializedObject.ApplyModifiedProperties();
             }
             
             SelectEntry(entry, false);
         }
 
-        private void RemoveEntry(PaletteEntry entry)
+        private void AddEntries(List<PaletteEntry> entries, bool apply = true)
         {
-            int index = GetEntries().IndexOf(entry);
+            if (apply)
+                CurrentCollectionSerializedObject.Update();
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                AddEntry(entries[i], false);
+            }
+            
+            if (apply)
+            {
+                SortEntriesInSerializedObject();
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            }
+        }
+
+        private int IndexOfEntry(PaletteEntry entry)
+        {
+            for (int i = 0; i < SelectedFolderEntriesSerializedProperty.arraySize; i++)
+            {
+                PaletteEntry entryAtIndex = (PaletteEntry)SelectedFolderEntriesSerializedProperty
+                    .GetArrayElementAtIndex(i).managedReferenceValue;
+                if (entryAtIndex == entry)
+                    return i;
+            }
+            return -1;
+        }
+
+        private void RemoveEntry(PaletteEntry entry, bool apply = true)
+        {
+            int index = IndexOfEntry(entry);
+            
             if (index != -1)
-                RemoveEntryAt(index);
+                RemoveEntryAt(index, apply);
         }
         
-        private void RemoveEntryAt(int index)
+        private void RemoveEntries(List<PaletteEntry> entries, bool apply = true)
         {
-            CurrentCollectionSerializedObject.Update();
+            if (apply)
+                CurrentCollectionSerializedObject.Update();
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                RemoveEntry(entries[i], false);
+            }
+            
+            if (apply)
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+        }
+        
+        private void RemoveEntryAt(int index, bool apply = true)
+        {
+            if (apply)
+                CurrentCollectionSerializedObject.Update();
             SelectedFolderEntriesSerializedProperty.DeleteArrayElementAtIndex(index);
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            
+            if (apply)
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
         }
         
         private void DrawEntriesPanel()
@@ -328,7 +374,9 @@ namespace RoyTheunissen.AssetPalette
 
                 DragAndDrop.objectReferences = selectedAssets.ToArray();
                 // Mark the drag as being an asset palette entry drag, so we know not to accept it again ourselves.
-                DragAndDrop.SetGenericData(EntryDragGenericDataType, true);
+                // Also pass along the name of the directory so we can handle stuff like dragging assets out into
+                // another folder (but ignore the folder it was originally dragged from).
+                DragAndDrop.SetGenericData(EntryDragGenericDataType, SelectedFolder.Name);
                 DragAndDrop.StartDrag("Drag from Asset Palette");
             }
 
