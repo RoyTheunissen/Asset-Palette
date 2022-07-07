@@ -21,17 +21,22 @@ namespace RoyTheunissen.AssetPalette
         [NonSerialized] private readonly List<Object> draggedObjectsToProcess = new List<Object>();
         [NonSerialized] private readonly List<PaletteEntry> entriesToAddFromDraggedAssets = new List<PaletteEntry>();
         
-        private bool HasEntryForAsset(Object asset)
+        private PaletteEntry GetEntryForAsset(Object asset)
         {
             foreach (PaletteEntry entry in GetEntries())
             {
                 if (entry is PaletteAsset paletteAsset && paletteAsset.Asset == asset)
-                    return true;
+                    return entry;
             }
-            return false;
+            return null;
+        }
+        
+        private bool HasEntryForAsset(Object asset)
+        {
+            return GetEntryForAsset(asset) != null;
         }
 
-        private void HandleAssetDropping()
+        private void HandleAssetDroppingInEntryPanel()
         {
             Event @event = Event.current;
             if (@event.type != EventType.DragUpdated && @event.type != EventType.DragPerform)
@@ -49,13 +54,18 @@ namespace RoyTheunissen.AssetPalette
             if (@event.type != EventType.DragPerform)
                 return;
 
+            HandleAssetDropping(DragAndDrop.objectReferences);
+        }
+
+        private void HandleAssetDropping(Object[] objectsToProcess)
+        {
             // Determine what entries are to be added as a result of these assets being dropped. Note that we may have
             // to ask the user how they want to handle certain special assets like folders. Because of a Unity bug this
             // means that processing will stop, a context menu will be displayed, two frames will have to be waited,
             // and THEN processing can resume. This bug doesn't seem to happen with Dialogs, only context menus. I
             // prefer to use context menus regardless because it's faster and less jarring for the user.
             draggedObjectsToProcess.Clear();
-            draggedObjectsToProcess.AddRange(DragAndDrop.objectReferences);
+            draggedObjectsToProcess.AddRange(objectsToProcess);
             entriesToAddFromDraggedAssets.Clear();
             addFolderBehaviour = AddFolderBehaviour.Undefined;
             ProcessDraggedObjects();
@@ -129,22 +139,9 @@ namespace RoyTheunissen.AssetPalette
         {
             if (entriesToAddFromDraggedAssets.Count == 0)
                 return;
-
-            bool addedAnEntry = false;
-            CurrentCollectionSerializedObject.Update();
-            foreach (PaletteEntry entry in entriesToAddFromDraggedAssets)
-            {
-                if (!addedAnEntry)
-                {
-                    ClearEntrySelection();
-                    addedAnEntry = true;
-                }
-
-                AddEntry(entry, true);
-            }
-
-            SortEntriesInSerializedObject();
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            
+            ClearEntrySelection();
+            AddEntries(entriesToAddFromDraggedAssets);
             entriesToAddFromDraggedAssets.Clear();
 
             Repaint();
