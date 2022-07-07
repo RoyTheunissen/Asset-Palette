@@ -57,14 +57,18 @@ namespace RoyTheunissen.AssetPalette
             }
         }
 
-        private static EditorAssetReference<Texture2D> lightModeIcon = new EditorAssetReference<Texture2D>(
-                "Assets/Asset-Palette/Textures/Editor/Resources/AssetPaletteWindow Icon.psd");
-        private static EditorAssetReference<Texture2D> darkModeIcon = new EditorAssetReference<Texture2D>(
-            "Assets/Asset-Palette/Textures/Editor/Resources/d_AssetPaletteWindow Icon.psd");
+        private static Texture2D lightModeIcon;
+        private static Texture2D darkModeIcon;
 
         [MenuItem ("Window/General/Asset Palette")]
-        public static void Init() 
+        public static void Init()
         {
+            if (lightModeIcon == null)
+                lightModeIcon = Resources.Load<Texture2D>("AssetPaletteWindow Icon");
+
+            if (darkModeIcon == null)
+                darkModeIcon = Resources.Load<Texture2D>("d_AssetPaletteWindow Icon");
+
             AssetPaletteWindow window = GetWindow<AssetPaletteWindow>(false);
             window.titleContent = new GUIContent(
                 "Asset Palette", EditorGUIUtility.isProSkin ? darkModeIcon : lightModeIcon);
