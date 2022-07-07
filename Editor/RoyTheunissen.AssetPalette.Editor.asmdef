@@ -1,0 +1,18 @@
+{
+    "name": "RoyTheunissen.AssetPalette.Editor",
+    "rootNamespace": "RoyTheunissen.AssetPalette",
+    "references": [
+        "GUID:f591e5d22e08d9a409a186d544c1e1e0"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
