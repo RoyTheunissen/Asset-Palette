@@ -12,6 +12,8 @@ That's exactly what this tool is for.
 
 Make custom groups of frequently used assets and shortcuts to folders for your project-specific workflows.
 
+[Video](https://www.youtube.com/watch?v=vlryRWGPMfI)    |    [Article](https://blog.roytheunissen.com/2022/07/07/introducing-the-asset-palette/)
+
 ![Example](Documentation~/Example.gif)
 
 ## Getting Started
