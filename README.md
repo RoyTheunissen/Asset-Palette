@@ -22,7 +22,23 @@ Make custom groups of frequently used assets and shortcuts to folders for your p
 
 ## Installation
 
-This asset can be downloaded and added to the project, or ideally added to your project's Asset folder as a submodule.
+### OpenUPM
+The package is available on the [openupm registry](https://openupm.com). It's recommended to install it via [openupm-cli](https://github.com/openupm/openupm-cli).
+
+```
+openupm add com.roytheunissen.assetpalette
+```
+
+### Manifest
+You can also install via git URL by adding this entry in your **manifest.json**
+```
+"com.roytheunissen.assetpalette": "https://github.com/RoyTheunissen/Asset-Palette.git"
+```
+
+### Unity Package Manager
+```
+from Window->Package Manager, click on the + sign and Add from git: https://github.com/RoyTheunissen/Asset-Palette.git
+```
 
 
 ## Contact
