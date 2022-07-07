@@ -1,7 +1,7 @@
 {
   "name": "com.roytheunissen.assetpalette",
   "displayName": "Asset Palette",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "unity": "2021.3",
   "description": "Allows you to quickly organize assets for certain workflows, such as organizing prefabs for level design.",
   "keywords": [
