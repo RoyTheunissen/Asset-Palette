@@ -11,7 +11,7 @@ namespace RoyTheunissen.AssetPalette
     /// <summary>
     /// Helps organize collections of prefabs and drag them into scenes quickly.
     /// </summary>
-    public partial class AssetPaletteWindow : EditorWindow
+    public partial class AssetPaletteWindow : EditorWindow, IHasCustomMenu
     {
         private const string EditorPrefPrefix = "RoyTheunissen/PrefabPalette/";
         private const string CurrentCollectionGUIDEditorPref = EditorPrefPrefix + "CurrentCollectionGUID";
@@ -31,6 +31,7 @@ namespace RoyTheunissen.AssetPalette
         private static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
         private static int NewFolderButtonWidth => 76 + (HasMultipleFolderTypes ? 9 : 0);
         private static int SortModeButtonWidth => 140;
+        private static int AddEntryForProjectWindowSelectionButtonWidth => 90;
         
         private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;

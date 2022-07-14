@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -472,6 +473,14 @@ namespace RoyTheunissen.AssetPalette
         {
             entriesSelected.Clear();
             entriesIndividuallySelected.Clear();
+        }
+
+        private void AddEntryForProjectWindowSelection()
+        {
+            PaletteSelectionShortcut paletteSelectionShortcut = new PaletteSelectionShortcut(Selection.objects);
+            AddEntry(paletteSelectionShortcut, true);
+            
+            Repaint();
         }
     }
 }
