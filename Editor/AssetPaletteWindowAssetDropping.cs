@@ -10,14 +10,6 @@ namespace RoyTheunissen.AssetPalette
 {
     public partial class AssetPaletteWindow
     {
-        public enum AddFolderBehaviour
-        {
-            Undefined,
-            AddShortcutToFolder,
-            AddFolderContents,
-        }
-
-        [NonSerialized] private AddFolderBehaviour addFolderBehaviour;
         [NonSerialized] private readonly List<Object> draggedObjectsToProcess = new List<Object>();
         [NonSerialized] private readonly List<PaletteEntry> entriesToAddFromDraggedAssets = new List<PaletteEntry>();
         
@@ -67,17 +59,7 @@ namespace RoyTheunissen.AssetPalette
             draggedObjectsToProcess.Clear();
             draggedObjectsToProcess.AddRange(objectsToProcess);
             entriesToAddFromDraggedAssets.Clear();
-            addFolderBehaviour = AddFolderBehaviour.Undefined;
             ProcessDraggedObjects();
-        }
-
-        private void ResumeDraggedObjectProcessing()
-        {
-            // BUG: We need to wait two frames before we resume. Not sure why. It has something to do with GenericMenu
-            // and serialized objects, I think. Might be related to threads? I couldn't find anything online.
-            // If we don't wait, the new entries will be added but will disappear again immediately, without any call
-            // being mode to remove the entries.
-            EditorApplication.delayCall += () => EditorApplication.delayCall += ProcessDraggedObjects;
         }
 
         private void ProcessDraggedObjects()
@@ -86,7 +68,7 @@ namespace RoyTheunissen.AssetPalette
             {
                 Object draggedObject = draggedObjectsToProcess[0];
 
-                TryProcessDraggedObject(draggedObject, out bool needsToAskForUserInputFirst);
+                TryCreateEntriesForDraggedObject(draggedObject, out bool needsToAskForUserInputFirst);
 
                 if (needsToAskForUserInputFirst)
                     return;
@@ -98,32 +80,16 @@ namespace RoyTheunissen.AssetPalette
             AddEntriesFromDraggedAssets();
         }
 
-        private void TryProcessDraggedObject(Object draggedObject, out bool needsToAskForUserInputFirst)
+        private void TryCreateEntriesForDraggedObject(Object draggedObject, out bool needsToAskForUserInputFirst)
         {
             needsToAskForUserInputFirst = false;
 
             string path = AssetDatabase.GetAssetPath(draggedObject);
+            
+            // If a folder is dragged in, add its contents.
             if (AssetDatabase.IsValidFolder(path))
             {
-                // If we don't know what to do with folders, figure that out first.
-                if (addFolderBehaviour == AddFolderBehaviour.Undefined)
-                {
-                    GenericMenu menu = new GenericMenu();
-                    menu.AddItem(
-                        new GUIContent("Add Folder Contents"), false, SetAddFolderBehaviourAndResumeProcessing,
-                        AddFolderBehaviour.AddFolderContents);
-                    menu.AddItem(
-                        new GUIContent("Add Shortcut To Folder"), false, SetAddFolderBehaviourAndResumeProcessing,
-                        AddFolderBehaviour.AddShortcutToFolder);
-                    menu.ShowAsContext();
-                    needsToAskForUserInputFirst = true;
-                    return;
-                }
-
-                if (addFolderBehaviour == AddFolderBehaviour.AddFolderContents)
-                    AddFolderContents(draggedObject);
-                else if (addFolderBehaviour == AddFolderBehaviour.AddShortcutToFolder)
-                    AddShortcutToFolder(draggedObject);
+                CreateEntriesForFolderContents(draggedObject);
                 return;
             }
 
@@ -147,19 +113,7 @@ namespace RoyTheunissen.AssetPalette
             Repaint();
         }
 
-        private void SetAddFolderBehaviourAndResumeProcessing(object userdata)
-        {
-            addFolderBehaviour = (AddFolderBehaviour)userdata;
-
-            ResumeDraggedObjectProcessing();
-        }
-
-        private void AddShortcutToFolder(Object folder)
-        {
-            entriesToAddFromDraggedAssets.Add(new PaletteAsset(folder));
-        }
-
-        private void AddFolderContents(Object folder)
+        private void CreateEntriesForFolderContents(Object folder)
         {
             string path = AssetDatabase.GetAssetPath(folder);
 
