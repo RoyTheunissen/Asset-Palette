@@ -24,7 +24,8 @@ namespace RoyTheunissen.AssetPalette.Editor
             float iconSize = position.width * 0.55f * Mathf.Lerp(1.0f, 0.75f, density);
             float offsetDistance = position.width * Mathf.Lerp(0.1f, 0.025f, density);
             Vector2 offset = new Vector2(offsetDistance, offsetDistance);
-            Vector2 offsetMax = offset * itemsToShowCount;
+            Vector2 offsetMax = itemsToShowCount == 1 ? Vector2.zero : offset * itemsToShowCount;
+            
             for (int i = 0; i < itemsToShowCount; i++)
             {
                 Object asset = entry.Selection[i];
