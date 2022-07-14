@@ -11,7 +11,7 @@ namespace RoyTheunissen.AssetPalette
     /// <summary>
     /// Helps organize collections of prefabs and drag them into scenes quickly.
     /// </summary>
-    public partial class AssetPaletteWindow : EditorWindow
+    public partial class AssetPaletteWindow : EditorWindow, IHasCustomMenu
     {
         private const string EditorPrefPrefix = "RoyTheunissen/PrefabPalette/";
         private const string CurrentCollectionGUIDEditorPref = EditorPrefPrefix + "CurrentCollectionGUID";
@@ -31,6 +31,7 @@ namespace RoyTheunissen.AssetPalette
         private static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
         private static int NewFolderButtonWidth => 76 + (HasMultipleFolderTypes ? 9 : 0);
         private static int SortModeButtonWidth => 140;
+        private static int AddEntryForProjectWindowSelectionButtonWidth => 90;
         
         private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
@@ -40,6 +41,10 @@ namespace RoyTheunissen.AssetPalette
         [NonSerialized] private bool isMouseInFooter;
         [NonSerialized] private bool isMouseInFolderPanel;
         [NonSerialized] private bool isMouseInEntriesPanel;
+        
+        [NonSerialized] private string renameText;
+
+        private bool IsRenaming => PaletteFolder.IsFolderBeingRenamed || PaletteEntry.IsEntryBeingRenamed;
         
         private Color cachedSelectionColor;
         private bool didCacheSelectionColor;
@@ -120,14 +125,14 @@ namespace RoyTheunissen.AssetPalette
             if (Event.current.type != EventType.KeyDown)
                 return;
             
-            if (Event.current.keyCode == KeyCode.Return && PaletteFolder.IsFolderBeingRenamed)
+            if (Event.current.keyCode == KeyCode.Return && IsRenaming)
             {
-                StopFolderRename();
+                StopAllRenames();
                 return;
             }
             
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
-            if (Event.current.control && Event.current.keyCode == KeyCode.A)
+            if (Event.current.control && Event.current.keyCode == KeyCode.A && !IsRenaming)
             {
                 SelectEntries(GetEntries(), true);
                 if (GetEntryCount() > 0)
@@ -136,7 +141,7 @@ namespace RoyTheunissen.AssetPalette
                 return;
             }
 
-            if (Event.current.keyCode == KeyCode.Delete)
+            if (Event.current.keyCode == KeyCode.Delete && !IsRenaming)
             {
                 if (isMouseInEntriesPanel)
                 {
@@ -150,7 +155,7 @@ namespace RoyTheunissen.AssetPalette
                     Repaint();
                 }
                 else if (isMouseInFolderPanel && HasCollection && CurrentCollection.Folders.Count > 1 &&
-                         !isDraggingFolder && !PaletteFolder.IsFolderBeingRenamed)
+                         !isDraggingFolder)
                 {
                     CurrentCollectionSerializedObject.Update();
                     SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
@@ -163,6 +168,12 @@ namespace RoyTheunissen.AssetPalette
                     Repaint();
                 }
             }
+        }
+
+        private void StopAllRenames()
+        {
+            StopFolderRename();
+            StopEntryRename();
         }
     }
 }

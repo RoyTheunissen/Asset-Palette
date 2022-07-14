@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace RoyTheunissen.AssetPalette
 {
@@ -8,11 +9,34 @@ namespace RoyTheunissen.AssetPalette
     [Serializable]
     public abstract class PaletteEntry : IComparable<PaletteEntry>
     {
-        public abstract string Name { get; }
+        [SerializeField] private string customName;
+        private string CustomName => customName;
+        public bool HasCustomName => !string.IsNullOrEmpty(CustomName);
+
+        protected abstract string DefaultName { get; }
+        public string Name => HasCustomName ? CustomName : DefaultName;
 
         public abstract bool IsValid { get; }
-    
+
+        public virtual bool CanRename => true;
+        
+        [NonSerialized] private static PaletteEntry entryCurrentlyRenaming;
+        public static PaletteEntry EntryCurrentlyRenaming => entryCurrentlyRenaming;
+
+        public bool IsRenaming => entryCurrentlyRenaming == this;
+        public static bool IsEntryBeingRenamed => entryCurrentlyRenaming != null;
+
         public abstract void Open();
+
+        public void StartRename()
+        {
+            entryCurrentlyRenaming = this;
+        }
+
+        public static void CancelRename()
+        {
+            entryCurrentlyRenaming = null;
+        }
         
         public override string ToString()
         {

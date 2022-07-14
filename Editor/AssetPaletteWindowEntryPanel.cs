@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using RoyTheunissen.AssetPalette.Editor;
+using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -56,6 +58,25 @@ namespace RoyTheunissen.AssetPalette
                     };
                 }
                 return cachedMessageTextStyle;
+            }
+        }
+        
+        [NonSerialized] private static GUIStyle cachedEntryRenameTextStyle;
+        [NonSerialized] private static bool didCacheEntryRenameTextStyle;
+        protected static GUIStyle EntryRenameTextStyle
+        {
+            get
+            {
+                if (!didCacheEntryRenameTextStyle)
+                {
+                    didCacheEntryRenameTextStyle = true;
+                    cachedEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
+                    {
+                        wordWrap = true,
+                        alignment = TextAnchor.LowerCenter,
+                    };
+                }
+                return cachedEntryRenameTextStyle;
             }
         }
         
@@ -253,6 +274,8 @@ namespace RoyTheunissen.AssetPalette
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && !didClickASpecificEntry &&
                 !Event.current.shift)
             {
+                StopAllRenames();
+                
                 ClearEntrySelection();
                 Repaint();
             }
@@ -349,7 +372,13 @@ namespace RoyTheunissen.AssetPalette
 
                     // Allow assets to be opened by double clicking on them.
                     if (Event.current.clickCount == 2)
-                        entry.Open();
+                    {
+                        Rect labelRect = PaletteEntryPropertyDrawerBase.GetLabelRect(rect, entry);
+                        if (entry.CanRename && labelRect.Contains(Event.current.mousePosition))
+                            StartEntryRename(entry);
+                        else
+                            entry.Open();
+                    }
                 }
 
                 didClickASpecificEntry = true;
@@ -390,10 +419,21 @@ namespace RoyTheunissen.AssetPalette
                 borderRect, EditorGUIUtility.whiteTexture, ScaleMode.ScaleToFit, true, 0.0f, borderColor, borderWidth,
                 borderWidth);
 
-            // Actually draw the contents of the entry.
+            // Actually draw the entry itself.
             Rect entryContentsRect = rect;
             SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
-            EditorGUI.PropertyField(entryContentsRect, entryProperty, GUIContent.none);
+
+            if (entry.IsRenaming)
+            {
+                string renameControlId = GetRenameControlId(entryProperty);
+                GUI.SetNextControlName(renameControlId);
+                renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
+                GUI.FocusControl(renameControlId);
+            }
+            else
+            {
+                EditorGUI.PropertyField(entryContentsRect, entryProperty, GUIContent.none);
+            }
         }
 
         private void DrawEntryPanelMessage(bool hasCollection)
@@ -472,6 +512,56 @@ namespace RoyTheunissen.AssetPalette
         {
             entriesSelected.Clear();
             entriesIndividuallySelected.Clear();
+        }
+
+        private void AddEntryForProjectWindowSelection()
+        {
+            PaletteSelectionShortcut paletteSelectionShortcut = new PaletteSelectionShortcut(Selection.objects);
+            AddEntry(paletteSelectionShortcut, true);
+            
+            if (Selection.objects.Length > PaletteSelectionShortcut.ItemNamesToDisplayMax)
+                StartEntryRename(paletteSelectionShortcut);
+            
+            Repaint();
+        }
+
+        private SerializedProperty GetSerializedPropertyForEntry(PaletteEntry entry)
+        {
+            int index = IndexOfEntry(entry);
+
+            if (index == -1)
+                return null;
+            
+            return SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+        }
+        
+        private void StartEntryRename(PaletteEntry entry)
+        {
+            renameText = entry.Name;
+            entry.StartRename();
+            
+            EditorGUI.FocusTextInControl(GetRenameControlId(entry));
+        }
+
+        private void StopEntryRename()
+        {
+            if (!PaletteEntry.IsEntryBeingRenamed)
+                return;
+
+            bool isValidRename = PaletteEntry.EntryCurrentlyRenaming.Name != renameText;
+            if (isValidRename)
+            {
+                CurrentCollectionSerializedObject.Update();
+                int index = SelectedFolder.Entries.IndexOf(PaletteEntry.EntryCurrentlyRenaming);
+                SerializedProperty entryBeingRenamedProperty =
+                    SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+                SerializedProperty customNameProperty = entryBeingRenamedProperty.FindPropertyRelative("customName");
+                customNameProperty.stringValue = renameText;
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            }
+
+            PaletteEntry.CancelRename();
+            Repaint();
         }
     }
 }

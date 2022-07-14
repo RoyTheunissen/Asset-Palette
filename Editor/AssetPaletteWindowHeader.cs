@@ -3,6 +3,7 @@ using System.IO;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using TypeExtensions = RoyTheunissen.AssetPalette.Extensions.TypeExtensions;
 
@@ -10,6 +11,8 @@ namespace RoyTheunissen.AssetPalette
 {
     public partial class AssetPaletteWindow
     {
+        private const string AddEntryForCurrentSelectionText = "Add Shortcut For Project Window Selection";
+        
         private string CurrentCollectionGuid
         {
             get => EditorPrefs.GetString(CurrentCollectionGUIDEditorPref);
@@ -102,7 +105,7 @@ namespace RoyTheunissen.AssetPalette
                 return cachedFolderTypes;
             }
         }
-        
+
         private void DrawHeader()
         {
             Rect headerRect = GUILayoutUtility.GetRect(position.width, HeaderHeight);
@@ -145,13 +148,23 @@ namespace RoyTheunissen.AssetPalette
 
         private void DrawEntryPanelHeader(Rect headerRect)
         {
-            Rect sortModeButtonRect = RectExtensions.GetSubRectFromRight(headerRect, SortModeButtonWidth);
+            // Dropdown for changing the sort mode.
+            Rect sortModeButtonRect = RectExtensions.GetSubRectFromRight(
+                headerRect, SortModeButtonWidth, out Rect remainder);
             GUI.enabled = HasCollection;
             bool showSortModeRect = GUI.Button(
                 sortModeButtonRect, SortMode.ToString().ToHumanReadable(), EditorStyles.toolbarDropDown);
             GUI.enabled = true;
             if (showSortModeRect)
                 DoSortModeDropDown(sortModeButtonRect);
+
+            // Dropdown for adding a special entry.
+            Rect addEntryForProjectWindowSelectionRect = RectExtensions.GetSubRectFromRight(
+                remainder, AddEntryForProjectWindowSelectionButtonWidth);
+            bool addEntryForProjectWindowSelection = GUI.Button(
+                addEntryForProjectWindowSelectionRect, "Add Special", EditorStyles.toolbarDropDown);
+            if (addEntryForProjectWindowSelection)
+                DoAddSpecialDropDown(addEntryForProjectWindowSelectionRect);
         }
 
         private void DoSortModeDropDown(Rect buttonRect)
@@ -258,7 +271,39 @@ namespace RoyTheunissen.AssetPalette
             // Create a new instance of the specified folder type.
             PaletteFolder newFolder = CreateNewFolderOfType((Type)userdata, GetUniqueFolderName(NewFolderName));
             StartFolderRename(newFolder);
-            GUI.FocusControl(newFolder.RenameControlId);
+        }
+        
+        private bool HasProjectWindowSelection()
+        {
+            Object[] selectionFiltered = Selection.GetFiltered<Object>(SelectionMode.Assets);
+            return selectionFiltered.Length > 0;
+        }
+        
+        private void DoAddSpecialDropDown(Rect position)
+        {
+            GenericMenu dropdownMenu = new GenericMenu();
+
+            DoAddSpecialDropDown(dropdownMenu, "");
+
+            dropdownMenu.DropDown(position);
+        }
+        
+        /// <summary>
+        /// This is for right-clicking the window or clicking on the hamburger icon.
+        /// </summary>
+        public void AddItemsToMenu(GenericMenu menu)
+        {
+            DoAddSpecialDropDown(menu, "Add Special/");
+        }
+
+        private void DoAddSpecialDropDown(GenericMenu menu, string prefix)
+        {
+            GUIContent addEntryForCurrentSelectionLabel =
+                new GUIContent(prefix + AddEntryForCurrentSelectionText);
+            if (HasProjectWindowSelection())
+                menu.AddItem(addEntryForCurrentSelectionLabel, false, AddEntryForProjectWindowSelection);
+            else
+                menu.AddDisabledItem(addEntryForCurrentSelectionLabel, false);
         }
     }
 }

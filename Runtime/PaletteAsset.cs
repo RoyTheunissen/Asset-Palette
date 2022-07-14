@@ -17,7 +17,7 @@ namespace RoyTheunissen.AssetPalette
 
         public override bool IsValid => Asset != null;
 
-        public override string Name => Asset.name;
+        protected override string DefaultName => Asset.name;
 
 #if UNITY_EDITOR
         [NonSerialized] private Texture2D cachedPreviewTexture;
