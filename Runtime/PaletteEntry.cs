@@ -27,7 +27,7 @@ namespace RoyTheunissen.AssetPalette
         public static bool IsEntryBeingRenamed => entryCurrentlyRenaming != null;
 
         public abstract void Open();
-        
+
         public void StartRename()
         {
             entryCurrentlyRenaming = this;

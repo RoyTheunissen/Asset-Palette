@@ -81,6 +81,22 @@ namespace RoyTheunissen.AssetPalette
             }
             set => SelectedFolderIndex = CurrentCollection.Folders.IndexOf(value);
         }
+        
+        [NonSerialized] private bool didCacheFoldersSerializedProperty;
+        [NonSerialized] private SerializedProperty cachedFoldersSerializedProperty;
+        private SerializedProperty FoldersSerializedProperty
+        {
+            get
+            {
+                if (!didCacheFoldersSerializedProperty)
+                {
+                    didCacheFoldersSerializedProperty = true;
+                    cachedFoldersSerializedProperty = CurrentCollectionSerializedObject.FindProperty("folders");
+                }
+
+                return cachedFoldersSerializedProperty;
+            }
+        }
 
         [NonSerialized] private bool didCacheSelectedFolderSerializedProperty;
         [NonSerialized] private SerializedProperty cachedSelectedFolderSerializedProperty;
@@ -92,8 +108,8 @@ namespace RoyTheunissen.AssetPalette
                 {
                     EnsureFolderExists();
                     didCacheSelectedFolderSerializedProperty = true;
-                    cachedSelectedFolderSerializedProperty = CurrentCollectionSerializedObject.FindProperty("folders")
-                        .GetArrayElementAtIndex(SelectedFolderIndex);
+                    cachedSelectedFolderSerializedProperty =
+                        FoldersSerializedProperty.GetArrayElementAtIndex(SelectedFolderIndex);
                 }
 
                 return cachedSelectedFolderSerializedProperty;
@@ -314,9 +330,10 @@ namespace RoyTheunissen.AssetPalette
                 // Draw the actual folder itself.
                 if (folder.IsRenaming)
                 {
-                    GUI.SetNextControlName(folder.RenameControlId);
+                    string renameControlId = GetRenameControlId(folderProperty);
+                    GUI.SetNextControlName(renameControlId);
                     renameText = EditorGUI.TextField(folderRect, renameText);
-                    GUI.FocusControl(folder.RenameControlId);
+                    GUI.FocusControl(renameControlId);
                 }
                 else
                 {
@@ -456,6 +473,47 @@ namespace RoyTheunissen.AssetPalette
         {
             renameText = folder.Name;
             folder.StartRename();
+            
+            EditorGUI.FocusTextInControl(GetRenameControlId(folder));
+        }
+
+        private string GetRenameControlId(SerializedProperty serializedProperty)
+        {
+            return serializedProperty.propertyPath;
+        }
+        
+        private string GetRenameControlId(PaletteFolder folder)
+        {
+            SerializedProperty serializedProperty = GetSerializedPropertyForFolder(folder);
+            return GetRenameControlId(serializedProperty);
+        }
+        
+        private string GetRenameControlId(PaletteEntry entry)
+        {
+            SerializedProperty serializedProperty = GetSerializedPropertyForEntry(entry);
+            return GetRenameControlId(serializedProperty);
+        }
+        
+        private int IndexOfFolder(PaletteFolder folder)
+        {
+            for (int i = 0; i < FoldersSerializedProperty.arraySize; i++)
+            {
+                PaletteFolder folderAtIndex =
+                    (PaletteFolder)FoldersSerializedProperty.GetArrayElementAtIndex(i).managedReferenceValue;
+                if (folderAtIndex == folder)
+                    return i;
+            }
+            return -1;
+        }
+        
+        private SerializedProperty GetSerializedPropertyForFolder(PaletteFolder folder)
+        {
+            int index = IndexOfFolder(folder);
+
+            if (index == -1)
+                return null;
+            
+            return FoldersSerializedProperty.GetArrayElementAtIndex(index);
         }
 
         private void StopFolderRename()

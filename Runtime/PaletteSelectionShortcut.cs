@@ -10,6 +10,8 @@ namespace RoyTheunissen.AssetPalette.Runtime
     [Serializable]
     public class PaletteSelectionShortcut : PaletteEntry
     {
+        public const int ItemNamesToDisplayMax = 3;
+        
         [SerializeField] private Object[] selection;
         public Object[] Selection => selection;
 
@@ -40,7 +42,7 @@ namespace RoyTheunissen.AssetPalette.Runtime
                         validItemCount++;
                     }
                     
-                    if (validItemCount > 3)
+                    if (validItemCount > ItemNamesToDisplayMax)
                     {
                         cachedName = $"{validItemCount} items";
                     }

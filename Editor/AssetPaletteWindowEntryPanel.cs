@@ -424,9 +424,16 @@ namespace RoyTheunissen.AssetPalette
             SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
 
             if (entry.IsRenaming)
+            {
+                string renameControlId = GetRenameControlId(entryProperty);
+                GUI.SetNextControlName(renameControlId);
                 renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
+                GUI.FocusControl(renameControlId);
+            }
             else
+            {
                 EditorGUI.PropertyField(entryContentsRect, entryProperty, GUIContent.none);
+            }
         }
 
         private void DrawEntryPanelMessage(bool hasCollection)
@@ -512,13 +519,28 @@ namespace RoyTheunissen.AssetPalette
             PaletteSelectionShortcut paletteSelectionShortcut = new PaletteSelectionShortcut(Selection.objects);
             AddEntry(paletteSelectionShortcut, true);
             
+            if (Selection.objects.Length > PaletteSelectionShortcut.ItemNamesToDisplayMax)
+                StartEntryRename(paletteSelectionShortcut);
+            
             Repaint();
+        }
+
+        private SerializedProperty GetSerializedPropertyForEntry(PaletteEntry entry)
+        {
+            int index = IndexOfEntry(entry);
+
+            if (index == -1)
+                return null;
+            
+            return SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
         }
         
         private void StartEntryRename(PaletteEntry entry)
         {
             renameText = entry.Name;
             entry.StartRename();
+            
+            EditorGUI.FocusTextInControl(GetRenameControlId(entry));
         }
 
         private void StopEntryRename()

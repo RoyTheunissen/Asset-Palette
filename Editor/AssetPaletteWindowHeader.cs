@@ -271,7 +271,6 @@ namespace RoyTheunissen.AssetPalette
             // Create a new instance of the specified folder type.
             PaletteFolder newFolder = CreateNewFolderOfType((Type)userdata, GetUniqueFolderName(NewFolderName));
             StartFolderRename(newFolder);
-            GUI.FocusControl(newFolder.RenameControlId);
         }
         
         private bool HasProjectWindowSelection()

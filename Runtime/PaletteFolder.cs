@@ -9,10 +9,7 @@ namespace RoyTheunissen.AssetPalette
     {
         [SerializeField] private string name;
         public string Name => name;
-        
-        [SerializeField] private string guid;
-        public string RenameControlId => $"{guid}Rename";
-        
+
         [SerializeReference] private List<PaletteEntry> entries = new List<PaletteEntry>();
         public List<PaletteEntry> Entries => entries;
 
@@ -26,8 +23,6 @@ namespace RoyTheunissen.AssetPalette
         public void Initialize(string name)
         {
             this.name = name;
-            
-            guid = Guid.NewGuid().ToString();
         }
 
         public void StartRename()
