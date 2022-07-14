@@ -12,6 +12,21 @@ namespace RoyTheunissen.AssetPalette.Editor
     {
         private const int IconsToShowMax = 10;
         
+        private Texture2D cachedShortcutIcon;
+        private bool didCacheShortcutIcon;
+        private Texture2D ShortcutIcon
+        {
+            get
+            {
+                if (!didCacheShortcutIcon)
+                {
+                    didCacheShortcutIcon = true;
+                    cachedShortcutIcon = Resources.Load<Texture2D>("Palette Shortcut Icon");
+                }
+                return cachedShortcutIcon;
+            }
+        }
+        
         protected override void DrawContents(Rect position, SerializedProperty property, PaletteSelectionShortcut entry)
         {
             // OPTIMIZATION: Don't bother with any of this if we're not currently drawing.
@@ -43,6 +58,12 @@ namespace RoyTheunissen.AssetPalette.Editor
                 if (iconTexture != null)
                     GUI.DrawTexture(iconRect, iconTexture, ScaleMode.ScaleToFit);
             }
+
+            // Also draw a shortcut icon in the corner, for clarity.
+            float shortcutIconSize = Mathf.RoundToInt(position.width * 0.25f);
+            Rect shortcutIconRect = new Rect(
+                position.xMin, position.yMin, shortcutIconSize, shortcutIconSize);
+            GUI.DrawTexture(shortcutIconRect, ShortcutIcon, ScaleMode.ScaleToFit);
         }
     }
 }
