@@ -250,7 +250,8 @@ namespace RoyTheunissen.AssetPalette
             GUILayout.Space(padding);
 
             // If you didn't click an entry and weren't pressing SHIFT, clear the selection.
-            if (Event.current.type == EventType.MouseDown && !didClickASpecificEntry && !Event.current.shift)
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && !didClickASpecificEntry &&
+                !Event.current.shift)
             {
                 ClearEntrySelection();
                 Repaint();
@@ -269,7 +270,7 @@ namespace RoyTheunissen.AssetPalette
             // Allow this entry to be selected by clicking it.
             bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && isMouseInEntriesPanel;
             bool wasAlreadySelected = entriesSelected.Contains(entry);
-            if (Event.current.type == EventType.MouseDown && isMouseOnEntry)
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && isMouseOnEntry)
             {
                 if (Event.current.shift)
                 {
@@ -354,15 +355,15 @@ namespace RoyTheunissen.AssetPalette
                 didClickASpecificEntry = true;
                 Repaint();
             }
-            else if (Event.current.type == EventType.MouseUp && isMouseOnEntry && !Event.current.control &&
-                     !Event.current.shift)
+            else if (Event.current.type == EventType.MouseUp && Event.current.button == 0 && isMouseOnEntry
+                     && !Event.current.control && !Event.current.shift)
             {
                 // Regular click to select only this entry.
                 SelectEntry(entry, true);
                 Repaint();
             }
-            else if (Event.current.type == EventType.MouseDrag && isMouseOnEntry && !isResizingFolderPanel &&
-                     isMouseInEntriesPanel && !IsZoomLevelFocused)
+            else if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOnEntry &&
+                     !isResizingFolderPanel && isMouseInEntriesPanel && !IsZoomLevelFocused)
             {
                 DragAndDrop.PrepareStartDrag();
                 List<Object> selectedAssets = new List<Object>();
