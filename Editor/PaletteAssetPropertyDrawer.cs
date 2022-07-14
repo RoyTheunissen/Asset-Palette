@@ -1,9 +1,6 @@
-using System;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
-using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
 namespace RoyTheunissen.AssetPalette.Editor
 {
@@ -11,44 +8,13 @@ namespace RoyTheunissen.AssetPalette.Editor
     /// Draws an Asset entry in the palette.
     /// </summary>
     [CustomPropertyDrawer(typeof(PaletteAsset))]
-    public class PaletteAssetPropertyDrawer : PropertyDrawer
+    public class PaletteAssetPropertyDrawer : PaletteEntryPropertyDrawer<PaletteAsset>
     {
-        [NonSerialized] private GUIStyle cachedEntryNameTextStyle;
-        [NonSerialized] private bool didCacheEntryNameTextStyle;
-        private GUIStyle EntryNameTextStyle
+        protected override void DrawContents(Rect position, SerializedProperty property, PaletteAsset entry)
         {
-            get
-            {
-                if (!didCacheEntryNameTextStyle)
-                {
-                    didCacheEntryNameTextStyle = true;
-                    cachedEntryNameTextStyle = new GUIStyle(EditorStyles.wordWrappedMiniLabel)
-                    {
-                        alignment = TextAnchor.LowerCenter
-                    };
-                    cachedEntryNameTextStyle.normal.textColor = Color.white;
-                }
-                return cachedEntryNameTextStyle;
-            }
-        }
-        
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            PaletteAsset entry;
-            
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 &&
-                position.Contains(Event.current.mousePosition))
-            {
-                entry = SerializedPropertyExtensions.GetValue<PaletteAsset>(property);
-                ShowContextMenu(entry);
-                return;
-            }
-            
             // OPTIMIZATION: Don't bother with any of this if we're not currently drawing.
             if (Event.current.type != EventType.Repaint)
                 return;
-            
-            entry = SerializedPropertyExtensions.GetValue<PaletteAsset>(property);
 
             // Draw the texture.
             if (entry.PreviewTexture != null)
@@ -70,22 +36,12 @@ namespace RoyTheunissen.AssetPalette.Editor
                 if (iconTexture != null)
                     GUI.DrawTexture(iconRect, iconTexture, ScaleMode.ScaleToFit);
             }
-            
-            // Draw a label with a nice semi-transparent backdrop.
-            GUIContent title = new GUIContent(entry.Name);
-            float height = EntryNameTextStyle.CalcHeight(title, position.width);
-            Rect labelRect = RectExtensions.GetSubRectFromBottom(position, height);
-            EditorGUI.DrawRect(labelRect, new Color(0, 0, 0, 0.15f));
-            EditorGUI.LabelField(position, title, EntryNameTextStyle);
         }
 
-        private void ShowContextMenu(PaletteAsset entry)
+        protected override void OnContextMenu(GenericMenu menu, PaletteAsset entry)
         {
-            GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Open"), false, entry.Open);
             menu.AddItem(new GUIContent("Show In Project Window"), false, ShowInProjectWindow, entry);
             menu.AddItem(new GUIContent("Show In Explorer"), false, ShowInExplorer, entry);
-            menu.ShowAsContext();
         }
 
         private void ShowInProjectWindow(object userData)
