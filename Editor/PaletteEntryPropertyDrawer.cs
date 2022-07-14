@@ -6,31 +6,64 @@ using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.Seria
 
 namespace RoyTheunissen.AssetPalette.Editor
 {
-    /// <summary>
-    /// Base class for drawing entries in the palette.
-    /// </summary>
-    public abstract class PaletteEntryPropertyDrawer<EntryType> : PropertyDrawer
-        where EntryType : PaletteEntry
+    public abstract class PaletteEntryPropertyDrawerBase : PropertyDrawer
     {
-        [NonSerialized] private GUIStyle cachedEntryNameTextStyle;
-        [NonSerialized] private bool didCacheEntryNameTextStyle;
-        protected GUIStyle EntryNameTextStyle
+        [NonSerialized] private static GUIStyle cachedLabelStyle;
+        [NonSerialized] private static bool didCacheLabelStyle;
+        private static GUIStyle LabelStyle
         {
             get
             {
-                if (!didCacheEntryNameTextStyle)
+                if (!didCacheLabelStyle)
                 {
-                    didCacheEntryNameTextStyle = true;
-                    cachedEntryNameTextStyle = new GUIStyle(EditorStyles.wordWrappedMiniLabel)
+                    didCacheLabelStyle = true;
+                    cachedLabelStyle = new GUIStyle(EditorStyles.wordWrappedMiniLabel)
                     {
-                        alignment = TextAnchor.LowerCenter
+                        alignment = TextAnchor.LowerCenter,
+                        normal = {textColor = Color.white}
                     };
-                    cachedEntryNameTextStyle.normal.textColor = Color.white;
                 }
-                return cachedEntryNameTextStyle;
+                return cachedLabelStyle;
             }
         }
         
+        [NonSerialized] private static GUIStyle cachedCustomLabelStyle;
+        [NonSerialized] private static bool didCustomLabelStyle;
+        private static GUIStyle CustomLabelStyle
+        {
+            get
+            {
+                if (!didCustomLabelStyle)
+                {
+                    didCustomLabelStyle = true;
+                    cachedCustomLabelStyle = new GUIStyle(LabelStyle)
+                    {
+                        fontStyle = FontStyle.Bold,
+                    };
+                }
+                return cachedCustomLabelStyle;
+            }
+        }
+
+        protected GUIStyle GetLabelStyle(PaletteEntry entry)
+        {
+            return entry.HasCustomName ? CustomLabelStyle : LabelStyle;
+        }
+        
+        public static Rect GetLabelRect(Rect position, PaletteEntry entry)
+        {
+            GUIContent label = new GUIContent(entry.Name);
+            float height = LabelStyle.CalcHeight(label, position.width);
+            return RectExtensions.GetSubRectFromBottom(position, height);
+        }
+    }
+    
+    /// <summary>
+    /// Base class for drawing entries in the palette.
+    /// </summary>
+    public abstract class PaletteEntryPropertyDrawer<EntryType> : PaletteEntryPropertyDrawerBase
+        where EntryType : PaletteEntry
+    {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EntryType entry;
@@ -54,8 +87,7 @@ namespace RoyTheunissen.AssetPalette.Editor
 
             // Draw a label with a nice semi-transparent backdrop.
             label = new GUIContent(entry.Name);
-            float height = EntryNameTextStyle.CalcHeight(label, position.width);
-            Rect labelRect = RectExtensions.GetSubRectFromBottom(position, height);
+            Rect labelRect = GetLabelRect(position, entry);
             DrawLabel(position, labelRect, property, label, entry);
         }
 
@@ -65,7 +97,7 @@ namespace RoyTheunissen.AssetPalette.Editor
             Rect position, Rect labelPosition, SerializedProperty property, GUIContent label, EntryType entry)
         {
             EditorGUI.DrawRect(labelPosition, new Color(0, 0, 0, 0.15f));
-            EditorGUI.LabelField(position, label, EntryNameTextStyle);
+            EditorGUI.LabelField(position, label, GetLabelStyle(entry));
         }
 
         private void ShowContextMenu(EntryType entry)
@@ -78,6 +110,8 @@ namespace RoyTheunissen.AssetPalette.Editor
         protected virtual void OnContextMenu(GenericMenu menu, EntryType entry)
         {
             menu.AddItem(new GUIContent("Open"), false, entry.Open);
+            if (entry.CanRename)
+                menu.AddItem(new GUIContent("Rename"), false, entry.StartRename);
         }
     }
 }

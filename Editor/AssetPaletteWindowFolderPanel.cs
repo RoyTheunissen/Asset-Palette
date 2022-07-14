@@ -20,9 +20,7 @@ namespace RoyTheunissen.AssetPalette
         [NonSerialized] private bool isDraggingFolder;
         [NonSerialized] private int currentFolderDragIndex;
         [NonSerialized] private int folderToDragIndex;
-        
-        [NonSerialized] private string folderRenameText;
-        
+
         [NonSerialized] private bool isResizingFolderPanel;
         
         private Vector2 folderPanelScrollPosition;
@@ -317,7 +315,7 @@ namespace RoyTheunissen.AssetPalette
                 if (folder.IsRenaming)
                 {
                     GUI.SetNextControlName(folder.RenameControlId);
-                    folderRenameText = EditorGUI.TextField(folderRect, folderRenameText);
+                    renameText = EditorGUI.TextField(folderRect, renameText);
                     GUI.FocusControl(folder.RenameControlId);
                 }
                 else
@@ -365,9 +363,9 @@ namespace RoyTheunissen.AssetPalette
                 {
                     if (folder.IsRenaming && !isMouseOver)
                     {
-                        StopFolderRename();
+                        StopAllRenames();
                     }
-                    else if (!PaletteFolder.IsFolderBeingRenamed && isMouseOver)
+                    else if (!IsRenaming && isMouseOver)
                     {
                         SelectedFolderIndex = i;
 
@@ -456,7 +454,7 @@ namespace RoyTheunissen.AssetPalette
         
         private void StartFolderRename(PaletteFolder folder)
         {
-            folderRenameText = folder.Name;
+            renameText = folder.Name;
             folder.StartRename();
         }
 
@@ -465,18 +463,18 @@ namespace RoyTheunissen.AssetPalette
             if (!PaletteFolder.IsFolderBeingRenamed)
                 return;
 
-            bool isValidRename = !string.IsNullOrEmpty(folderRenameText) &&
-                                 !string.IsNullOrWhiteSpace(folderRenameText) &&
-                                 PaletteFolder.FolderCurrentlyRenaming.Name != folderRenameText;
+            bool isValidRename = !string.IsNullOrEmpty(renameText) &&
+                                 !string.IsNullOrWhiteSpace(renameText) &&
+                                 PaletteFolder.FolderCurrentlyRenaming.Name != renameText;
             if (isValidRename)
             {
-                folderRenameText = GetUniqueFolderName(folderRenameText);
+                renameText = GetUniqueFolderName(renameText);
                 CurrentCollectionSerializedObject.Update();
                 SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
                 int index = CurrentCollection.Folders.IndexOf(PaletteFolder.FolderCurrentlyRenaming);
                 SerializedProperty folderBeingRenamedProperty = foldersProperty.GetArrayElementAtIndex(index);
                 SerializedProperty nameProperty = folderBeingRenamedProperty.FindPropertyRelative("name");
-                nameProperty.stringValue = folderRenameText;
+                nameProperty.stringValue = renameText;
                 CurrentCollectionSerializedObject.ApplyModifiedProperties();
             }
 
@@ -486,22 +484,22 @@ namespace RoyTheunissen.AssetPalette
         
         private void OnLostFocus()
         {
-            StopFolderRename();
+            StopAllRenames();
         }
 
         private void OnSelectionChange()
         {
-            StopFolderRename();
+            StopAllRenames();
         }
 
         private void OnFocus()
         {
-            StopFolderRename();
+            StopAllRenames();
         }
 
         private void OnProjectChange()
         {
-            StopFolderRename();
+            StopAllRenames();
         }
     }
 }

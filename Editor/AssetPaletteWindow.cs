@@ -42,6 +42,10 @@ namespace RoyTheunissen.AssetPalette
         [NonSerialized] private bool isMouseInFolderPanel;
         [NonSerialized] private bool isMouseInEntriesPanel;
         
+        [NonSerialized] private string renameText;
+
+        private bool IsRenaming => PaletteFolder.IsFolderBeingRenamed || PaletteEntry.IsEntryBeingRenamed;
+        
         private Color cachedSelectionColor;
         private bool didCacheSelectionColor;
         private Color SelectionColor
@@ -121,14 +125,14 @@ namespace RoyTheunissen.AssetPalette
             if (Event.current.type != EventType.KeyDown)
                 return;
             
-            if (Event.current.keyCode == KeyCode.Return && PaletteFolder.IsFolderBeingRenamed)
+            if (Event.current.keyCode == KeyCode.Return && IsRenaming)
             {
-                StopFolderRename();
+                StopAllRenames();
                 return;
             }
             
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
-            if (Event.current.control && Event.current.keyCode == KeyCode.A)
+            if (Event.current.control && Event.current.keyCode == KeyCode.A && !IsRenaming)
             {
                 SelectEntries(GetEntries(), true);
                 if (GetEntryCount() > 0)
@@ -137,7 +141,7 @@ namespace RoyTheunissen.AssetPalette
                 return;
             }
 
-            if (Event.current.keyCode == KeyCode.Delete)
+            if (Event.current.keyCode == KeyCode.Delete && !IsRenaming)
             {
                 if (isMouseInEntriesPanel)
                 {
@@ -151,7 +155,7 @@ namespace RoyTheunissen.AssetPalette
                     Repaint();
                 }
                 else if (isMouseInFolderPanel && HasCollection && CurrentCollection.Folders.Count > 1 &&
-                         !isDraggingFolder && !PaletteFolder.IsFolderBeingRenamed)
+                         !isDraggingFolder)
                 {
                     CurrentCollectionSerializedObject.Update();
                     SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
@@ -164,6 +168,12 @@ namespace RoyTheunissen.AssetPalette
                     Repaint();
                 }
             }
+        }
+
+        private void StopAllRenames()
+        {
+            StopFolderRename();
+            StopEntryRename();
         }
     }
 }

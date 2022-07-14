@@ -15,7 +15,8 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         [NonSerialized] private bool didCacheName;
         [NonSerialized] private string cachedName;
-        public override string Name
+
+        protected override string DefaultName
         {
             get
             {
