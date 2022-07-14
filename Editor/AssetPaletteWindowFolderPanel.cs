@@ -179,7 +179,7 @@ namespace RoyTheunissen.AssetPalette
         private void DrawFolderPanel()
         {
             // It seems like mouse events are relative to scroll views.
-            bool didClickAnywhereInWindow = Event.current.type == EventType.MouseDown;
+            bool didClickAnywhereInWindow = Event.current.type == EventType.MouseDown && Event.current.button == 0;
 
             folderPanelScrollPosition = EditorGUILayout.BeginScrollView(
                 folderPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
@@ -326,8 +326,8 @@ namespace RoyTheunissen.AssetPalette
                 }
 
                 // Dragging and dropping folders.
-                if (Event.current.type == EventType.MouseDrag && isMouseOver && !isResizingFolderPanel &&
-                    !isDraggingAssets)
+                if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOver &&
+                    !isResizingFolderPanel && !isDraggingAssets)
                 {
                     StartFolderDrag(folder);
                 }
@@ -394,7 +394,8 @@ namespace RoyTheunissen.AssetPalette
             resizeRect.xMax += expansion;
             EditorGUIUtility.AddCursorRect(resizeRect, MouseCursor.ResizeHorizontal);
 
-            if (Event.current.type == EventType.MouseDown && resizeRect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 &&
+                resizeRect.Contains(Event.current.mousePosition))
             {
                 isResizingFolderPanel = true;
             }
