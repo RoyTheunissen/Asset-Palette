@@ -24,9 +24,6 @@ namespace RoyTheunissen.AssetPalette.Editor
             }
             else
             {
-                const float brightness = 0.325f;
-                EditorGUI.DrawRect(position, new Color(brightness, brightness, brightness));
-                
                 // If we don't have a nice rendered preview, draw an icon instead.
                 Texture2D iconTexture = AssetPreview.GetMiniThumbnail(entry.Asset);
                 float width = Mathf.Min(iconTexture.width, position.width * 0.75f);
@@ -40,6 +37,8 @@ namespace RoyTheunissen.AssetPalette.Editor
 
         protected override void OnContextMenu(GenericMenu menu, PaletteAsset entry)
         {
+            base.OnContextMenu(menu, entry);
+            
             menu.AddItem(new GUIContent("Show In Project Window"), false, ShowInProjectWindow, entry);
             menu.AddItem(new GUIContent("Show In Explorer"), false, ShowInExplorer, entry);
         }

@@ -44,7 +44,12 @@ namespace RoyTheunissen.AssetPalette.Editor
             }
             
             entry = SerializedPropertyExtensions.GetValue<EntryType>(property);
+            
+            // Draw a nice background.
+            const float brightness = 0.325f;
+            EditorGUI.DrawRect(position, new Color(brightness, brightness, brightness));
 
+            // Draw the contents for this particular entry.
             DrawContents(position, property, entry);
 
             // Draw a label with a nice semi-transparent backdrop.
@@ -66,11 +71,13 @@ namespace RoyTheunissen.AssetPalette.Editor
         private void ShowContextMenu(EntryType entry)
         {
             GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Open"), false, entry.Open);
             OnContextMenu(menu, entry);
             menu.ShowAsContext();
         }
 
-        protected abstract void OnContextMenu(GenericMenu menu, EntryType entry);
+        protected virtual void OnContextMenu(GenericMenu menu, EntryType entry)
+        {
+            menu.AddItem(new GUIContent("Open"), false, entry.Open);
+        }
     }
 }
