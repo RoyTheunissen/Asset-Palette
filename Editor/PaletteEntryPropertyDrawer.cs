@@ -76,7 +76,7 @@ namespace RoyTheunissen.AssetPalette.Editor
                 position.Contains(Event.current.mousePosition))
             {
                 entry = SerializedPropertyExtensions.GetValue<EntryType>(property);
-                ShowContextMenu(entry);
+                ShowContextMenu(entry, property);
                 return;
             }
             
@@ -104,14 +104,14 @@ namespace RoyTheunissen.AssetPalette.Editor
             EditorGUI.LabelField(position, label, GetLabelStyle(entry));
         }
 
-        private void ShowContextMenu(EntryType entry)
+        private void ShowContextMenu(EntryType entry, SerializedProperty property)
         {
             GenericMenu menu = new GenericMenu();
-            OnContextMenu(menu, entry);
+            OnContextMenu(menu, entry, property);
             menu.ShowAsContext();
         }
 
-        protected virtual void OnContextMenu(GenericMenu menu, EntryType entry)
+        protected virtual void OnContextMenu(GenericMenu menu, EntryType entry, SerializedProperty property)
         {
             menu.AddItem(new GUIContent(OpenText), false, entry.Open);
             if (entry.CanRename)

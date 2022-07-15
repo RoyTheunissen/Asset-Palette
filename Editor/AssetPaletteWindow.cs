@@ -98,11 +98,12 @@ namespace RoyTheunissen.AssetPalette
 
                 EditorGUILayout.BeginVertical();
                 {
-                    HandleAssetDroppingInEntryPanel();
-
                     DrawEntriesPanel();
 
                     DrawFooter();
+                    
+                    // Do this last! Specific entries can now handle a dragged asset in which case this needn't happen. 
+                    HandleAssetDroppingInEntryPanel();
                 }
                 EditorGUILayout.EndVertical();
             }
@@ -118,6 +119,13 @@ namespace RoyTheunissen.AssetPalette
             isMouseInFolderPanel = !isMouseInHeader && Event.current.mousePosition.x < FolderPanelWidth;
 
             isMouseInEntriesPanel = !isMouseInHeader && !isMouseInFooter && !isMouseInFolderPanel;
+            
+            // Store this once so that specific entries can consider if they should be handling an asset drop, or 
+            // if the entry panel as a whole should be handling.
+            isDraggingAssetIntoEntryPanel = (Event.current.type == EventType.DragUpdated ||
+                                             Event.current.type == EventType.DragPerform) && isMouseInEntriesPanel &&
+                                            DragAndDrop.objectReferences.Length > 0 &&
+                                            DragAndDrop.GetGenericData(EntryDragGenericDataType) == null;
         }
         
         private void PerformKeyboardShortcuts()

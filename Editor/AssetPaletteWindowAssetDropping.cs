@@ -16,7 +16,8 @@ namespace RoyTheunissen.AssetPalette
         [NonSerialized] private readonly List<PaletteEntry> entriesToAddFromDraggedAssets = new List<PaletteEntry>();
         
         [NonSerialized] private List<PotentialMacro> potentialMacros = new List<PotentialMacro>();
-        
+        [NonSerialized] private bool isDraggingAssetIntoEntryPanel;
+
         private PaletteEntry GetEntryForAsset(Object asset)
         {
             foreach (PaletteEntry entry in GetEntries())
@@ -34,20 +35,13 @@ namespace RoyTheunissen.AssetPalette
 
         private void HandleAssetDroppingInEntryPanel()
         {
-            Event @event = Event.current;
-            if (@event.type != EventType.DragUpdated && @event.type != EventType.DragPerform)
-                return;
-
-            // NOTE: Ignore assets that are being dragged OUT of the entries panel as opposed to being dragged INTO it.
-            bool isValidDrag = isMouseInEntriesPanel && DragAndDrop.objectReferences.Length > 0 &&
-                               DragAndDrop.GetGenericData(EntryDragGenericDataType) == null;
-            if (!isValidDrag)
+            if (!isDraggingAssetIntoEntryPanel)
                 return;
 
             DragAndDrop.AcceptDrag();
             DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
 
-            if (@event.type != EventType.DragPerform)
+            if (Event.current.type != EventType.DragPerform)
                 return;
 
             HandleAssetDropping(DragAndDrop.objectReferences);

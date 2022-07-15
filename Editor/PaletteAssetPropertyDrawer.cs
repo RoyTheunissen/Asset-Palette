@@ -35,9 +35,9 @@ namespace RoyTheunissen.AssetPalette.Editor
             }
         }
 
-        protected override void OnContextMenu(GenericMenu menu, PaletteAsset entry)
+        protected override void OnContextMenu(GenericMenu menu, PaletteAsset entry, SerializedProperty property)
         {
-            base.OnContextMenu(menu, entry);
+            base.OnContextMenu(menu, entry, property);
             
             menu.AddItem(new GUIContent("Show In Project Window"), false, ShowInProjectWindow, entry);
             menu.AddItem(new GUIContent("Show In Explorer"), false, ShowInExplorer, entry);

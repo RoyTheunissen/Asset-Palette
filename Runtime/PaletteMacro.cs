@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -20,6 +21,10 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         [SerializeField] private string methodName;
         
+        [SerializeField] private Texture2D customIcon;
+        public Texture2D CustomIcon => customIcon;
+        public bool HasCustomIcon => CustomIcon != null;
+
         protected override string DefaultName => methodName.ToHumanReadable();
 
         public override bool IsValid => script != null && !string.IsNullOrEmpty(methodName);
@@ -82,5 +87,22 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
             return true;
         }
+
+#if UNITY_EDITOR
+        public override bool CanAcceptDraggedAssets(Object[] objectReferences)
+        {
+            return objectReferences.Length == 1 && objectReferences[0] is Texture2D;
+        }
+
+        public override void AcceptDraggedAssets(Object[] objectReferences, SerializedProperty serializedProperty)
+        {
+            base.AcceptDraggedAssets(objectReferences, serializedProperty);
+
+            Texture2D draggedTexture = (Texture2D)objectReferences[0];
+
+            SerializedProperty customIconProperty = serializedProperty.FindPropertyRelative(nameof(customIcon));
+            customIconProperty.objectReferenceValue = draggedTexture;
+        }
+#endif // UNITY_EDITOR
     }
 }
