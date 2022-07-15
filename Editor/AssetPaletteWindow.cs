@@ -80,6 +80,23 @@ namespace RoyTheunissen.AssetPalette
             window.wantsMouseMove = true;
         }
 
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+            Undo.undoRedoPerformed += OnUndoRedoPerformed;
+        }
+        
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+        }
+
+        private void OnUndoRedoPerformed()
+        {
+            // Repaint immediately otherwise you don't see the result of your undo!
+            Repaint();
+        }
+
         private void OnGUI()
         {
             UpdateMouseOverStates();
