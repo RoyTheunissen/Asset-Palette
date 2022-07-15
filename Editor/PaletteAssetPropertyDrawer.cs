@@ -54,10 +54,7 @@ namespace RoyTheunissen.AssetPalette.Editor
         {
             PaletteAsset entry = (PaletteAsset)userData;
 
-            string pathRelativeToProject = AssetDatabase.GetAssetPath(entry.Asset);
-            string pathRelativeToAssetsFolder = Path.GetRelativePath("Assets", pathRelativeToProject);
-            string pathAbsolute = Path.GetFullPath(pathRelativeToAssetsFolder, Application.dataPath);
-            EditorUtility.RevealInFinder(pathAbsolute);
+            ShowAssetInExplorer(entry.Asset);
         }
     }
 }

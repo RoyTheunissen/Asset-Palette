@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
@@ -64,6 +66,8 @@ namespace RoyTheunissen.AssetPalette.Editor
     public abstract class PaletteEntryPropertyDrawer<EntryType> : PaletteEntryPropertyDrawerBase
         where EntryType : PaletteEntry
     {
+        protected virtual string OpenText => "Open";
+        
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EntryType entry;
@@ -109,9 +113,17 @@ namespace RoyTheunissen.AssetPalette.Editor
 
         protected virtual void OnContextMenu(GenericMenu menu, EntryType entry)
         {
-            menu.AddItem(new GUIContent("Open"), false, entry.Open);
+            menu.AddItem(new GUIContent(OpenText), false, entry.Open);
             if (entry.CanRename)
                 menu.AddItem(new GUIContent("Rename"), false, entry.StartRename);
+        }
+
+        protected void ShowAssetInExplorer(Object asset)
+        {
+            string pathRelativeToProject = AssetDatabase.GetAssetPath(asset);
+            string pathRelativeToAssetsFolder = Path.GetRelativePath("Assets", pathRelativeToProject);
+            string pathAbsolute = Path.GetFullPath(pathRelativeToAssetsFolder, Application.dataPath);
+            EditorUtility.RevealInFinder(pathAbsolute);
         }
     }
 }

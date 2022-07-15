@@ -11,6 +11,8 @@ namespace RoyTheunissen.AssetPalette.Runtime
     public class PaletteMacro : PaletteEntry
     {
         [SerializeField] private TextAsset script;
+        public TextAsset Script => script;
+
         [SerializeField] private string methodName;
         
         protected override string DefaultName => methodName.ToHumanReadable();
@@ -25,7 +27,7 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         public override void Open()
         {
-            Debug.Log($"Should be calling script {script}'s {methodName}()");
+            Debug.Log($"Should be calling script {script.name}'s {methodName}()");
         }
     }
 }
