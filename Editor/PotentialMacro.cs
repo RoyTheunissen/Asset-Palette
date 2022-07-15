@@ -34,7 +34,7 @@ namespace RoyTheunissen.AssetPalette.Editor
             MethodInfo[] publicStaticMethods = scriptClass.GetMethods(BindingFlags.Public | BindingFlags.Static);
             foreach (MethodInfo methodInfo in publicStaticMethods)
             {
-                if (methodInfo.IsGenericMethod)
+                if (methodInfo.IsGenericMethod || methodInfo.ReturnType != typeof(void))
                     continue;
                 
                 ParameterInfo[] parameters = methodInfo.GetParameters();
