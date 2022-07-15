@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
+using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 
@@ -34,15 +35,9 @@ namespace RoyTheunissen.AssetPalette.Editor
             MethodInfo[] publicStaticMethods = scriptClass.GetMethods(BindingFlags.Public | BindingFlags.Static);
             foreach (MethodInfo methodInfo in publicStaticMethods)
             {
-                if (methodInfo.IsGenericMethod || methodInfo.ReturnType != typeof(void))
+                if (!PaletteMacro.CanCallMethodForMacro(methodInfo))
                     continue;
-                
-                ParameterInfo[] parameters = methodInfo.GetParameters();
-                
-                // Right now we only support parameterless methods.
-                if (parameters.Length > 0)
-                    continue;
-                
+
                 // We've got a live one.
                 macros.Add(new PotentialMacro(script, methodInfo));
             }

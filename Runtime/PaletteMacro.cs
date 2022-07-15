@@ -1,6 +1,11 @@
 using System;
+using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif // UNITY_EDITOR
 
 namespace RoyTheunissen.AssetPalette.Runtime
 {
@@ -27,7 +32,55 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         public override void Open()
         {
-            Debug.Log($"Should be calling script {script.name}'s {methodName}()");
+#if UNITY_EDITOR
+            MonoScript monoScript = (MonoScript)script;
+
+            if (monoScript == null)
+            {
+                Debug.LogError($"Tried to run macro '{Name}' but its script appeared to be missing.");
+                return;
+            }
+
+            Type macroClass = monoScript.GetClass();
+            if (macroClass == null)
+            {
+                Debug.LogError($"Tried to run macro '{Name}' but its script didn't appear to define a valid class. " +
+                               $"Make sure it defines one top-level non-generic class.");
+                return;
+            }
+
+            MethodInfo methodInfo = macroClass.GetMethod(methodName);
+            if (methodInfo == null)
+            {
+                Debug.LogError($"Tried to run macro '{Name}' but method '{methodName}' didn't seem to exist. " +
+                               $"Did you remove or rename it?");
+                return;
+            }
+            
+            if (!CanCallMethodForMacro(methodInfo))
+            {
+                Debug.LogError($"Tried to run macro '{Name}' but method '{methodName}' couldn't seem to be called. " +
+                               $"Check that it's static, non-generic, doesn't require parameters and doesn't return a value.");
+                return;
+            }
+
+            // Actually call the method.
+            methodInfo.Invoke(null, new object[] { });
+#endif // UNITY_EDITOR
+        }
+
+        public static bool CanCallMethodForMacro(MethodInfo methodInfo)
+        {
+            if (methodInfo.IsGenericMethod || methodInfo.ReturnType != typeof(void))
+                return false;
+                
+            ParameterInfo[] parameters = methodInfo.GetParameters();
+                
+            // Right now we only support parameterless methods.
+            if (parameters.Length > 0)
+                return false;
+
+            return true;
         }
     }
 }
