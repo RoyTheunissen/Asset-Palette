@@ -100,7 +100,7 @@ namespace RoyTheunissen.AssetPalette.Editor
         protected virtual void DrawLabel(
             Rect position, Rect labelPosition, SerializedProperty property, GUIContent label, EntryType entry)
         {
-            EditorGUI.DrawRect(labelPosition, new Color(0, 0, 0, 0.15f));
+            EditorGUI.DrawRect(labelPosition, new Color(0, 0, 0, 0.3f));
             EditorGUI.LabelField(position, label, GetLabelStyle(entry));
         }
 
