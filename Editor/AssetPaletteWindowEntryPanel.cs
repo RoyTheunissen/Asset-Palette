@@ -535,7 +535,7 @@ namespace RoyTheunissen.AssetPalette
             return SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
         }
         
-        private void StartEntryRename(PaletteEntry entry)
+        public void StartEntryRename(PaletteEntry entry)
         {
             renameText = entry.Name;
             entry.StartRename();

@@ -115,7 +115,17 @@ namespace RoyTheunissen.AssetPalette.Editor
         {
             menu.AddItem(new GUIContent(OpenText), false, entry.Open);
             if (entry.CanRename)
-                menu.AddItem(new GUIContent("Rename"), false, entry.StartRename);
+                menu.AddItem(new GUIContent("Rename"), false, StartRename, entry);
+        }
+
+        private void StartRename(object userData)
+        {
+            EntryType entry = (EntryType)userData;
+            AssetPaletteWindow window = EditorWindow.GetWindow<AssetPaletteWindow>();
+            if (window == null)
+                return;
+            
+            window.StartEntryRename(entry);
         }
 
         protected void ShowAssetInExplorer(Object asset)
