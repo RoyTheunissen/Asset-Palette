@@ -9,13 +9,11 @@ namespace RoyTheunissen.AssetPalette.Runtime.Macros
     {
         public static void ResetTimeScale()
         {
-            Debug.Log("Resetting time scale.");
             Time.timeScale = 1.0f;
         }
         
         public static void SetTimeScaleToZeroPointOne()
         {
-            Debug.Log("Setting time scale to 0.1");
             Time.timeScale = 0.1f;
         }
     }
