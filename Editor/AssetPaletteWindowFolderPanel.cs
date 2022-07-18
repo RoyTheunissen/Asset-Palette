@@ -117,6 +117,8 @@ namespace RoyTheunissen.AssetPalette
             }
         }
         
+        [NonSerialized] private PaletteFolder folderBelowCursorOnMouseDown;
+        
         private void EnsureFolderExists()
         {
             if (CurrentCollection.Folders.Count > 0)
@@ -195,6 +197,8 @@ namespace RoyTheunissen.AssetPalette
         {
             // It seems like mouse events are relative to scroll views.
             bool didClickAnywhereInWindow = Event.current.type == EventType.MouseDown && Event.current.button == 0;
+            if (didClickAnywhereInWindow)
+                folderBelowCursorOnMouseDown = null;
 
             folderPanelScrollPosition = EditorGUILayout.BeginScrollView(
                 folderPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
@@ -343,7 +347,7 @@ namespace RoyTheunissen.AssetPalette
 
                 // Dragging and dropping folders.
                 if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOver &&
-                    !isResizingFolderPanel && !isDraggingAssets)
+                    !isResizingFolderPanel && !isDraggingAssets && folderBelowCursorOnMouseDown == folder)
                 {
                     StartFolderDrag(folder);
                 }
@@ -386,6 +390,8 @@ namespace RoyTheunissen.AssetPalette
                     else if (!IsRenaming && isMouseOver)
                     {
                         SelectedFolderIndex = i;
+
+                        folderBelowCursorOnMouseDown = folder;
 
                         // Allow starting a rename by clicking on it twice.
                         if (Event.current.clickCount == 2)
