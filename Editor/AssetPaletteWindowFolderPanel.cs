@@ -16,8 +16,9 @@ namespace RoyTheunissen.AssetPalette
         
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
+
+        private bool IsDraggingFolder => DragAndDrop.GetGenericData(FolderDragGenericDataType) != null;
         
-        [NonSerialized] private bool isDraggingFolder;
         [NonSerialized] private int currentFolderDragIndex;
         [NonSerialized] private int folderToDragIndex;
 
@@ -219,7 +220,7 @@ namespace RoyTheunissen.AssetPalette
             
             EditorGUILayout.EndScrollView();
 
-            if (isDraggingFolder && Event.current.type == EventType.DragUpdated ||
+            if (IsDraggingFolder && Event.current.type == EventType.DragUpdated ||
                 Event.current.type == EventType.DragPerform)
             {
                 if (!isMouseInFolderPanel)
@@ -347,7 +348,7 @@ namespace RoyTheunissen.AssetPalette
                     StartFolderDrag(folder);
                 }
 
-                if (isDraggingFolder)
+                if (IsDraggingFolder)
                 {
                     bool didFindDragIndex = false;
                     Rect dragMarkerRect = Rect.zero;
@@ -432,16 +433,13 @@ namespace RoyTheunissen.AssetPalette
             DragAndDrop.PrepareStartDrag();
             DragAndDrop.SetGenericData(FolderDragGenericDataType, folder);
             DragAndDrop.StartDrag("Drag Palette Folder");
-            isDraggingFolder = true;
             folderToDragIndex = CurrentCollection.Folders.IndexOf(folder);
         }
 
         private void StopFolderDrag()
         {
-            if (!isDraggingFolder)
+            if (!IsDraggingFolder)
                 return;
-            
-            isDraggingFolder = false;
 
             bool isValidDrop = DragAndDrop.visualMode == DragAndDropVisualMode.Move;
             if (!isValidDrop)

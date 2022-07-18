@@ -180,7 +180,7 @@ namespace RoyTheunissen.AssetPalette
                     Repaint();
                 }
                 else if (isMouseInFolderPanel && HasCollection && CurrentCollection.Folders.Count > 1 &&
-                         !isDraggingFolder)
+                         !IsDraggingFolder)
                 {
                     CurrentCollectionSerializedObject.Update();
                     SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
