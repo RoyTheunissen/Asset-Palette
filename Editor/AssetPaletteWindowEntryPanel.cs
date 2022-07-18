@@ -80,6 +80,8 @@ namespace RoyTheunissen.AssetPalette
             }
         }
         
+        [NonSerialized] private PaletteEntry entryBelowCursorOnMouseDown;
+        
         private int GetEntryCount()
         {
             return SelectedFolder.Entries.Count;
@@ -205,6 +207,9 @@ namespace RoyTheunissen.AssetPalette
         
         private void DrawEntriesPanel()
         {
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
+                entryBelowCursorOnMouseDown = null;
+            
             entriesPanelScrollPosition = GUILayout.BeginScrollView(
                 entriesPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
 
@@ -312,6 +317,8 @@ namespace RoyTheunissen.AssetPalette
             }
             else if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && isMouseOnEntry)
             {
+                entryBelowCursorOnMouseDown = entry;
+                
                 if (Event.current.shift)
                 {
                     // Shift+click to grow selection until this point.
@@ -409,7 +416,8 @@ namespace RoyTheunissen.AssetPalette
                 Repaint();
             }
             else if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOnEntry &&
-                     !isResizingFolderPanel && isMouseInEntriesPanel && !IsZoomLevelFocused)
+                     !isResizingFolderPanel && isMouseInEntriesPanel && !IsZoomLevelFocused &&
+                     entriesSelected.Contains(entryBelowCursorOnMouseDown))
             {
                 DragAndDrop.PrepareStartDrag();
                 List<Object> selectedAssets = new List<Object>();

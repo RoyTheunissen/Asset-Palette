@@ -16,8 +16,9 @@ namespace RoyTheunissen.AssetPalette
         
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
+
+        private bool IsDraggingFolder => DragAndDrop.GetGenericData(FolderDragGenericDataType) != null;
         
-        [NonSerialized] private bool isDraggingFolder;
         [NonSerialized] private int currentFolderDragIndex;
         [NonSerialized] private int folderToDragIndex;
 
@@ -116,6 +117,8 @@ namespace RoyTheunissen.AssetPalette
             }
         }
         
+        [NonSerialized] private PaletteFolder folderBelowCursorOnMouseDown;
+        
         private void EnsureFolderExists()
         {
             if (CurrentCollection.Folders.Count > 0)
@@ -194,6 +197,8 @@ namespace RoyTheunissen.AssetPalette
         {
             // It seems like mouse events are relative to scroll views.
             bool didClickAnywhereInWindow = Event.current.type == EventType.MouseDown && Event.current.button == 0;
+            if (didClickAnywhereInWindow)
+                folderBelowCursorOnMouseDown = null;
 
             folderPanelScrollPosition = EditorGUILayout.BeginScrollView(
                 folderPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
@@ -219,7 +224,7 @@ namespace RoyTheunissen.AssetPalette
             
             EditorGUILayout.EndScrollView();
 
-            if (isDraggingFolder && Event.current.type == EventType.DragUpdated ||
+            if (IsDraggingFolder && Event.current.type == EventType.DragUpdated ||
                 Event.current.type == EventType.DragPerform)
             {
                 if (!isMouseInFolderPanel)
@@ -342,12 +347,12 @@ namespace RoyTheunissen.AssetPalette
 
                 // Dragging and dropping folders.
                 if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOver &&
-                    !isResizingFolderPanel && !isDraggingAssets)
+                    !isResizingFolderPanel && !isDraggingAssets && folderBelowCursorOnMouseDown == folder)
                 {
                     StartFolderDrag(folder);
                 }
 
-                if (isDraggingFolder)
+                if (IsDraggingFolder)
                 {
                     bool didFindDragIndex = false;
                     Rect dragMarkerRect = Rect.zero;
@@ -385,6 +390,8 @@ namespace RoyTheunissen.AssetPalette
                     else if (!IsRenaming && isMouseOver)
                     {
                         SelectedFolderIndex = i;
+
+                        folderBelowCursorOnMouseDown = folder;
 
                         // Allow starting a rename by clicking on it twice.
                         if (Event.current.clickCount == 2)
@@ -432,16 +439,13 @@ namespace RoyTheunissen.AssetPalette
             DragAndDrop.PrepareStartDrag();
             DragAndDrop.SetGenericData(FolderDragGenericDataType, folder);
             DragAndDrop.StartDrag("Drag Palette Folder");
-            isDraggingFolder = true;
             folderToDragIndex = CurrentCollection.Folders.IndexOf(folder);
         }
 
         private void StopFolderDrag()
         {
-            if (!isDraggingFolder)
+            if (!IsDraggingFolder)
                 return;
-            
-            isDraggingFolder = false;
 
             bool isValidDrop = DragAndDrop.visualMode == DragAndDropVisualMode.Move;
             if (!isValidDrop)
