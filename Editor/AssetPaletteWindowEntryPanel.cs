@@ -293,7 +293,24 @@ namespace RoyTheunissen.AssetPalette
             // Allow this entry to be selected by clicking it.
             bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && isMouseInEntriesPanel;
             bool wasAlreadySelected = entriesSelected.Contains(entry);
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && isMouseOnEntry)
+            if (isDraggingAssetIntoEntryPanel && isMouseOnEntry &&
+                entry.CanAcceptDraggedAssets(DragAndDrop.objectReferences))
+            {
+                DragAndDrop.AcceptDrag();
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+
+                if (Event.current.type == EventType.DragPerform)
+                {
+                    CurrentCollectionSerializedObject.Update();
+                    SerializedProperty serializedProperty = GetSerializedPropertyForEntry(entry);
+                    entry.AcceptDraggedAssets(DragAndDrop.objectReferences, serializedProperty);
+                    CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                }
+
+                // Make sure nothing else handles this, like the entry panel itself.
+                isDraggingAssetIntoEntryPanel = false;
+            }
+            else if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && isMouseOnEntry)
             {
                 if (Event.current.shift)
                 {
@@ -535,7 +552,7 @@ namespace RoyTheunissen.AssetPalette
             return SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
         }
         
-        private void StartEntryRename(PaletteEntry entry)
+        public void StartEntryRename(PaletteEntry entry)
         {
             renameText = entry.Name;
             entry.StartRename();

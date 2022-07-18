@@ -35,9 +35,9 @@ namespace RoyTheunissen.AssetPalette.Editor
             }
         }
 
-        protected override void OnContextMenu(GenericMenu menu, PaletteAsset entry)
+        protected override void OnContextMenu(GenericMenu menu, PaletteAsset entry, SerializedProperty property)
         {
-            base.OnContextMenu(menu, entry);
+            base.OnContextMenu(menu, entry, property);
             
             menu.AddItem(new GUIContent("Show In Project Window"), false, ShowInProjectWindow, entry);
             menu.AddItem(new GUIContent("Show In Explorer"), false, ShowInExplorer, entry);
@@ -54,10 +54,7 @@ namespace RoyTheunissen.AssetPalette.Editor
         {
             PaletteAsset entry = (PaletteAsset)userData;
 
-            string pathRelativeToProject = AssetDatabase.GetAssetPath(entry.Asset);
-            string pathRelativeToAssetsFolder = Path.GetRelativePath("Assets", pathRelativeToProject);
-            string pathAbsolute = Path.GetFullPath(pathRelativeToAssetsFolder, Application.dataPath);
-            EditorUtility.RevealInFinder(pathAbsolute);
+            ShowAssetInExplorer(entry.Asset);
         }
     }
 }

@@ -26,7 +26,9 @@ namespace RoyTheunissen.AssetPalette.Editor
                 return cachedShortcutIcon;
             }
         }
-        
+
+        protected override string OpenText => "Select Assets";
+
         protected override void DrawContents(Rect position, SerializedProperty property, PaletteSelectionShortcut entry)
         {
             // OPTIMIZATION: Don't bother with any of this if we're not currently drawing.

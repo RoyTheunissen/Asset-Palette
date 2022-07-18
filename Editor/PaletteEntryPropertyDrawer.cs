@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
@@ -64,6 +66,8 @@ namespace RoyTheunissen.AssetPalette.Editor
     public abstract class PaletteEntryPropertyDrawer<EntryType> : PaletteEntryPropertyDrawerBase
         where EntryType : PaletteEntry
     {
+        protected virtual string OpenText => "Open";
+        
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EntryType entry;
@@ -72,7 +76,7 @@ namespace RoyTheunissen.AssetPalette.Editor
                 position.Contains(Event.current.mousePosition))
             {
                 entry = SerializedPropertyExtensions.GetValue<EntryType>(property);
-                ShowContextMenu(entry);
+                ShowContextMenu(entry, property);
                 return;
             }
             
@@ -96,22 +100,40 @@ namespace RoyTheunissen.AssetPalette.Editor
         protected virtual void DrawLabel(
             Rect position, Rect labelPosition, SerializedProperty property, GUIContent label, EntryType entry)
         {
-            EditorGUI.DrawRect(labelPosition, new Color(0, 0, 0, 0.15f));
+            EditorGUI.DrawRect(labelPosition, new Color(0, 0, 0, 0.3f));
             EditorGUI.LabelField(position, label, GetLabelStyle(entry));
         }
 
-        private void ShowContextMenu(EntryType entry)
+        private void ShowContextMenu(EntryType entry, SerializedProperty property)
         {
             GenericMenu menu = new GenericMenu();
-            OnContextMenu(menu, entry);
+            OnContextMenu(menu, entry, property);
             menu.ShowAsContext();
         }
 
-        protected virtual void OnContextMenu(GenericMenu menu, EntryType entry)
+        protected virtual void OnContextMenu(GenericMenu menu, EntryType entry, SerializedProperty property)
         {
-            menu.AddItem(new GUIContent("Open"), false, entry.Open);
+            menu.AddItem(new GUIContent(OpenText), false, entry.Open);
             if (entry.CanRename)
-                menu.AddItem(new GUIContent("Rename"), false, entry.StartRename);
+                menu.AddItem(new GUIContent("Rename"), false, StartRename, entry);
+        }
+
+        private void StartRename(object userData)
+        {
+            EntryType entry = (EntryType)userData;
+            AssetPaletteWindow window = EditorWindow.GetWindow<AssetPaletteWindow>();
+            if (window == null)
+                return;
+            
+            window.StartEntryRename(entry);
+        }
+
+        protected void ShowAssetInExplorer(Object asset)
+        {
+            string pathRelativeToProject = AssetDatabase.GetAssetPath(asset);
+            string pathRelativeToAssetsFolder = Path.GetRelativePath("Assets", pathRelativeToProject);
+            string pathAbsolute = Path.GetFullPath(pathRelativeToAssetsFolder, Application.dataPath);
+            EditorUtility.RevealInFinder(pathAbsolute);
         }
     }
 }
