@@ -458,7 +458,7 @@ namespace RoyTheunissen.AssetPalette.Editor.Windows
             }
             else
             {
-                EditorGUI.PropertyField(entryContentsRect, entryProperty, GUIContent.none);
+                PaletteDrawing.DrawEntry(entryContentsRect, entryProperty, entry);
             }
         }
 

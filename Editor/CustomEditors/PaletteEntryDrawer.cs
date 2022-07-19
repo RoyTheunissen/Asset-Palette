@@ -59,6 +59,8 @@ namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
             float height = LabelStyle.CalcHeight(label, position.width);
             return RectExtensions.GetSubRectFromBottom(position, height);
         }
+
+        public abstract void OnGUI(Rect position, SerializedProperty property, PaletteEntry entry);
     }
     
     /// <summary>
@@ -69,20 +71,17 @@ namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
     {
         protected virtual string OpenText => "Open";
         
-        public void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(Rect position, SerializedProperty property, PaletteEntry baseEntry)
         {
-            EntryType entry;
+            EntryType entry = (EntryType)baseEntry;
             
             if (Event.current.type == EventType.MouseDown && Event.current.button == 1 &&
                 position.Contains(Event.current.mousePosition))
             {
-                entry = SerializedPropertyExtensions.GetValue<EntryType>(property);
                 ShowContextMenu(entry, property);
                 return;
             }
-            
-            entry = SerializedPropertyExtensions.GetValue<EntryType>(property);
-            
+
             // Draw a nice background.
             const float brightness = 0.325f;
             EditorGUI.DrawRect(position, new Color(brightness, brightness, brightness));
@@ -91,7 +90,7 @@ namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
             DrawContents(position, property, entry);
 
             // Draw a label with a nice semi-transparent backdrop.
-            label = new GUIContent(entry.Name);
+            GUIContent label = new GUIContent(entry.Name);
             Rect labelRect = GetLabelRect(position, entry);
             DrawLabel(position, labelRect, property, label, entry);
         }
