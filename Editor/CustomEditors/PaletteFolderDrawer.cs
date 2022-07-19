@@ -7,9 +7,9 @@ namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
     /// Draws a folder.
     /// </summary>
     [CustomPropertyDrawer(typeof(PaletteFolder))]
-    public class PaletteFolderPropertyDrawer : PropertyDrawer
+    public class PaletteFolderDrawer
     {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             //PaletteFolder folder = this.GetActualObject<PaletteFolder>(fieldInfo, property);
 

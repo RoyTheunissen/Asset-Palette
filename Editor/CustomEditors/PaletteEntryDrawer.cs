@@ -9,7 +9,7 @@ using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.Seria
 
 namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
 {
-    public abstract class PaletteEntryPropertyDrawerBase : PropertyDrawer
+    public abstract class PaletteEntryDrawerBase
     {
         [NonSerialized] private static GUIStyle cachedLabelStyle;
         [NonSerialized] private static bool didCacheLabelStyle;
@@ -64,12 +64,12 @@ namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
     /// <summary>
     /// Base class for drawing entries in the palette.
     /// </summary>
-    public abstract class PaletteEntryPropertyDrawer<EntryType> : PaletteEntryPropertyDrawerBase
+    public abstract class PaletteEntryDrawer<EntryType> : PaletteEntryDrawerBase
         where EntryType : PaletteEntry
     {
         protected virtual string OpenText => "Open";
         
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EntryType entry;
             

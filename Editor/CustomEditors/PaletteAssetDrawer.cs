@@ -8,7 +8,7 @@ namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
     /// Draws an Asset entry in the palette.
     /// </summary>
     [CustomPropertyDrawer(typeof(PaletteAsset))]
-    public class PaletteAssetPropertyDrawer : PaletteEntryPropertyDrawer<PaletteAsset>
+    public class PaletteAssetDrawer : PaletteEntryDrawer<PaletteAsset>
     {
         protected override void DrawContents(Rect position, SerializedProperty property, PaletteAsset entry)
         {

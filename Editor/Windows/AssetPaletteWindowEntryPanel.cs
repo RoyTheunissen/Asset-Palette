@@ -398,7 +398,7 @@ namespace RoyTheunissen.AssetPalette.Editor.Windows
                     // Allow assets to be opened by double clicking on them.
                     if (Event.current.clickCount == 2)
                     {
-                        Rect labelRect = PaletteEntryPropertyDrawerBase.GetLabelRect(rect, entry);
+                        Rect labelRect = PaletteEntryDrawerBase.GetLabelRect(rect, entry);
                         if (entry.CanRename && labelRect.Contains(Event.current.mousePosition))
                             StartEntryRename(entry);
                         else

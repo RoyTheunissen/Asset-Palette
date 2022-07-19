@@ -8,7 +8,7 @@ namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
     /// Draws an Asset entry in the palette.
     /// </summary>
     [CustomPropertyDrawer(typeof(PaletteMacro))]
-    public class PaletteMacroPropertyDrawer : PaletteEntryPropertyDrawer<PaletteMacro>
+    public class PaletteMacroDrawer : PaletteEntryDrawer<PaletteMacro>
     {
         private Texture2D cachedMacroIcon;
         private bool didCacheShortcutIcon;
