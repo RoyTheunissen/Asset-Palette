@@ -1,13 +1,13 @@
 using System;
 using System.IO;
-using RoyTheunissen.AssetPalette.Editor.Windows;
+using RoyTheunissen.AssetPalette.Windows;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
-namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
+namespace RoyTheunissen.AssetPalette.CustomEditors
 {
     public abstract class PaletteEntryDrawerBase
     {

@@ -2,7 +2,7 @@ using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
+namespace RoyTheunissen.AssetPalette.CustomEditors
 {
     /// <summary>
     /// Draws an Asset entry in the palette.

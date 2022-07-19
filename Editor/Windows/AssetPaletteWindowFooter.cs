@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.AssetPalette.Editor.Windows
+namespace RoyTheunissen.AssetPalette.Windows
 {
     public partial class AssetPaletteWindow
     {

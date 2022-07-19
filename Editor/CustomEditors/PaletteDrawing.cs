@@ -4,7 +4,7 @@ using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
+namespace RoyTheunissen.AssetPalette.CustomEditors
 {
     /// <summary>
     /// Contains utilities for drawing palette entries and folders.

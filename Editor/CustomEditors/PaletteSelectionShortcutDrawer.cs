@@ -2,7 +2,7 @@ using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
+namespace RoyTheunissen.AssetPalette.CustomEditors
 {
     /// <summary>
     /// Draws an entry in the palette that represents a shortcut to a Project Window selection.

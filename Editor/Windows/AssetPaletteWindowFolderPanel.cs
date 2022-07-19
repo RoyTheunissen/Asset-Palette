@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using RoyTheunissen.AssetPalette.Editor.CustomEditors;
+using RoyTheunissen.AssetPalette.CustomEditors;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
-namespace RoyTheunissen.AssetPalette.Editor.Windows
+namespace RoyTheunissen.AssetPalette.Windows
 {
     public partial class AssetPaletteWindow
     {

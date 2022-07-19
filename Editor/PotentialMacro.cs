@@ -6,7 +6,7 @@ using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.AssetPalette.Editor
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Represents a viable macro that is found in a script.
