@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RoyTheunissen.AssetPalette.Editor.CustomEditors;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEngine;
@@ -342,7 +343,7 @@ namespace RoyTheunissen.AssetPalette.Editor.Windows
                 }
                 else
                 {
-                    EditorGUI.PropertyField(folderRect, folderProperty, GUIContent.none);
+                    PaletteDrawing.DrawFolder(folderRect, folderProperty, folder);
                 }
 
                 // Dragging and dropping folders.
