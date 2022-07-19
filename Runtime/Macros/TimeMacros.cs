@@ -16,5 +16,10 @@ namespace RoyTheunissen.AssetPalette.Runtime.Macros
         {
             Time.timeScale = 0.1f;
         }
+        
+        public static void SetTimeScaleToTwo()
+        {
+            Time.timeScale = 2.0f;
+        }
     }
 }
