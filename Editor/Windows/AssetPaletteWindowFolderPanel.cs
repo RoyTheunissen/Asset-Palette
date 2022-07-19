@@ -6,7 +6,7 @@ using UnityEngine;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
-namespace RoyTheunissen.AssetPalette
+namespace RoyTheunissen.AssetPalette.Editor.Windows
 {
     public partial class AssetPaletteWindow
     {

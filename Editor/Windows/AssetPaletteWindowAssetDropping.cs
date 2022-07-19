@@ -8,7 +8,7 @@ using UnityEngine;
 using GameObjectExtensions = RoyTheunissen.AssetPalette.Extensions.GameObjectExtensions;
 using Object = UnityEngine.Object;
 
-namespace RoyTheunissen.AssetPalette
+namespace RoyTheunissen.AssetPalette.Editor.Windows
 {
     public partial class AssetPaletteWindow
     {

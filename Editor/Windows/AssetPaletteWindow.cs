@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace RoyTheunissen.AssetPalette
+namespace RoyTheunissen.AssetPalette.Editor.Windows
 {
     /// <summary>
     /// Helps organize collections of prefabs and drag them into scenes quickly.

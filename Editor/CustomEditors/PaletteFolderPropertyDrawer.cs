@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.AssetPalette
+namespace RoyTheunissen.AssetPalette.Editor.CustomEditors
 {
     /// <summary>
     /// Draws a folder.
