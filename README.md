@@ -22,6 +22,12 @@ Make custom groups of frequently used assets and shortcuts to folders for your p
 - Open a new Asset Palette window via `Windows/General/Asset Palette`
 - Create a new Asset Palette Collection asset. This is where your folders and asset shortcuts will be serialized to.
 
+## Compatibility
+
+It is recommended to be used in Unity 2021. It seems there's a few issues in Unity 2020, but we'll look into that soon.
+
+If you want my help in supporting an even earlier version, feel free to reach out.
+
 ## Installation
 
 ### OpenUPM
