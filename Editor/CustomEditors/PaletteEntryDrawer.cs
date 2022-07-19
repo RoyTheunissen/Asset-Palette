@@ -1,14 +1,15 @@
 using System;
 using System.IO;
+using RoyTheunissen.AssetPalette.Windows;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
-namespace RoyTheunissen.AssetPalette.Editor
+namespace RoyTheunissen.AssetPalette.CustomEditors
 {
-    public abstract class PaletteEntryPropertyDrawerBase : PropertyDrawer
+    public abstract class PaletteEntryDrawerBase
     {
         [NonSerialized] private static GUIStyle cachedLabelStyle;
         [NonSerialized] private static bool didCacheLabelStyle;
@@ -58,30 +59,29 @@ namespace RoyTheunissen.AssetPalette.Editor
             float height = LabelStyle.CalcHeight(label, position.width);
             return RectExtensions.GetSubRectFromBottom(position, height);
         }
+
+        public abstract void OnGUI(Rect position, SerializedProperty property, PaletteEntry entry);
     }
     
     /// <summary>
     /// Base class for drawing entries in the palette.
     /// </summary>
-    public abstract class PaletteEntryPropertyDrawer<EntryType> : PaletteEntryPropertyDrawerBase
+    public abstract class PaletteEntryDrawer<EntryType> : PaletteEntryDrawerBase
         where EntryType : PaletteEntry
     {
         protected virtual string OpenText => "Open";
         
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(Rect position, SerializedProperty property, PaletteEntry baseEntry)
         {
-            EntryType entry;
+            EntryType entry = (EntryType)baseEntry;
             
             if (Event.current.type == EventType.MouseDown && Event.current.button == 1 &&
                 position.Contains(Event.current.mousePosition))
             {
-                entry = SerializedPropertyExtensions.GetValue<EntryType>(property);
                 ShowContextMenu(entry, property);
                 return;
             }
-            
-            entry = SerializedPropertyExtensions.GetValue<EntryType>(property);
-            
+
             // Draw a nice background.
             const float brightness = 0.325f;
             EditorGUI.DrawRect(position, new Color(brightness, brightness, brightness));
@@ -90,7 +90,7 @@ namespace RoyTheunissen.AssetPalette.Editor
             DrawContents(position, property, entry);
 
             // Draw a label with a nice semi-transparent backdrop.
-            label = new GUIContent(entry.Name);
+            GUIContent label = new GUIContent(entry.Name);
             Rect labelRect = GetLabelRect(position, entry);
             DrawLabel(position, labelRect, property, label, entry);
         }

@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using TypeExtensions = RoyTheunissen.AssetPalette.Extensions.TypeExtensions;
 
-namespace RoyTheunissen.AssetPalette
+namespace RoyTheunissen.AssetPalette.Windows
 {
     public partial class AssetPaletteWindow
     {

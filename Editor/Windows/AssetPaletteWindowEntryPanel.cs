@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using RoyTheunissen.AssetPalette.Editor;
+using RoyTheunissen.AssetPalette;
+using RoyTheunissen.AssetPalette.CustomEditors;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -8,7 +9,7 @@ using Object = UnityEngine.Object;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
-namespace RoyTheunissen.AssetPalette
+namespace RoyTheunissen.AssetPalette.Windows
 {
     public partial class AssetPaletteWindow
     {
@@ -397,7 +398,7 @@ namespace RoyTheunissen.AssetPalette
                     // Allow assets to be opened by double clicking on them.
                     if (Event.current.clickCount == 2)
                     {
-                        Rect labelRect = PaletteEntryPropertyDrawerBase.GetLabelRect(rect, entry);
+                        Rect labelRect = PaletteEntryDrawerBase.GetLabelRect(rect, entry);
                         if (entry.CanRename && labelRect.Contains(Event.current.mousePosition))
                             StartEntryRename(entry);
                         else
@@ -457,7 +458,7 @@ namespace RoyTheunissen.AssetPalette
             }
             else
             {
-                EditorGUI.PropertyField(entryContentsRect, entryProperty, GUIContent.none);
+                PaletteDrawing.DrawEntry(entryContentsRect, entryProperty, entry);
             }
         }
 

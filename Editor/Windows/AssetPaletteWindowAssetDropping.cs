@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using RoyTheunissen.AssetPalette.Editor;
+using RoyTheunissen.AssetPalette;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 using GameObjectExtensions = RoyTheunissen.AssetPalette.Extensions.GameObjectExtensions;
 using Object = UnityEngine.Object;
 
-namespace RoyTheunissen.AssetPalette
+namespace RoyTheunissen.AssetPalette.Windows
 {
     public partial class AssetPaletteWindow
     {

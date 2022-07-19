@@ -2,13 +2,12 @@ using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyTheunissen.AssetPalette.Editor
+namespace RoyTheunissen.AssetPalette.CustomEditors
 {
     /// <summary>
     /// Draws an entry in the palette that represents a shortcut to a Project Window selection.
     /// </summary>
-    [CustomPropertyDrawer(typeof(PaletteSelectionShortcut))]
-    public class PaletteSelectionShortcutPropertyDrawer : PaletteEntryPropertyDrawer<PaletteSelectionShortcut>
+    public class PaletteSelectionShortcutDrawer : PaletteEntryDrawer<PaletteSelectionShortcut>
     {
         private const int IconsToShowMax = 10;
         
