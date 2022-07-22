@@ -1,3 +1,4 @@
+using System;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -38,6 +39,12 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
                 
             // Draw either a default icon or some custom one that the user dragged onto it.
             GUI.DrawTexture(iconRect, entry.HasCustomIcon ? entry.CustomIcon : MacroIcon, ScaleMode.ScaleToFit);
+        }
+
+        /// <inheritdoc />
+        protected override void DrawListEntry(Rect position, SerializedProperty property, PaletteMacro entry)
+        {
+            // TODO: Implement
         }
 
         protected override void OnContextMenu(GenericMenu menu, PaletteMacro entry, SerializedProperty property)

@@ -30,7 +30,17 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             EditorGUI.LabelField(position, GUIContent.none, new GUIContent(nameField.stringValue));
         }
 
-        public static void DrawEntry(Rect position, SerializedProperty property, PaletteEntry entry)
+        public static void DrawListEntry(Rect position, SerializedProperty property, PaletteEntry entry)
+        {
+            if (entry == null)
+                return;
+            
+            PaletteEntryDrawerBase entryDrawer = GetEntryDrawer(entry.GetType());
+
+            entryDrawer?.OnListGUI(position, property, entry);
+        }
+
+        public static void DrawGridEntry(Rect position, SerializedProperty property, PaletteEntry entry)
         {
             if (entry == null)
                 return;

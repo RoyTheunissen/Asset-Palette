@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -32,6 +33,12 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
                 if (iconTexture != null)
                     GUI.DrawTexture(iconRect, iconTexture, ScaleMode.ScaleToFit);
             }
+        }
+
+        /// <inheritdoc />
+        protected override void DrawListEntry(Rect position, SerializedProperty property, PaletteAsset entry)
+        {
+            // TODO: Implement
         }
 
         protected override void OnContextMenu(GenericMenu menu, PaletteAsset entry, SerializedProperty property)

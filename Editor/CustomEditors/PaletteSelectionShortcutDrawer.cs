@@ -1,6 +1,8 @@
+using System;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.CustomEditors
 {
@@ -65,6 +67,12 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             Rect shortcutIconRect = new Rect(
                 position.xMin, position.yMin, shortcutIconSize, shortcutIconSize);
             GUI.DrawTexture(shortcutIconRect, ShortcutIcon, ScaleMode.ScaleToFit);
+        }
+
+        /// <inheritdoc />
+        protected override void DrawListEntry(Rect position, SerializedProperty property, PaletteSelectionShortcut entry)
+        {
+            // TODO: Implement
         }
     }
 }

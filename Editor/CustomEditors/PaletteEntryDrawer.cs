@@ -61,6 +61,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         }
 
         public abstract void OnGUI(Rect position, SerializedProperty property, PaletteEntry entry);
+        public abstract void OnListGUI(Rect position, SerializedProperty property, PaletteEntry entry);
     }
     
     /// <summary>
@@ -95,7 +96,24 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             DrawLabel(position, labelRect, property, label, entry);
         }
 
+        /// <inheritdoc />
+        public override void OnListGUI(Rect position, SerializedProperty property, PaletteEntry baseEntry)
+        {
+            EntryType entry = (EntryType)baseEntry;
+            
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 &&
+                position.Contains(Event.current.mousePosition))
+            {
+                ShowContextMenu(entry, property);
+                return;
+            }
+
+            DrawListEntry(position, property, entry);
+        }
+
         protected abstract void DrawContents(Rect position, SerializedProperty property, EntryType entry);
+
+        protected abstract void DrawListEntry(Rect position, SerializedProperty property, EntryType entry);
 
         protected virtual void DrawLabel(
             Rect position, Rect labelPosition, SerializedProperty property, GUIContent label, EntryType entry)
