@@ -258,13 +258,14 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = 0; i < foldersProperty.arraySize; i++)
             {
                 SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
-                float folderHeight = EditorGUI.GetPropertyHeight(folderProperty, GUIContent.none, true);
+                PaletteFolder folder = SerializedPropertyExtensions.GetValue<PaletteFolder>(folderProperty);
+                
+                float folderHeight = PaletteDrawing.GetFolderHeight(folderProperty, folder);
                 float folderWidth = FolderPanelWidth;
                 Rect folderRect = GUILayoutUtility.GetRect(folderWidth, folderHeight);
                 folderRect = RectExtensions.Indent(folderRect, 1);
                 bool isSelected = SelectedFolderIndex == i;
 
-                PaletteFolder folder = SerializedPropertyExtensions.GetValue<PaletteFolder>(folderProperty);
                 bool isMouseOver = isMouseInFolderPanel && folderRect.Contains(Event.current.mousePosition);
                 
                 // Dragging and dropping assets into folders. Need to handle this early because it affects the way we
