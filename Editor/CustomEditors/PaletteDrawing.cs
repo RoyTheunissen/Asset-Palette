@@ -14,6 +14,13 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         [NonSerialized]
         private static readonly Dictionary<Type, PaletteEntryDrawerBase> entryTypeToDrawer =
             new Dictionary<Type, PaletteEntryDrawerBase>();
+
+        public static float GetFolderHeight(SerializedProperty property, PaletteFolder folder)
+        {
+            // NOTE: If you wanted to you could support different kinds of folders with custom drawers like you could
+            // for entries. For now I've not found a reason to have custom folder types so I'll leave it out for now.
+            return EditorGUIUtility.singleLineHeight;
+        }
         
         public static void DrawFolder(Rect position, SerializedProperty property, PaletteFolder folder)
         {
