@@ -485,7 +485,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     if (Event.current.clickCount == 2)
                     {
                         Rect labelRect = PaletteEntryDrawerBase.GetLabelRect(rect, entry);
-                        if (entry.CanRename && labelRect.Contains(Event.current.mousePosition))
+                        if (ZoomLevel != 0 && entry.CanRename && labelRect.Contains(Event.current.mousePosition))
                             StartEntryRename(entry);
                         else
                             entry.Open();
