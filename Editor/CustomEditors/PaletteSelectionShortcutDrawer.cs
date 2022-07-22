@@ -70,9 +70,9 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         }
 
         /// <inheritdoc />
-        protected override void DrawListEntry(Rect position, SerializedProperty property, PaletteSelectionShortcut entry)
+        protected override Texture2D GetListIcon(PaletteSelectionShortcut entry)
         {
-            // TODO: Implement
+            return ShortcutIcon;
         }
     }
 }

@@ -42,9 +42,9 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         }
 
         /// <inheritdoc />
-        protected override void DrawListEntry(Rect position, SerializedProperty property, PaletteMacro entry)
+        protected override Texture2D GetListIcon(PaletteMacro entry)
         {
-            // TODO: Implement
+            return entry.HasCustomIcon ? entry.CustomIcon : MacroIcon;
         }
 
         protected override void OnContextMenu(GenericMenu menu, PaletteMacro entry, SerializedProperty property)

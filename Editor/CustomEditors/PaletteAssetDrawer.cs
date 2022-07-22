@@ -36,9 +36,11 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         }
 
         /// <inheritdoc />
-        protected override void DrawListEntry(Rect position, SerializedProperty property, PaletteAsset entry)
+        protected override Texture2D GetListIcon(PaletteAsset entry)
         {
-            // TODO: Implement
+            return entry.PreviewTexture != null
+                ? entry.PreviewTexture
+                : AssetPreview.GetMiniThumbnail(entry.Asset);
         }
 
         protected override void OnContextMenu(GenericMenu menu, PaletteAsset entry, SerializedProperty property)

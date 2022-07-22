@@ -100,7 +100,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         public override void OnListGUI(Rect position, SerializedProperty property, PaletteEntry baseEntry)
         {
             EntryType entry = (EntryType)baseEntry;
-            
+
             if (Event.current.type == EventType.MouseDown && Event.current.button == 1 &&
                 position.Contains(Event.current.mousePosition))
             {
@@ -108,12 +108,40 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
                 return;
             }
 
-            DrawListEntry(position, property, entry);
+            if (Event.current.type != EventType.Repaint)
+                return;
+
+            if (entry.IsSelected)
+            {
+                GUIStyle selectionStyle = "RL Element";
+                selectionStyle.Draw(position, false, true, true, true);
+            }
+
+            Texture2D icon = GetListIcon(entry);
+            if (icon == null)
+            {
+                DrawListEntry(position, property, entry);
+            }
+            else
+            {
+                // TODO: We also need to check if EditorWindow.focusedWindow is the palette window for proper focus handling
+                bool isSelectedAndHasFocus = entry.IsSelected;
+                GUIContent content = new GUIContent(entry.Name, icon);
+                EditorStyles.label.Draw(position, content, false, false, isSelectedAndHasFocus, isSelectedAndHasFocus);
+            }
+        }
+
+        protected virtual Texture2D GetListIcon(EntryType entry)
+        {
+            return null;
         }
 
         protected abstract void DrawContents(Rect position, SerializedProperty property, EntryType entry);
 
-        protected abstract void DrawListEntry(Rect position, SerializedProperty property, EntryType entry);
+        protected virtual void DrawListEntry(Rect position, SerializedProperty property, EntryType entry)
+        {
+            EditorGUI.LabelField(position, "No GUI implemented");
+        }
 
         protected virtual void DrawLabel(
             Rect position, Rect labelPosition, SerializedProperty property, GUIContent label, EntryType entry)
