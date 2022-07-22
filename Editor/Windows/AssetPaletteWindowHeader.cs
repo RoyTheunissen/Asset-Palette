@@ -211,12 +211,12 @@ namespace RoyTheunissen.AssetPalette.Windows
                 dropdownMenu.AddSeparator("");
 
             // Add any existing collections that we find as options.
-            foreach (string collection in existingCollectionGuids)
+            foreach (string collectionGuid in existingCollectionGuids)
             {
-                bool isCurrentCollection = collection == CurrentCollectionGuid;
-                string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collection));
+                bool isCurrentCollection = collectionGuid == CurrentCollectionGuid;
+                string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collectionGuid));
                 dropdownMenu.AddItem(
-                    new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collection);
+                    new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
             }
 
             dropdownMenu.DropDown(collectionRect);
