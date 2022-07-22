@@ -26,9 +26,12 @@ namespace RoyTheunissen.AssetPalette.Windows
                 // Need to re-cache the current collection now.
                 cachedCurrentCollection = null;
                 
-                // Need to re-cache the serialized object, too.
+                // Need to re-cache the serialized objects, too.
                 cachedCurrentCollectionSerializedObject?.Dispose();
                 cachedCurrentCollectionSerializedObject = null;
+                didCacheCurrentCollectionSerializedObject = false;
+                didCacheSelectedFolderSerializedProperty = false;
+                didCacheSelectedFolderEntriesSerializedProperty = false;
             }
         }
 
@@ -60,13 +63,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 
                 if (value == null)
                 {
-                    cachedCurrentCollection = null;
                     CurrentCollectionGuid = null;
                     return;
                 }
-                
-                // Need to cache the serialized property now.
-                didCacheSelectedFolderSerializedProperty = false;
 
                 CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
             }
@@ -75,12 +74,14 @@ namespace RoyTheunissen.AssetPalette.Windows
         private bool HasCollection => CurrentCollection != null;
         
         [NonSerialized] private SerializedObject cachedCurrentCollectionSerializedObject;
+        [NonSerialized] private bool didCacheCurrentCollectionSerializedObject;
         private SerializedObject CurrentCollectionSerializedObject
         {
             get
             {
-                if (cachedCurrentCollectionSerializedObject == null)
+                if (!didCacheCurrentCollectionSerializedObject)
                 {
+                    didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
                     
                     // Need to re-cache these now.
@@ -205,19 +206,20 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             // Allow a new collection to be created.
             GenericMenu dropdownMenu = new GenericMenu();
-            dropdownMenu.AddItem(new GUIContent("Create New"), false, CreateNewCollection);
+
+            // Add any existing collections that we find as options.
+            foreach (string collectionGuid in existingCollectionGuids)
+            {
+                bool isCurrentCollection = collectionGuid == CurrentCollectionGuid;
+                string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collectionGuid));
+                dropdownMenu.AddItem(
+                    new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
+            }
 
             if (existingCollectionGuids.Length > 0)
                 dropdownMenu.AddSeparator("");
-
-            // Add any existing collections that we find as options.
-            foreach (string collection in existingCollectionGuids)
-            {
-                bool isCurrentCollection = collection == CurrentCollectionGuid;
-                string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collection));
-                dropdownMenu.AddItem(
-                    new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collection);
-            }
+            
+            dropdownMenu.AddItem(new GUIContent("Create New..."), false, CreateNewCollection);
 
             dropdownMenu.DropDown(collectionRect);
         }
@@ -246,8 +248,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void LoadExistingCollection(object userdata)
         {
-            string path = (string)userdata;
-            string guid = AssetDatabase.AssetPathToGUID(path);
+            string guid = (string)userdata;
             CurrentCollectionGuid = guid;
 
             Repaint();
