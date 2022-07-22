@@ -236,7 +236,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             bool didClickASpecificEntry;
             if (ZoomLevel == 0)
             {
-                DrawAsList(containerWidth, out didClickASpecificEntry);
+                DrawListEntries(containerWidth, out didClickASpecificEntry);
             }
             else
             {
@@ -258,7 +258,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorGUILayout.EndScrollView();
         }
 
-        private void DrawAsList(float containerWidth, out bool didClickASpecificEntry)
+        private void DrawListEntries(float containerWidth, out bool didClickASpecificEntry)
         {
             didClickASpecificEntry = false;
 
