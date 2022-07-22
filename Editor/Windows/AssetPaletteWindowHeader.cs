@@ -26,9 +26,12 @@ namespace RoyTheunissen.AssetPalette.Windows
                 // Need to re-cache the current collection now.
                 cachedCurrentCollection = null;
                 
-                // Need to re-cache the serialized object, too.
+                // Need to re-cache the serialized objects, too.
                 cachedCurrentCollectionSerializedObject?.Dispose();
                 cachedCurrentCollectionSerializedObject = null;
+                didCacheCurrentCollectionSerializedObject = false;
+                didCacheSelectedFolderSerializedProperty = false;
+                didCacheSelectedFolderEntriesSerializedProperty = false;
             }
         }
 
@@ -60,13 +63,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 
                 if (value == null)
                 {
-                    cachedCurrentCollection = null;
                     CurrentCollectionGuid = null;
                     return;
                 }
-                
-                // Need to cache the serialized property now.
-                didCacheSelectedFolderSerializedProperty = false;
 
                 CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
             }
@@ -75,12 +74,14 @@ namespace RoyTheunissen.AssetPalette.Windows
         private bool HasCollection => CurrentCollection != null;
         
         [NonSerialized] private SerializedObject cachedCurrentCollectionSerializedObject;
+        [NonSerialized] private bool didCacheCurrentCollectionSerializedObject;
         private SerializedObject CurrentCollectionSerializedObject
         {
             get
             {
-                if (cachedCurrentCollectionSerializedObject == null)
+                if (!didCacheCurrentCollectionSerializedObject)
                 {
+                    didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
                     
                     // Need to re-cache these now.
