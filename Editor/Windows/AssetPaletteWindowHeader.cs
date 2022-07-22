@@ -206,10 +206,6 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             // Allow a new collection to be created.
             GenericMenu dropdownMenu = new GenericMenu();
-            dropdownMenu.AddItem(new GUIContent("Create New"), false, CreateNewCollection);
-
-            if (existingCollectionGuids.Length > 0)
-                dropdownMenu.AddSeparator("");
 
             // Add any existing collections that we find as options.
             foreach (string collectionGuid in existingCollectionGuids)
@@ -219,6 +215,11 @@ namespace RoyTheunissen.AssetPalette.Windows
                 dropdownMenu.AddItem(
                     new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
             }
+
+            if (existingCollectionGuids.Length > 0)
+                dropdownMenu.AddSeparator("");
+            
+            dropdownMenu.AddItem(new GUIContent("Create New..."), false, CreateNewCollection);
 
             dropdownMenu.DropDown(collectionRect);
         }
