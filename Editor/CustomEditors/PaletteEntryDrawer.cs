@@ -124,8 +124,8 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             }
             else
             {
-                // TODO: We also need to check if EditorWindow.focusedWindow is the palette window for proper focus handling
-                bool isSelectedAndHasFocus = isSelected;
+                bool isSelectedAndHasFocus =
+                    isSelected && EditorWindow.focusedWindow == PaletteDrawing.ActivePaletteWindow;
                 GUIContent content = new GUIContent(entry.Name, icon);
                 EditorStyles.label.Draw(position, content, false, false, isSelectedAndHasFocus, isSelectedAndHasFocus);
             }
