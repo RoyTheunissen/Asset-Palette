@@ -61,7 +61,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         }
 
         public abstract void OnGUI(Rect position, SerializedProperty property, PaletteEntry entry);
-        public abstract void OnListGUI(Rect position, SerializedProperty property, PaletteEntry entry);
+        public abstract void OnListGUI(Rect position, SerializedProperty property, PaletteEntry entry, bool isSelected);
     }
     
     /// <summary>
@@ -97,7 +97,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         }
 
         /// <inheritdoc />
-        public override void OnListGUI(Rect position, SerializedProperty property, PaletteEntry baseEntry)
+        public override void OnListGUI(Rect position, SerializedProperty property, PaletteEntry baseEntry, bool isSelected)
         {
             EntryType entry = (EntryType)baseEntry;
 
@@ -111,7 +111,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             if (Event.current.type != EventType.Repaint)
                 return;
 
-            if (entry.IsSelected)
+            if (isSelected)
             {
                 GUIStyle selectionStyle = "RL Element";
                 selectionStyle.Draw(position, false, true, true, true);
@@ -125,7 +125,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             else
             {
                 // TODO: We also need to check if EditorWindow.focusedWindow is the palette window for proper focus handling
-                bool isSelectedAndHasFocus = entry.IsSelected;
+                bool isSelectedAndHasFocus = isSelected;
                 GUIContent content = new GUIContent(entry.Name, icon);
                 EditorStyles.label.Draw(position, content, false, false, isSelectedAndHasFocus, isSelectedAndHasFocus);
             }
