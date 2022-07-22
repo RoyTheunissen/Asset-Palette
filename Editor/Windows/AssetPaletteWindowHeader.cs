@@ -246,8 +246,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void LoadExistingCollection(object userdata)
         {
-            string path = (string)userdata;
-            string guid = AssetDatabase.AssetPathToGUID(path);
+            string guid = (string)userdata;
             CurrentCollectionGuid = guid;
 
             Repaint();
