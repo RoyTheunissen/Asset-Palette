@@ -30,6 +30,8 @@ namespace RoyTheunissen.AssetPalette
 
         public bool IsRenaming => entryCurrentlyRenaming == this;
         public static bool IsEntryBeingRenamed => entryCurrentlyRenaming != null;
+        
+        public bool IsSelected { get; private set; }
 
         public abstract void Open();
 
@@ -61,6 +63,16 @@ namespace RoyTheunissen.AssetPalette
 
         public virtual void AcceptDraggedAssets(Object[] objectReferences, SerializedProperty serializedProperty)
         {
+        }
+
+        public void Select()
+        {
+            IsSelected = true;
+        }
+
+        public void Deselect()
+        {
+            IsSelected = false;
         }
 #endif // UNITY_EDITOR
     }

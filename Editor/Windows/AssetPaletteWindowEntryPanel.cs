@@ -493,6 +493,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             entriesSelected.Remove(entry);
             entriesIndividuallySelected.Remove(entry);
+            entry.Deselect();
         }
 
         private void SelectEntry(PaletteEntry entry, bool exclusively)
@@ -501,12 +502,18 @@ namespace RoyTheunissen.AssetPalette.Windows
                 ClearEntrySelection();
             entriesSelected.Add(entry);
             entriesIndividuallySelected.Add(entry);
+            entry.Select();
         }
 
         private void SelectEntriesByRange(int from, int to, bool exclusively)
         {
             if (exclusively)
             {
+                foreach (PaletteEntry entry in entriesSelected)
+                {
+                    entry.Deselect();
+                }
+
                 entriesSelected.Clear();
                 // NOTE: Do NOT clear the individually selected entries. These are used to determine from what point we 
                 // define the range. Used for SHIFT-selecting ranges of entries.
@@ -515,12 +522,20 @@ namespace RoyTheunissen.AssetPalette.Windows
             int direction = @from <= to ? 1 : -1;
             for (int i = @from; i != to; i += direction)
             {
-                if (!entriesSelected.Contains(GetEntry(i)))
-                    entriesSelected.Add(GetEntry(i));
+                PaletteEntry currentEntry = GetEntry(i);
+                if (!entriesSelected.Contains(currentEntry))
+                {
+                    entriesSelected.Add(currentEntry);
+                    currentEntry.Select();
+                }
             }
 
-            if (!entriesSelected.Contains(GetEntry(to)))
-                entriesSelected.Add(GetEntry(to));
+            PaletteEntry toEntry = GetEntry(to);
+            if (!entriesSelected.Contains(toEntry))
+            {
+                entriesSelected.Add(toEntry);
+                toEntry.Select();
+            }
         }
 
         private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
@@ -531,11 +546,22 @@ namespace RoyTheunissen.AssetPalette.Windows
             foreach (PaletteEntry entry in entries)
             {
                 entriesSelected.Add(entry);
+                entry.Select();
             }
         }
 
         private void ClearEntrySelection()
         {
+            foreach (PaletteEntry entry in entriesSelected)
+            {
+                entry.Deselect();
+            }
+
+            foreach (PaletteEntry entry in entriesIndividuallySelected)
+            {
+                entry.Deselect();
+            }
+
             entriesSelected.Clear();
             entriesIndividuallySelected.Clear();
         }
