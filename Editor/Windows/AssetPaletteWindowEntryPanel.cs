@@ -233,7 +233,15 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             GUILayout.Space(Padding);
 
-            DrawGridEntries(containerWidth, out bool didClickASpecificEntry);
+            bool didClickASpecificEntry;
+            if (ZoomLevel == 0)
+            {
+                DrawListEntries(containerWidth, out didClickASpecificEntry);
+            }
+            else
+            {
+                DrawGridEntries(containerWidth, out didClickASpecificEntry);
+            }
 
             GUILayout.Space(Padding);
 
@@ -248,6 +256,44 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawListEntries(float containerWidth, out bool didClickASpecificEntry)
+        {
+            didClickASpecificEntry = false;
+
+            for (int i = 0; i < GetEntryCount(); i++)
+            {
+                PurgeInvalidEntries(i);
+                if (i >= GetEntryCount())
+                    break;
+
+                DrawListEntry(i, containerWidth, ref didClickASpecificEntry);
+            }
+        }
+
+        private void DrawListEntry(int index, float containerWidth, ref bool didClickASpecificEntry)
+        {
+            PaletteEntry entry = GetEntry(index);
+            Rect rect = GUILayoutUtility.GetRect(0, 0,
+                GUILayout.Width(containerWidth), GUILayout.Height(EditorGUIUtility.singleLineHeight));
+
+            HandleEntrySelection(index, rect, entry, ref didClickASpecificEntry);
+
+            Rect entryContentsRect = rect;
+            SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+
+            if (entry.IsRenaming)
+            {
+                string renameControlId = GetRenameControlId(entryProperty);
+                GUI.SetNextControlName(renameControlId);
+                renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
+                GUI.FocusControl(renameControlId);
+            }
+            else
+            {
+                PaletteDrawing.DrawListEntry(entryContentsRect, entryProperty, entry);
+            }
         }
 
         private void DrawGridEntries(float containerWidth, out bool didClickASpecificEntry)
