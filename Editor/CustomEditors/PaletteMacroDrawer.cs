@@ -1,4 +1,3 @@
-using System;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;

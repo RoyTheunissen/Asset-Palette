@@ -1,8 +1,6 @@
-using System;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.CustomEditors
 {
