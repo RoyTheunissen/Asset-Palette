@@ -13,6 +13,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 {
     public partial class AssetPaletteWindow
     {
+        private const float Padding = 2;
         private const float EntrySpacing = 4;
         private const int EntrySizeMax = 128;
         private const float EntrySizeMin = EntrySizeMax * 0.45f;
@@ -205,12 +206,12 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (apply)
                 CurrentCollectionSerializedObject.ApplyModifiedProperties();
         }
-        
+
         private void DrawEntriesPanel()
         {
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
                 entryBelowCursorOnMouseDown = null;
-            
+
             entriesPanelScrollPosition = GUILayout.BeginScrollView(
                 entriesPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
 
@@ -230,58 +231,18 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - FolderPanelWidth;
 
-            const float padding = 2;
-            int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, ZoomLevel));
+            GUILayout.Space(Padding);
 
-            int columnCount = Mathf.FloorToInt(containerWidth / (entrySize + EntrySpacing));
-            int rowCount = Mathf.CeilToInt((float)GetEntryCount() / columnCount);
+            DrawGridEntries(containerWidth, out bool didClickASpecificEntry);
 
-            GUILayout.Space(padding);
-
-            bool didClickASpecificEntry = false;
-            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
-            {
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Space(padding);
-                for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
-                {
-                    int index = rowIndex * columnCount + columnIndex;
-
-                    // Purge invalid entries.
-                    while (index < GetEntryCount() && !GetEntry(index).IsValid)
-                    {
-                        RemoveEntryAt(index);
-                    }
-
-                    if (index >= GetEntryCount())
-                    {
-                        GUILayout.FlexibleSpace();
-                        break;
-                    }
-
-                    DrawEntry(index, entrySize, ref didClickASpecificEntry);
-
-                    if (columnIndex < columnCount - 1)
-                        EditorGUILayout.Space(EntrySpacing);
-                    else
-                        GUILayout.FlexibleSpace();
-                }
-
-                GUILayout.Space(padding);
-                EditorGUILayout.EndHorizontal();
-
-                if (rowIndex < rowCount - 1)
-                    EditorGUILayout.Space(EntrySpacing);
-            }
-
-            GUILayout.Space(padding);
+            GUILayout.Space(Padding);
 
             // If you didn't click an entry and weren't pressing SHIFT, clear the selection.
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && !didClickASpecificEntry &&
                 !Event.current.shift)
             {
                 StopAllRenames();
-                
+
                 ClearEntrySelection();
                 Repaint();
             }
@@ -289,13 +250,92 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorGUILayout.EndScrollView();
         }
 
-        private void DrawEntry(int index, int entrySize, ref bool didClickASpecificEntry)
+        private void DrawGridEntries(float containerWidth, out bool didClickASpecificEntry)
+        {
+            int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, ZoomLevel));
+            int columnCount = Mathf.FloorToInt(containerWidth / (entrySize + EntrySpacing));
+            int rowCount = Mathf.CeilToInt((float)GetEntryCount() / columnCount);
+
+            didClickASpecificEntry = false;
+
+            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(Padding);
+                for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
+                {
+                    int index = rowIndex * columnCount + columnIndex;
+
+                    PurgeInvalidEntries(index);
+
+                    if (index >= GetEntryCount())
+                    {
+                        GUILayout.FlexibleSpace();
+                        break;
+                    }
+
+                    DrawGridEntry(index, entrySize, ref didClickASpecificEntry);
+
+                    if (columnIndex < columnCount - 1)
+                        EditorGUILayout.Space(EntrySpacing);
+                    else
+                        GUILayout.FlexibleSpace();
+                }
+
+                GUILayout.Space(Padding);
+                EditorGUILayout.EndHorizontal();
+
+                if (rowIndex < rowCount - 1)
+                    EditorGUILayout.Space(EntrySpacing);
+            }
+        }
+
+        private void DrawGridEntry(int index, int entrySize, ref bool didClickASpecificEntry)
         {
             PaletteEntry entry = GetEntry(index);
 
             Rect rect = GUILayoutUtility.GetRect(
                 0, 0, GUILayout.Width(entrySize), GUILayout.Height(entrySize));
 
+            HandleEntrySelection(index, rect, entry, ref didClickASpecificEntry);
+
+            bool isSelected = entriesSelected.Contains(entry);
+
+            Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            float borderWidth = isSelected ? 2 : 1;
+            Rect borderRect = RectExtensions.Expand(rect, borderWidth);
+            GUI.DrawTexture(
+                borderRect, EditorGUIUtility.whiteTexture, ScaleMode.ScaleToFit, true, 0.0f, borderColor, borderWidth,
+                borderWidth);
+
+            // Actually draw the entry itself.
+            Rect entryContentsRect = rect;
+            SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+
+            if (entry.IsRenaming)
+            {
+                string renameControlId = GetRenameControlId(entryProperty);
+                GUI.SetNextControlName(renameControlId);
+                renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
+                GUI.FocusControl(renameControlId);
+            }
+            else
+            {
+                PaletteDrawing.DrawGridEntry(entryContentsRect, entryProperty, entry);
+            }
+        }
+
+        private void PurgeInvalidEntries(int index)
+        {
+            // Purge invalid entries.
+            while (index < GetEntryCount() && !GetEntry(index).IsValid)
+            {
+                RemoveEntryAt(index);
+            }
+        }
+
+        private void HandleEntrySelection(int index, Rect rect, PaletteEntry entry, ref bool didClickASpecificEntry)
+        {
             // Allow this entry to be selected by clicking it.
             bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && isMouseInEntriesPanel;
             bool wasAlreadySelected = entriesSelected.Contains(entry);
@@ -434,31 +474,6 @@ namespace RoyTheunissen.AssetPalette.Windows
                 // another folder (but ignore the folder it was originally dragged from).
                 DragAndDrop.SetGenericData(EntryDragGenericDataType, SelectedFolder.Name);
                 DragAndDrop.StartDrag("Drag from Asset Palette");
-            }
-
-            bool isSelected = entriesSelected.Contains(entry);
-
-            Color borderColor = isSelected ? Color.white : new Color(0.5f, 0.5f, 0.5f);
-            float borderWidth = isSelected ? 2 : 1;
-            Rect borderRect = RectExtensions.Expand(rect, borderWidth);
-            GUI.DrawTexture(
-                borderRect, EditorGUIUtility.whiteTexture, ScaleMode.ScaleToFit, true, 0.0f, borderColor, borderWidth,
-                borderWidth);
-
-            // Actually draw the entry itself.
-            Rect entryContentsRect = rect;
-            SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
-
-            if (entry.IsRenaming)
-            {
-                string renameControlId = GetRenameControlId(entryProperty);
-                GUI.SetNextControlName(renameControlId);
-                renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
-                GUI.FocusControl(renameControlId);
-            }
-            else
-            {
-                PaletteDrawing.DrawEntry(entryContentsRect, entryProperty, entry);
             }
         }
 
