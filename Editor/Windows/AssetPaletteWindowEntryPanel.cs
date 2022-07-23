@@ -63,22 +63,30 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
         
-        [NonSerialized] private static GUIStyle cachedEntryRenameTextStyle;
+        [NonSerialized] private static GUIStyle cachedGridEntryRenameTextStyle;
+        [NonSerialized] private static GUIStyle cachedListEntryRenameTextStyle;
         [NonSerialized] private static bool didCacheEntryRenameTextStyle;
-        protected static GUIStyle EntryRenameTextStyle
+        private GUIStyle EntryRenameTextStyle
         {
             get
             {
                 if (!didCacheEntryRenameTextStyle)
                 {
                     didCacheEntryRenameTextStyle = true;
-                    cachedEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
+                    cachedGridEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
                     {
                         wordWrap = true,
                         alignment = TextAnchor.LowerCenter,
                     };
+
+                    cachedListEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
+                    {
+                        wordWrap = true,
+                        alignment = TextAnchor.MiddleLeft
+                    };
                 }
-                return cachedEntryRenameTextStyle;
+
+                return ShouldDrawListView ? cachedListEntryRenameTextStyle : cachedGridEntryRenameTextStyle;
             }
         }
         
