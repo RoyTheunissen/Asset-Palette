@@ -110,6 +110,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             if (Event.current.type != EventType.Repaint)
                 return;
 
+            // This draws the backdrop of a Reorderable List Element to show that an entry has been selected.
             if (isSelected)
             {
                 GUIStyle selectionStyle = "RL Element";
