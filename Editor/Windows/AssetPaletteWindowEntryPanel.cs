@@ -245,13 +245,9 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             bool didClickASpecificEntry;
             if (ShouldDrawListView)
-            {
                 DrawListEntries(containerWidth, out didClickASpecificEntry);
-            }
             else
-            {
                 DrawGridEntries(containerWidth, out didClickASpecificEntry);
-            }
 
             GUILayout.Space(Padding);
 
@@ -366,13 +362,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
 
             if (entry.IsRenaming)
-            {
                 DrawRenameEntry(entryProperty, entryContentsRect);
-            }
             else
-            {
                 PaletteDrawing.DrawGridEntry(entryContentsRect, entryProperty, entry);
-            }
         }
 
         private void PurgeInvalidEntries(int index)
