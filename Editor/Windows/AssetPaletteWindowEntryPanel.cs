@@ -572,8 +572,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             if (PaletteEntry.IsEntryBeingRenamed && PaletteEntry.EntryCurrentlyRenaming != entry)
             {
-                PaletteEntry.CancelRename();
-                renameText = string.Empty;
+                StopEntryRename(true);
             }
 
             if (exclusively)
@@ -587,8 +586,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             if (PaletteEntry.IsEntryBeingRenamed)
             {
-                PaletteEntry.CancelRename();
-                renameText = string.Empty;
+                StopEntryRename(true);
             }
 
             if (exclusively)
@@ -613,8 +611,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             if (PaletteEntry.IsEntryBeingRenamed)
             {
-                PaletteEntry.CancelRename();
-                renameText = string.Empty;
+                StopEntryRename(true);
             }
 
             if (exclusively)
