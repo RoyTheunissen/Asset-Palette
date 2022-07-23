@@ -30,8 +30,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 cachedCurrentCollectionSerializedObject?.Dispose();
                 cachedCurrentCollectionSerializedObject = null;
                 didCacheCurrentCollectionSerializedObject = false;
-                didCacheSelectedFolderSerializedProperty = false;
-                didCacheSelectedFolderEntriesSerializedProperty = false;
+                ClearCachedSelectedFolderSerializedProperties();
             }
         }
 
@@ -84,9 +83,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
                     
-                    // Need to re-cache these now.
-                    didCacheSelectedFolderSerializedProperty = false;
-                    didCacheSelectedFolderEntriesSerializedProperty = false;
+                    ClearCachedSelectedFolderSerializedProperties();
                 }
                 return cachedCurrentCollectionSerializedObject;
             }
