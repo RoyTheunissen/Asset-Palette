@@ -30,7 +30,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 cachedCurrentCollectionSerializedObject?.Dispose();
                 cachedCurrentCollectionSerializedObject = null;
                 didCacheCurrentCollectionSerializedObject = false;
-                ClearCachedSelectedFolderSerializedProperties();
+                ClearCachedFolderSerializedProperties();
             }
         }
 
@@ -78,12 +78,12 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
-                if (!didCacheCurrentCollectionSerializedObject)
+                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null)
                 {
                     didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
                     
-                    ClearCachedSelectedFolderSerializedProperties();
+                    ClearCachedFolderSerializedProperties();
                 }
                 return cachedCurrentCollectionSerializedObject;
             }

@@ -61,7 +61,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                 SelectedFolderIndexRaw = clampedValue;
 
-                ClearCachedSelectedFolderSerializedProperties();
+                ClearCachedFolderSerializedProperties();
                 
                 // If you change the folder that's selected, we need to clear the selection.
                 ClearEntrySelection();
@@ -131,10 +131,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
         
-        private void ClearCachedSelectedFolderSerializedProperties()
+        private void ClearCachedFolderSerializedProperties()
         {
             didCacheSelectedFolderSerializedProperty = false;
             didCacheSelectedFolderEntriesSerializedProperty = false;
+            didCacheFoldersSerializedProperty = false;
         }
 
         private string GetUniqueFolderName(string desiredName, int previousAttempts = 0)
