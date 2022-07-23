@@ -30,13 +30,13 @@ namespace RoyTheunissen.AssetPalette.Windows
                 cachedCurrentCollectionSerializedObject?.Dispose();
                 cachedCurrentCollectionSerializedObject = null;
                 didCacheCurrentCollectionSerializedObject = false;
-                didCacheSelectedFolderSerializedProperty = false;
-                didCacheSelectedFolderEntriesSerializedProperty = false;
+                ClearCachedFolderSerializedProperties();
             }
         }
 
         [NonSerialized] private AssetPaletteCollection cachedCurrentCollection;
-        private AssetPaletteCollection CurrentCollection
+
+        public AssetPaletteCollection CurrentCollection
         {
             get
             {
@@ -79,14 +79,12 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
-                if (!didCacheCurrentCollectionSerializedObject)
+                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null)
                 {
                     didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
                     
-                    // Need to re-cache these now.
-                    didCacheSelectedFolderSerializedProperty = false;
-                    didCacheSelectedFolderEntriesSerializedProperty = false;
+                    ClearCachedFolderSerializedProperties();
                 }
                 return cachedCurrentCollectionSerializedObject;
             }
@@ -161,7 +159,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             // Dropdown for adding a special entry.
             Rect addEntryForProjectWindowSelectionRect = RectExtensions.GetSubRectFromRight(
-                remainder, AddEntryForProjectWindowSelectionButtonWidth);
+                remainder, AddSpecialButtonWidth);
             bool addEntryForProjectWindowSelection = GUI.Button(
                 addEntryForProjectWindowSelectionRect, "Add Special", EditorStyles.toolbarDropDown);
             if (addEntryForProjectWindowSelection)

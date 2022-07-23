@@ -245,13 +245,9 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             bool didClickASpecificEntry;
             if (ShouldDrawListView)
-            {
                 DrawListEntries(containerWidth, out didClickASpecificEntry);
-            }
             else
-            {
                 DrawGridEntries(containerWidth, out didClickASpecificEntry);
-            }
 
             GUILayout.Space(Padding);
 
@@ -259,7 +255,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && !didClickASpecificEntry &&
                 !Event.current.shift)
             {
-                StopAllRenames();
+                StopAllRenames(false);
 
                 ClearEntrySelection();
                 Repaint();
@@ -287,6 +283,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             PaletteEntry entry = GetEntry(index);
             Rect rect = GUILayoutUtility.GetRect(0, 0,
                 GUILayout.Width(containerWidth), GUILayout.Height(EditorGUIUtility.singleLineHeight));
+            
+            // Add an indent. Looks a bit more spacious this way. Unity does it for their project view list too.
+            rect = RectExtensions.Indent(rect, 1);
 
             HandleEntrySelection(index, rect, entry, ref didClickASpecificEntry);
 
@@ -366,13 +365,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
 
             if (entry.IsRenaming)
-            {
                 DrawRenameEntry(entryProperty, entryContentsRect);
-            }
             else
-            {
                 PaletteDrawing.DrawGridEntry(entryContentsRect, entryProperty, entry);
-            }
         }
 
         private void PurgeInvalidEntries(int index)
@@ -571,9 +566,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void SelectEntry(PaletteEntry entry, bool exclusively)
         {
             if (PaletteEntry.IsEntryBeingRenamed && PaletteEntry.EntryCurrentlyRenaming != entry)
-            {
                 StopEntryRename(true);
-            }
 
             if (exclusively)
                 ClearEntrySelection();
@@ -585,9 +578,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void SelectEntriesByRange(int from, int to, bool exclusively)
         {
             if (PaletteEntry.IsEntryBeingRenamed)
-            {
                 StopEntryRename(true);
-            }
 
             if (exclusively)
             {
@@ -610,9 +601,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
         {
             if (PaletteEntry.IsEntryBeingRenamed)
-            {
                 StopEntryRename(true);
-            }
 
             if (exclusively)
                 ClearEntrySelection();

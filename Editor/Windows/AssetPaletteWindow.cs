@@ -25,14 +25,14 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
 
         private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;
-        private static float EntriesPanelWidthMin => 200;
+        private static float EntriesPanelWidthMin => AddSpecialButtonWidth + SortModeButtonWidth;
         private static float PrefabPanelHeightMin => 50;
         private static float WindowWidthMin => FolderPanelWidthMin + EntriesPanelWidthMin;
         private static float CollectionButtonWidth => 130;
         private static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
         private static int NewFolderButtonWidth => 76 + (HasMultipleFolderTypes ? 9 : 0);
         private static int SortModeButtonWidth => 140;
-        private static int AddEntryForProjectWindowSelectionButtonWidth => 90;
+        private static int AddSpecialButtonWidth => 90;
         
         private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
@@ -41,32 +41,25 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private bool isMouseInHeader;
         [NonSerialized] private bool isMouseInFooter;
         [NonSerialized] private bool isMouseInFolderPanel;
+        [NonSerialized] private bool isMouseOverFolderPanelResizeBorder;
         [NonSerialized] private bool isMouseInEntriesPanel;
         
         [NonSerialized] private string renameText;
 
         private bool IsRenaming => PaletteFolder.IsFolderBeingRenamed || PaletteEntry.IsEntryBeingRenamed;
-        
-        private Color cachedSelectionColor;
-        private bool didCacheSelectionColor;
-        private Color SelectionColor
-        {
-            get
-            {
-                if (!didCacheSelectionColor)
-                {
-                    didCacheSelectionColor = true;
-                    cachedSelectionColor = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).settings.selectionColor;
-                }
-                return cachedSelectionColor;
-            }
-        }
 
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;
 
         [MenuItem ("Window/General/Asset Palette")]
-        public static void Init()
+        private static void OpenViaMenu()
+        {
+            AssetPaletteWindow window = GetWindow<AssetPaletteWindow>(false);
+
+            window.Initialize();
+        }
+
+        public void Initialize()
         {
             if (lightModeIcon == null)
                 lightModeIcon = Resources.Load<Texture2D>("AssetPaletteWindow Icon");
@@ -74,11 +67,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (darkModeIcon == null)
                 darkModeIcon = Resources.Load<Texture2D>("d_AssetPaletteWindow Icon");
 
-            AssetPaletteWindow window = GetWindow<AssetPaletteWindow>(false);
-            window.titleContent = new GUIContent(
+            titleContent = new GUIContent(
                 "Asset Palette", EditorGUIUtility.isProSkin ? darkModeIcon : lightModeIcon);
-            window.minSize = new Vector2(WindowWidthMin, WindowHeightMin);
-            window.wantsMouseMove = true;
+            minSize = new Vector2(WindowWidthMin, WindowHeightMin);
+            wantsMouseMove = true;
         }
 
         private void OnEnable()
@@ -141,6 +133,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             isMouseInHeader = Event.current.mousePosition.y <= HeaderHeight;
             isMouseInFooter = Event.current.mousePosition.y >= position.height - FooterHeight;
             isMouseInFolderPanel = !isMouseInHeader && Event.current.mousePosition.x < FolderPanelWidth;
+            isMouseOverFolderPanelResizeBorder = DividerResizeRect.Contains(Event.current.mousePosition);
 
             isMouseInEntriesPanel = !isMouseInHeader && !isMouseInFooter && !isMouseInFolderPanel;
             
@@ -167,20 +160,17 @@ namespace RoyTheunissen.AssetPalette.Windows
                         return;
                     case KeyCode.Return:
                     case KeyCode.KeypadEnter:
-                        StopAllRenames();
+                        StopAllRenames(false);
                         Event.current.Use();
                         return;
                 }
             }
 
-            if (Event.current.keyCode == KeyCode.F2)
+            if (Event.current.keyCode == KeyCode.F2 && entriesSelected.Count == 1)
             {
-                if (entriesSelected.Count == 1)
-                {
-                    StartEntryRename(entriesSelected[0]);
-                    Event.current.Use();
-                    return;
-                }
+                StartEntryRename(entriesSelected[0]);
+                Event.current.Use();
+                return;
             }
 
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
@@ -222,7 +212,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void StopAllRenames(bool isCancel = false)
+        private void StopAllRenames(bool isCancel)
         {
             StopFolderRename(isCancel);
             StopEntryRename(isCancel);

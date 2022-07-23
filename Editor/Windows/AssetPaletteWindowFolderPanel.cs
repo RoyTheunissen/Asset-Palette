@@ -26,6 +26,25 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private bool isResizingFolderPanel;
         
         private Vector2 folderPanelScrollPosition;
+        
+        private const int DividerRectThickness = 1;
+        private Rect DividerRect => new Rect(
+            FolderPanelWidth - DividerRectThickness, HeaderHeight, DividerRectThickness, position.height);
+
+        private Rect DividerResizeRect
+        {
+            get
+            {
+                // NOTE: We make the resize rect very big while resizing otherwise quick cursor movements cause the
+                // cursor to flicker back to the normal one. I'd rather change the cursor not based on a screen rect
+                // but on the isResizingFolderPanel state, but there's no functionality for that apparently.
+                int expansion = isResizingFolderPanel ? 100000 : 1;
+                Rect rect = DividerRect;
+                rect.xMin -= expansion;
+                rect.xMax += expansion;
+                return rect;
+            }
+        }
 
         private float FolderPanelWidth
         {
@@ -135,6 +154,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             didCacheSelectedFolderSerializedProperty = false;
             didCacheSelectedFolderEntriesSerializedProperty = false;
+            didCacheFoldersSerializedProperty = false;
         }
 
         private string GetUniqueFolderName(string desiredName, int previousAttempts = 0)
@@ -246,11 +266,6 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DrawFolders(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
         {
-            Color selectionColor = SelectionColor;
-            selectionColor.a = 0.25f;
-
-            Color highlightColor = new Color(1, 1, 1, 0.1f);
-
             bool isDraggingAssets = DragAndDrop.objectReferences.Length > 0;
             string folderDraggedFrom = (string)DragAndDrop.GetGenericData(EntryDragGenericDataType);
             bool isDraggingEntriesFromAFolder = folderDraggedFrom != null;
@@ -315,24 +330,15 @@ namespace RoyTheunissen.AssetPalette.Windows
                     }
                 }
                 
-                // Draw a background for the folder. Can be both selected and highlighted.
-                Color bgColor = Color.clear;
-                if (isSelected)
-                    bgColor = selectionColor;
-                if (isHighlighted)
+                // Draw a background for the folder using the Reorderable List Element style.
+                if (Event.current.type == EventType.Repaint)
                 {
-                    if (!isSelected)
-                        bgColor = highlightColor;
-                    else
-                    {
-                        // Blend the selection color with the highlight color, and respect the selection alpha.
-                        Color highlightColorWithCurrentAlpha = new Color(
-                            highlightColor.r, highlightColor.g, highlightColor.b, bgColor.a);
-                        bgColor = Color.Lerp(bgColor, highlightColorWithCurrentAlpha, 0.25f);
-                    }
+                    GUIStyle reorderableListElementStyle = "RL Element";
+                    Rect backgroundRect = folderRect;
+                    backgroundRect.xMin = 0;
+                    reorderableListElementStyle.Draw(
+                        backgroundRect, false, isSelected, isSelected || isHighlighted, true);
                 }
-                if (bgColor.a > 0)
-                    EditorGUI.DrawRect(folderRect, bgColor);
 
                 // Draw the actual folder itself.
                 if (folder.IsRenaming)
@@ -363,22 +369,25 @@ namespace RoyTheunissen.AssetPalette.Windows
                     {
                         currentFolderDragIndex = i;
                         didFindDragIndex = true;
-                        dragMarkerRect = RectExtensions.GetSubRectFromTop(folderRect, 2);
+                        dragMarkerRect = RectExtensions.GetSubRectFromTop(folderRect, 0);
                         Repaint();
                     }
                     else if (currentFolderDragIndex == -1 && i == foldersProperty.arraySize - 1)
                     {
                         currentFolderDragIndex = i + 1;
                         didFindDragIndex = true;
-                        dragMarkerRect = RectExtensions.GetSubRectFromBottom(folderRect, 2);
+                        dragMarkerRect = RectExtensions.GetSubRectFromBottom(folderRect, 0);
                         Repaint();
                     }
 
                     if (didFindDragIndex && currentFolderDragIndex != folderToDragIndex &&
                         currentFolderDragIndex != folderToDragIndex + 1 &&
-                        DragAndDrop.visualMode == DragAndDropVisualMode.Move)
+                        DragAndDrop.visualMode == DragAndDropVisualMode.Move && Event.current.type == EventType.Repaint)
                     {
-                        EditorGUI.DrawRect(dragMarkerRect, Color.blue);
+                        GUIStyle dragMarkerStyle = "TV Insertion";
+                        dragMarkerRect.height = dragMarkerStyle.fixedHeight;
+                        dragMarkerRect.y -= dragMarkerStyle.fixedHeight / 2 - 1;
+                        dragMarkerStyle.Draw(dragMarkerRect, true, true, false, false);
                     }
                 }
 
@@ -387,9 +396,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 {
                     if (folder.IsRenaming && !isMouseOver)
                     {
-                        StopAllRenames();
+                        StopAllRenames(false);
                     }
-                    else if (!IsRenaming && isMouseOver)
+                    else if (!IsRenaming && isMouseOver && !isMouseOverFolderPanelResizeBorder)
                     {
                         SelectedFolderIndex = i;
 
@@ -407,19 +416,12 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void DrawResizableFolderPanelDivider()
         {
-            const int thickness = 1;
-            Rect dividerRect = new Rect(
-                FolderPanelWidth - thickness, HeaderHeight, thickness, position.height);
-            EditorGUI.DrawRect(dividerRect, DividerColor);
-
-            const int expansion = 1;
-            Rect resizeRect = dividerRect;
-            resizeRect.xMin -= expansion;
-            resizeRect.xMax += expansion;
-            EditorGUIUtility.AddCursorRect(resizeRect, MouseCursor.ResizeHorizontal);
+            EditorGUI.DrawRect(DividerRect, DividerColor);
+            
+            EditorGUIUtility.AddCursorRect(DividerResizeRect, MouseCursor.ResizeHorizontal);
 
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 &&
-                resizeRect.Contains(Event.current.mousePosition))
+                isMouseOverFolderPanelResizeBorder)
             {
                 isResizingFolderPanel = true;
             }
@@ -433,7 +435,12 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             if (Event.current.type == EventType.MouseUp)
+            {
                 isResizingFolderPanel = false;
+                
+                // NOTE: Need to repaint now so that the resize rect becomes the normal size again.
+                Repaint();
+            }
         }
 
         private void StartFolderDrag(PaletteFolder folder)
@@ -548,22 +555,22 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void OnLostFocus()
         {
-            StopAllRenames();
+            StopAllRenames(false);
         }
 
         private void OnSelectionChange()
         {
-            StopAllRenames();
+            StopAllRenames(false);
         }
 
         private void OnFocus()
         {
-            StopAllRenames();
+            StopAllRenames(false);
         }
 
         private void OnProjectChange()
         {
-            StopAllRenames();
+            StopAllRenames(false);
         }
     }
 }
