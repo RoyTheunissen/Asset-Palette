@@ -293,13 +293,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             Rect entryContentsRect = rect;
             SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
 
+            PaletteDrawing.DrawListEntry(entryContentsRect, entryProperty, entry, entriesSelected.Contains(entry));
+
             if (entry.IsRenaming)
             {
+                // This is done purely by eye
+                entryContentsRect.xMin += 17;
                 DrawRenameEntry(entryProperty, entryContentsRect);
-            }
-            else
-            {
-                PaletteDrawing.DrawListEntry(entryContentsRect, entryProperty, entry, entriesSelected.Contains(entry));
             }
         }
 
