@@ -35,7 +35,10 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
-                const int expansion = 1;
+                // NOTE: We make the resize rect very big while resizing otherwise quick cursor movements cause the
+                // cursor to flicker back to the normal one. I'd rather change the cursor not based on a screen rect
+                // but on the isResizingFolderPanel state, but there's no functionality for that apparently.
+                int expansion = isResizingFolderPanel ? 100000 : 1;
                 Rect rect = DividerRect;
                 rect.xMin -= expansion;
                 rect.xMax += expansion;
@@ -432,7 +435,12 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             if (Event.current.type == EventType.MouseUp)
+            {
                 isResizingFolderPanel = false;
+                
+                // NOTE: Need to repaint now so that the resize rect becomes the normal size again.
+                Repaint();
+            }
         }
 
         private void StartFolderDrag(PaletteFolder folder)
