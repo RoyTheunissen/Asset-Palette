@@ -522,7 +522,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             return FoldersSerializedProperty.GetArrayElementAtIndex(index);
         }
 
-        private void StopFolderRename()
+        private void StopFolderRename(bool isCancel)
         {
             if (!PaletteFolder.IsFolderBeingRenamed)
                 return;
@@ -530,7 +530,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             bool isValidRename = !string.IsNullOrEmpty(renameText) &&
                                  !string.IsNullOrWhiteSpace(renameText) &&
                                  PaletteFolder.FolderCurrentlyRenaming.Name != renameText;
-            if (isValidRename)
+            if (isValidRename && !isCancel)
             {
                 renameText = GetUniqueFolderName(renameText);
                 CurrentCollectionSerializedObject.Update();

@@ -151,18 +151,38 @@ namespace RoyTheunissen.AssetPalette.Windows
                                             DragAndDrop.objectReferences.Length > 0 &&
                                             DragAndDrop.GetGenericData(EntryDragGenericDataType) == null;
         }
-        
+
         private void PerformKeyboardShortcuts()
         {
             if (Event.current.type != EventType.KeyDown)
                 return;
-            
-            if (Event.current.keyCode == KeyCode.Return && IsRenaming)
+
+            if (IsRenaming)
             {
-                StopAllRenames();
-                return;
+                switch (Event.current.keyCode)
+                {
+                    case KeyCode.Escape:
+                        StopAllRenames(true);
+                        Event.current.Use();
+                        return;
+                    case KeyCode.Return:
+                    case KeyCode.KeypadEnter:
+                        StopAllRenames();
+                        Event.current.Use();
+                        return;
+                }
             }
-            
+
+            if (Event.current.keyCode == KeyCode.F2)
+            {
+                if (entriesSelected.Count == 1)
+                {
+                    StartEntryRename(entriesSelected[0]);
+                    Event.current.Use();
+                    return;
+                }
+            }
+
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
             if (Event.current.control && Event.current.keyCode == KeyCode.A && !IsRenaming)
             {
@@ -196,16 +216,16 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                     // Select the last folder.
                     SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
-                    
+
                     Repaint();
                 }
             }
         }
 
-        private void StopAllRenames()
+        private void StopAllRenames(bool isCancel = false)
         {
-            StopFolderRename();
-            StopEntryRename();
+            StopFolderRename(isCancel);
+            StopEntryRename(isCancel);
         }
     }
 }

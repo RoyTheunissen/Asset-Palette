@@ -63,22 +63,30 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
         
-        [NonSerialized] private static GUIStyle cachedEntryRenameTextStyle;
+        [NonSerialized] private static GUIStyle cachedGridEntryRenameTextStyle;
+        [NonSerialized] private static GUIStyle cachedListEntryRenameTextStyle;
         [NonSerialized] private static bool didCacheEntryRenameTextStyle;
-        protected static GUIStyle EntryRenameTextStyle
+        private GUIStyle EntryRenameTextStyle
         {
             get
             {
                 if (!didCacheEntryRenameTextStyle)
                 {
                     didCacheEntryRenameTextStyle = true;
-                    cachedEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
+                    cachedGridEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
                     {
                         wordWrap = true,
                         alignment = TextAnchor.LowerCenter,
                     };
+
+                    cachedListEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
+                    {
+                        wordWrap = true,
+                        alignment = TextAnchor.MiddleLeft
+                    };
                 }
-                return cachedEntryRenameTextStyle;
+
+                return ShouldDrawListView ? cachedListEntryRenameTextStyle : cachedGridEntryRenameTextStyle;
             }
         }
         
@@ -285,13 +293,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             Rect entryContentsRect = rect;
             SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
 
+            PaletteDrawing.DrawListEntry(entryContentsRect, entryProperty, entry, entriesSelected.Contains(entry));
+
             if (entry.IsRenaming)
             {
+                // This is done purely by eye
+                entryContentsRect.xMin += 17;
                 DrawRenameEntry(entryProperty, entryContentsRect);
-            }
-            else
-            {
-                PaletteDrawing.DrawListEntry(entryContentsRect, entryProperty, entry, entriesSelected.Contains(entry));
             }
         }
 
@@ -562,14 +570,25 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void SelectEntry(PaletteEntry entry, bool exclusively)
         {
+            if (PaletteEntry.IsEntryBeingRenamed && PaletteEntry.EntryCurrentlyRenaming != entry)
+            {
+                StopEntryRename(true);
+            }
+
             if (exclusively)
                 ClearEntrySelection();
+
             entriesSelected.Add(entry);
             entriesIndividuallySelected.Add(entry);
         }
 
         private void SelectEntriesByRange(int from, int to, bool exclusively)
         {
+            if (PaletteEntry.IsEntryBeingRenamed)
+            {
+                StopEntryRename(true);
+            }
+
             if (exclusively)
             {
                 entriesSelected.Clear();
@@ -590,6 +609,11 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
         {
+            if (PaletteEntry.IsEntryBeingRenamed)
+            {
+                StopEntryRename(true);
+            }
+
             if (exclusively)
                 ClearEntrySelection();
 
@@ -634,13 +658,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorGUI.FocusTextInControl(GetRenameControlId(entry));
         }
 
-        private void StopEntryRename()
+        private void StopEntryRename(bool isCancel)
         {
             if (!PaletteEntry.IsEntryBeingRenamed)
                 return;
 
             bool isValidRename = PaletteEntry.EntryCurrentlyRenaming.Name != renameText;
-            if (isValidRename)
+            if (isValidRename && !isCancel)
             {
                 CurrentCollectionSerializedObject.Update();
                 int index = SelectedFolder.Entries.IndexOf(PaletteEntry.EntryCurrentlyRenaming);
