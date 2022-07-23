@@ -169,6 +169,16 @@ namespace RoyTheunissen.AssetPalette.Windows
                         return;
                 }
             }
+
+            if (Event.current.keyCode == KeyCode.F2)
+            {
+                if (entriesSelected.Count ==1)
+                {
+                    StartEntryRename(entriesSelected[0]);
+                    Repaint();
+                    return;                    
+                }
+            }
             
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
             if (Event.current.control && Event.current.keyCode == KeyCode.A && !IsRenaming)
