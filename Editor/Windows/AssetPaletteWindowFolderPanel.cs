@@ -26,6 +26,22 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private bool isResizingFolderPanel;
         
         private Vector2 folderPanelScrollPosition;
+        
+        private const int DividerRectThickness = 1;
+        private Rect DividerRect => new Rect(
+            FolderPanelWidth - DividerRectThickness, HeaderHeight, DividerRectThickness, position.height);
+
+        private Rect DividerResizeRect
+        {
+            get
+            {
+                const int expansion = 1;
+                Rect rect = DividerRect;
+                rect.xMin -= expansion;
+                rect.xMax += expansion;
+                return rect;
+            }
+        }
 
         private float FolderPanelWidth
         {
@@ -379,7 +395,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     {
                         StopAllRenames(false);
                     }
-                    else if (!IsRenaming && isMouseOver)
+                    else if (!IsRenaming && isMouseOver && !isMouseOverFolderPanelResizeBorder)
                     {
                         SelectedFolderIndex = i;
 
@@ -397,19 +413,12 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void DrawResizableFolderPanelDivider()
         {
-            const int thickness = 1;
-            Rect dividerRect = new Rect(
-                FolderPanelWidth - thickness, HeaderHeight, thickness, position.height);
-            EditorGUI.DrawRect(dividerRect, DividerColor);
-
-            const int expansion = 1;
-            Rect resizeRect = dividerRect;
-            resizeRect.xMin -= expansion;
-            resizeRect.xMax += expansion;
-            EditorGUIUtility.AddCursorRect(resizeRect, MouseCursor.ResizeHorizontal);
+            EditorGUI.DrawRect(DividerRect, DividerColor);
+            
+            EditorGUIUtility.AddCursorRect(DividerResizeRect, MouseCursor.ResizeHorizontal);
 
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 &&
-                resizeRect.Contains(Event.current.mousePosition))
+                isMouseOverFolderPanelResizeBorder)
             {
                 isResizingFolderPanel = true;
             }

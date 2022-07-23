@@ -41,6 +41,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private bool isMouseInHeader;
         [NonSerialized] private bool isMouseInFooter;
         [NonSerialized] private bool isMouseInFolderPanel;
+        [NonSerialized] private bool isMouseOverFolderPanelResizeBorder;
         [NonSerialized] private bool isMouseInEntriesPanel;
         
         [NonSerialized] private string renameText;
@@ -126,6 +127,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             isMouseInHeader = Event.current.mousePosition.y <= HeaderHeight;
             isMouseInFooter = Event.current.mousePosition.y >= position.height - FooterHeight;
             isMouseInFolderPanel = !isMouseInHeader && Event.current.mousePosition.x < FolderPanelWidth;
+            isMouseOverFolderPanelResizeBorder = DividerResizeRect.Contains(Event.current.mousePosition);
 
             isMouseInEntriesPanel = !isMouseInHeader && !isMouseInFooter && !isMouseInFolderPanel;
             
