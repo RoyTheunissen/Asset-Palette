@@ -83,6 +83,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         }
         
         [NonSerialized] private PaletteEntry entryBelowCursorOnMouseDown;
+
+        private bool ShouldDrawListView => ZoomLevel == 0;
         
         private int GetEntryCount()
         {
@@ -234,7 +236,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             GUILayout.Space(Padding);
 
             bool didClickASpecificEntry;
-            if (ZoomLevel == 0)
+            if (ShouldDrawListView)
             {
                 DrawListEntries(containerWidth, out didClickASpecificEntry);
             }
@@ -285,10 +287,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             if (entry.IsRenaming)
             {
-                string renameControlId = GetRenameControlId(entryProperty);
-                GUI.SetNextControlName(renameControlId);
-                renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
-                GUI.FocusControl(renameControlId);
+                DrawRenameEntry(entryProperty, entryContentsRect);
             }
             else
             {
@@ -360,10 +359,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             if (entry.IsRenaming)
             {
-                string renameControlId = GetRenameControlId(entryProperty);
-                GUI.SetNextControlName(renameControlId);
-                renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
-                GUI.FocusControl(renameControlId);
+                DrawRenameEntry(entryProperty, entryContentsRect);
             }
             else
             {
@@ -378,6 +374,14 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 RemoveEntryAt(index);
             }
+        }
+
+        private void DrawRenameEntry(SerializedProperty entryProperty, Rect entryContentsRect)
+        {
+            string renameControlId = GetRenameControlId(entryProperty);
+            GUI.SetNextControlName(renameControlId);
+            renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
+            GUI.FocusControl(renameControlId);
         }
 
         private void HandleEntrySelection(int index, Rect rect, PaletteEntry entry, ref bool didClickASpecificEntry)
@@ -485,7 +489,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     if (Event.current.clickCount == 2)
                     {
                         Rect labelRect = PaletteEntryDrawerBase.GetLabelRect(rect, entry);
-                        if (ZoomLevel != 0 && entry.CanRename && labelRect.Contains(Event.current.mousePosition))
+                        if (!ShouldDrawListView && entry.CanRename && labelRect.Contains(Event.current.mousePosition))
                             StartEntryRename(entry);
                         else
                             entry.Open();
