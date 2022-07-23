@@ -283,6 +283,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             PaletteEntry entry = GetEntry(index);
             Rect rect = GUILayoutUtility.GetRect(0, 0,
                 GUILayout.Width(containerWidth), GUILayout.Height(EditorGUIUtility.singleLineHeight));
+            
+            // Add an indent. Looks a bit more spacious this way. Unity does it for their project view list too.
+            rect = RectExtensions.Indent(rect, 1);
 
             HandleEntrySelection(index, rect, entry, ref didClickASpecificEntry);
 
