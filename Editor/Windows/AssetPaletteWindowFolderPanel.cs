@@ -346,22 +346,25 @@ namespace RoyTheunissen.AssetPalette.Windows
                     {
                         currentFolderDragIndex = i;
                         didFindDragIndex = true;
-                        dragMarkerRect = RectExtensions.GetSubRectFromTop(folderRect, 2);
+                        dragMarkerRect = RectExtensions.GetSubRectFromTop(folderRect, 0);
                         Repaint();
                     }
                     else if (currentFolderDragIndex == -1 && i == foldersProperty.arraySize - 1)
                     {
                         currentFolderDragIndex = i + 1;
                         didFindDragIndex = true;
-                        dragMarkerRect = RectExtensions.GetSubRectFromBottom(folderRect, 2);
+                        dragMarkerRect = RectExtensions.GetSubRectFromBottom(folderRect, 0);
                         Repaint();
                     }
 
                     if (didFindDragIndex && currentFolderDragIndex != folderToDragIndex &&
                         currentFolderDragIndex != folderToDragIndex + 1 &&
-                        DragAndDrop.visualMode == DragAndDropVisualMode.Move)
+                        DragAndDrop.visualMode == DragAndDropVisualMode.Move && Event.current.type == EventType.Repaint)
                     {
-                        EditorGUI.DrawRect(dragMarkerRect, Color.blue);
+                        GUIStyle dragMarkerStyle = "TV Insertion";
+                        dragMarkerRect.height = dragMarkerStyle.fixedHeight;
+                        dragMarkerRect.y -= dragMarkerStyle.fixedHeight / 2 - 1;
+                        dragMarkerStyle.Draw(dragMarkerRect, true, true, false, false);
                     }
                 }
 
