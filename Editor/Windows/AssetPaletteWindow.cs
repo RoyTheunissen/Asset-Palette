@@ -46,21 +46,6 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private string renameText;
 
         private bool IsRenaming => PaletteFolder.IsFolderBeingRenamed || PaletteEntry.IsEntryBeingRenamed;
-        
-        private Color cachedSelectionColor;
-        private bool didCacheSelectionColor;
-        private Color SelectionColor
-        {
-            get
-            {
-                if (!didCacheSelectionColor)
-                {
-                    didCacheSelectionColor = true;
-                    cachedSelectionColor = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).settings.selectionColor;
-                }
-                return cachedSelectionColor;
-            }
-        }
 
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;

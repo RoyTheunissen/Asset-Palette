@@ -246,11 +246,6 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DrawFolders(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
         {
-            Color selectionColor = SelectionColor;
-            selectionColor.a = 0.25f;
-
-            Color highlightColor = new Color(1, 1, 1, 0.1f);
-
             bool isDraggingAssets = DragAndDrop.objectReferences.Length > 0;
             string folderDraggedFrom = (string)DragAndDrop.GetGenericData(EntryDragGenericDataType);
             bool isDraggingEntriesFromAFolder = folderDraggedFrom != null;
@@ -315,24 +310,12 @@ namespace RoyTheunissen.AssetPalette.Windows
                     }
                 }
                 
-                // Draw a background for the folder. Can be both selected and highlighted.
-                Color bgColor = Color.clear;
-                if (isSelected)
-                    bgColor = selectionColor;
-                if (isHighlighted)
+                // Draw a background for the folder using the Reorderable List Element style.
+                if (Event.current.type == EventType.Repaint)
                 {
-                    if (!isSelected)
-                        bgColor = highlightColor;
-                    else
-                    {
-                        // Blend the selection color with the highlight color, and respect the selection alpha.
-                        Color highlightColorWithCurrentAlpha = new Color(
-                            highlightColor.r, highlightColor.g, highlightColor.b, bgColor.a);
-                        bgColor = Color.Lerp(bgColor, highlightColorWithCurrentAlpha, 0.25f);
-                    }
+                    GUIStyle reorderableListElementStyle = "RL Element";
+                    reorderableListElementStyle.Draw(folderRect, false, isSelected, isSelected || isHighlighted, true);
                 }
-                if (bgColor.a > 0)
-                    EditorGUI.DrawRect(folderRect, bgColor);
 
                 // Draw the actual folder itself.
                 if (folder.IsRenaming)
