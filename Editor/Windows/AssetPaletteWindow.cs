@@ -25,14 +25,14 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
 
         private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;
-        private static float EntriesPanelWidthMin => 200;
+        private static float EntriesPanelWidthMin => AddSpecialButtonWidth + SortModeButtonWidth;
         private static float PrefabPanelHeightMin => 50;
         private static float WindowWidthMin => FolderPanelWidthMin + EntriesPanelWidthMin;
         private static float CollectionButtonWidth => 130;
         private static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
         private static int NewFolderButtonWidth => 76 + (HasMultipleFolderTypes ? 9 : 0);
         private static int SortModeButtonWidth => 140;
-        private static int AddEntryForProjectWindowSelectionButtonWidth => 90;
+        private static int AddSpecialButtonWidth => 90;
         
         private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;

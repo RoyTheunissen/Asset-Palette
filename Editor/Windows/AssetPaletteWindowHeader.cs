@@ -158,7 +158,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             // Dropdown for adding a special entry.
             Rect addEntryForProjectWindowSelectionRect = RectExtensions.GetSubRectFromRight(
-                remainder, AddEntryForProjectWindowSelectionButtonWidth);
+                remainder, AddSpecialButtonWidth);
             bool addEntryForProjectWindowSelection = GUI.Button(
                 addEntryForProjectWindowSelectionRect, "Add Special", EditorStyles.toolbarDropDown);
             if (addEntryForProjectWindowSelection)
