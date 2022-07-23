@@ -162,10 +162,13 @@ namespace RoyTheunissen.AssetPalette.Windows
                 switch (Event.current.keyCode)
                 {
                     case KeyCode.Escape:
+                        StopAllRenames(true);
+                        Event.current.Use();
+                        return;
                     case KeyCode.Return:
                     case KeyCode.KeypadEnter:
-                        // Using a delay call here to allow canceling of the rename
-                        EditorApplication.delayCall += StopAllRenames;
+                        StopAllRenames();
+                        Event.current.Use();
                         return;
                 }
             }
@@ -175,7 +178,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 if (entriesSelected.Count == 1)
                 {
                     StartEntryRename(entriesSelected[0]);
-                    Repaint();
+                    Event.current.Use();
                     return;
                 }
             }
@@ -219,10 +222,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void StopAllRenames()
+        private void StopAllRenames(bool isCancel = false)
         {
-            StopFolderRename();
-            StopEntryRename();
+            StopFolderRename(isCancel);
+            StopEntryRename(isCancel);
         }
     }
 }

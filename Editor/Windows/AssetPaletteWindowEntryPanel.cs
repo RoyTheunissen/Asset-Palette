@@ -653,13 +653,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorGUI.FocusTextInControl(GetRenameControlId(entry));
         }
 
-        private void StopEntryRename()
+        private void StopEntryRename(bool isCancel)
         {
             if (!PaletteEntry.IsEntryBeingRenamed)
                 return;
 
             bool isValidRename = PaletteEntry.EntryCurrentlyRenaming.Name != renameText;
-            if (isValidRename)
+            if (isValidRename && !isCancel)
             {
                 CurrentCollectionSerializedObject.Update();
                 int index = SelectedFolder.Entries.IndexOf(PaletteEntry.EntryCurrentlyRenaming);
