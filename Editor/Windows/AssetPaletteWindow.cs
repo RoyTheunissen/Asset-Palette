@@ -52,7 +52,14 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static Texture2D darkModeIcon;
 
         [MenuItem ("Window/General/Asset Palette")]
-        public static void Init()
+        private static void OpenViaMenu()
+        {
+            AssetPaletteWindow window = GetWindow<AssetPaletteWindow>(false);
+
+            window.Initialize();
+        }
+
+        public void Initialize()
         {
             if (lightModeIcon == null)
                 lightModeIcon = Resources.Load<Texture2D>("AssetPaletteWindow Icon");
@@ -60,11 +67,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (darkModeIcon == null)
                 darkModeIcon = Resources.Load<Texture2D>("d_AssetPaletteWindow Icon");
 
-            AssetPaletteWindow window = GetWindow<AssetPaletteWindow>(false);
-            window.titleContent = new GUIContent(
+            titleContent = new GUIContent(
                 "Asset Palette", EditorGUIUtility.isProSkin ? darkModeIcon : lightModeIcon);
-            window.minSize = new Vector2(WindowWidthMin, WindowHeightMin);
-            window.wantsMouseMove = true;
+            minSize = new Vector2(WindowWidthMin, WindowHeightMin);
+            wantsMouseMove = true;
         }
 
         private void OnEnable()

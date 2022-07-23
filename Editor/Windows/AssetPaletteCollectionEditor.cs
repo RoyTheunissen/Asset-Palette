@@ -22,6 +22,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void OpenInAssetPaletteWindow(AssetPaletteCollection collection)
         {
             AssetPaletteWindow window = AssetPaletteWindow.GetWindow<AssetPaletteWindow>();
+            window.Initialize();
             window.CurrentCollection = collection;
             window.Repaint();
         }
