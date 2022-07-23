@@ -152,20 +152,17 @@ namespace RoyTheunissen.AssetPalette.Windows
                         return;
                     case KeyCode.Return:
                     case KeyCode.KeypadEnter:
-                        StopAllRenames();
+                        StopAllRenames(false);
                         Event.current.Use();
                         return;
                 }
             }
 
-            if (Event.current.keyCode == KeyCode.F2)
+            if (Event.current.keyCode == KeyCode.F2 && entriesSelected.Count == 1)
             {
-                if (entriesSelected.Count == 1)
-                {
-                    StartEntryRename(entriesSelected[0]);
-                    Event.current.Use();
-                    return;
-                }
+                StartEntryRename(entriesSelected[0]);
+                Event.current.Use();
+                return;
             }
 
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
@@ -207,7 +204,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void StopAllRenames(bool isCancel = false)
+        private void StopAllRenames(bool isCancel)
         {
             StopFolderRename(isCancel);
             StopEntryRename(isCancel);

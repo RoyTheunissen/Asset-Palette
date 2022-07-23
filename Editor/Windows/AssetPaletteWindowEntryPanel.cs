@@ -255,7 +255,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && !didClickASpecificEntry &&
                 !Event.current.shift)
             {
-                StopAllRenames();
+                StopAllRenames(false);
 
                 ClearEntrySelection();
                 Repaint();
@@ -563,9 +563,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void SelectEntry(PaletteEntry entry, bool exclusively)
         {
             if (PaletteEntry.IsEntryBeingRenamed && PaletteEntry.EntryCurrentlyRenaming != entry)
-            {
                 StopEntryRename(true);
-            }
 
             if (exclusively)
                 ClearEntrySelection();
@@ -577,9 +575,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void SelectEntriesByRange(int from, int to, bool exclusively)
         {
             if (PaletteEntry.IsEntryBeingRenamed)
-            {
                 StopEntryRename(true);
-            }
 
             if (exclusively)
             {
@@ -602,9 +598,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
         {
             if (PaletteEntry.IsEntryBeingRenamed)
-            {
                 StopEntryRename(true);
-            }
 
             if (exclusively)
                 ClearEntrySelection();

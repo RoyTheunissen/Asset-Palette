@@ -377,7 +377,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 {
                     if (folder.IsRenaming && !isMouseOver)
                     {
-                        StopAllRenames();
+                        StopAllRenames(false);
                     }
                     else if (!IsRenaming && isMouseOver)
                     {
@@ -538,22 +538,22 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void OnLostFocus()
         {
-            StopAllRenames();
+            StopAllRenames(false);
         }
 
         private void OnSelectionChange()
         {
-            StopAllRenames();
+            StopAllRenames(false);
         }
 
         private void OnFocus()
         {
-            StopAllRenames();
+            StopAllRenames(false);
         }
 
         private void OnProjectChange()
         {
-            StopAllRenames();
+            StopAllRenames(false);
         }
     }
 }
