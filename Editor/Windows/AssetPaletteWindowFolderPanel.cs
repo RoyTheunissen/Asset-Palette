@@ -314,7 +314,10 @@ namespace RoyTheunissen.AssetPalette.Windows
                 if (Event.current.type == EventType.Repaint)
                 {
                     GUIStyle reorderableListElementStyle = "RL Element";
-                    reorderableListElementStyle.Draw(folderRect, false, isSelected, isSelected || isHighlighted, true);
+                    Rect backgroundRect = folderRect;
+                    backgroundRect.xMin = 0;
+                    reorderableListElementStyle.Draw(
+                        backgroundRect, false, isSelected, isSelected || isHighlighted, true);
                 }
 
                 // Draw the actual folder itself.
