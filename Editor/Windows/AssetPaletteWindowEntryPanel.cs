@@ -562,14 +562,27 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void SelectEntry(PaletteEntry entry, bool exclusively)
         {
+            if (PaletteEntry.IsEntryBeingRenamed && PaletteEntry.EntryCurrentlyRenaming != entry)
+            {
+                PaletteEntry.CancelRename();
+                renameText = string.Empty;
+            }
+
             if (exclusively)
                 ClearEntrySelection();
+
             entriesSelected.Add(entry);
             entriesIndividuallySelected.Add(entry);
         }
 
         private void SelectEntriesByRange(int from, int to, bool exclusively)
         {
+            if (PaletteEntry.IsEntryBeingRenamed)
+            {
+                PaletteEntry.CancelRename();
+                renameText = string.Empty;
+            }
+
             if (exclusively)
             {
                 entriesSelected.Clear();
@@ -590,6 +603,12 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
         {
+            if (PaletteEntry.IsEntryBeingRenamed)
+            {
+                PaletteEntry.CancelRename();
+                renameText = string.Empty;
+            }
+
             if (exclusively)
                 ClearEntrySelection();
 
