@@ -151,7 +151,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                                             DragAndDrop.objectReferences.Length > 0 &&
                                             DragAndDrop.GetGenericData(EntryDragGenericDataType) == null;
         }
-        
+
         private void PerformKeyboardShortcuts()
         {
             if (Event.current.type != EventType.KeyDown)
@@ -164,7 +164,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     case KeyCode.Escape:
                     case KeyCode.Return:
                     case KeyCode.KeypadEnter:
-                        // Using a delay call here to allow cancelling of the rename
+                        // Using a delay call here to allow canceling of the rename
                         EditorApplication.delayCall += StopAllRenames;
                         return;
                 }
@@ -172,14 +172,14 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             if (Event.current.keyCode == KeyCode.F2)
             {
-                if (entriesSelected.Count ==1)
+                if (entriesSelected.Count == 1)
                 {
                     StartEntryRename(entriesSelected[0]);
                     Repaint();
-                    return;                    
+                    return;
                 }
             }
-            
+
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
             if (Event.current.control && Event.current.keyCode == KeyCode.A && !IsRenaming)
             {
@@ -213,7 +213,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                     // Select the last folder.
                     SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
-                    
+
                     Repaint();
                 }
             }
