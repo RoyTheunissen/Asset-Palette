@@ -66,5 +66,11 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
                 position.xMin, position.yMin, shortcutIconSize, shortcutIconSize);
             GUI.DrawTexture(shortcutIconRect, ShortcutIcon, ScaleMode.ScaleToFit);
         }
+
+        /// <inheritdoc />
+        protected override Texture2D GetListIcon(PaletteSelectionShortcut entry)
+        {
+            return ShortcutIcon;
+        }
     }
 }

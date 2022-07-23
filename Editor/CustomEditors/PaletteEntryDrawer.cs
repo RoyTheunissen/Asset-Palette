@@ -1,11 +1,10 @@
 using System;
 using System.IO;
+using RoyTheunissen.AssetPalette.Extensions;
 using RoyTheunissen.AssetPalette.Windows;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
-using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
 namespace RoyTheunissen.AssetPalette.CustomEditors
 {
@@ -61,6 +60,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         }
 
         public abstract void OnGUI(Rect position, SerializedProperty property, PaletteEntry entry);
+        public abstract void OnListGUI(Rect position, SerializedProperty property, PaletteEntry entry, bool isSelected);
     }
     
     /// <summary>
@@ -95,7 +95,52 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             DrawLabel(position, labelRect, property, label, entry);
         }
 
+        /// <inheritdoc />
+        public override void OnListGUI(Rect position, SerializedProperty property, PaletteEntry baseEntry, bool isSelected)
+        {
+            EntryType entry = (EntryType)baseEntry;
+
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 &&
+                position.Contains(Event.current.mousePosition))
+            {
+                ShowContextMenu(entry, property);
+                return;
+            }
+
+            if (Event.current.type != EventType.Repaint)
+                return;
+
+            if (isSelected)
+            {
+                GUIStyle selectionStyle = "RL Element";
+                selectionStyle.Draw(position, false, true, true, true);
+            }
+
+            Texture2D icon = GetListIcon(entry);
+            if (icon == null)
+            {
+                DrawListEntry(position, property, entry);
+            }
+            else
+            {
+                bool isSelectedAndHasFocus =
+                    isSelected && EditorWindow.focusedWindow == PaletteDrawing.ActivePaletteWindow;
+                GUIContent content = new GUIContent(entry.Name, icon);
+                EditorStyles.label.Draw(position, content, false, false, isSelectedAndHasFocus, isSelectedAndHasFocus);
+            }
+        }
+
+        protected virtual Texture2D GetListIcon(EntryType entry)
+        {
+            return null;
+        }
+
         protected abstract void DrawContents(Rect position, SerializedProperty property, EntryType entry);
+
+        protected virtual void DrawListEntry(Rect position, SerializedProperty property, EntryType entry)
+        {
+            EditorGUI.LabelField(position, "No GUI implemented");
+        }
 
         protected virtual void DrawLabel(
             Rect position, Rect labelPosition, SerializedProperty property, GUIContent label, EntryType entry)

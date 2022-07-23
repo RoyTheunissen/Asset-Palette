@@ -15,6 +15,8 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         private static readonly Dictionary<Type, PaletteEntryDrawerBase> entryTypeToDrawer =
             new Dictionary<Type, PaletteEntryDrawerBase>();
 
+        public static EditorWindow ActivePaletteWindow;
+
         public static float GetFolderHeight(SerializedProperty property, PaletteFolder folder)
         {
             // NOTE: If you wanted to you could support different kinds of folders with custom drawers like you could
@@ -30,7 +32,17 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             EditorGUI.LabelField(position, GUIContent.none, new GUIContent(nameField.stringValue));
         }
 
-        public static void DrawEntry(Rect position, SerializedProperty property, PaletteEntry entry)
+        public static void DrawListEntry(Rect position, SerializedProperty property, PaletteEntry entry, bool isSelected)
+        {
+            if (entry == null)
+                return;
+            
+            PaletteEntryDrawerBase entryDrawer = GetEntryDrawer(entry.GetType());
+
+            entryDrawer?.OnListGUI(position, property, entry, isSelected);
+        }
+
+        public static void DrawGridEntry(Rect position, SerializedProperty property, PaletteEntry entry)
         {
             if (entry == null)
                 return;

@@ -40,6 +40,12 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             GUI.DrawTexture(iconRect, entry.HasCustomIcon ? entry.CustomIcon : MacroIcon, ScaleMode.ScaleToFit);
         }
 
+        /// <inheritdoc />
+        protected override Texture2D GetListIcon(PaletteMacro entry)
+        {
+            return entry.HasCustomIcon ? entry.CustomIcon : MacroIcon;
+        }
+
         protected override void OnContextMenu(GenericMenu menu, PaletteMacro entry, SerializedProperty property)
         {
             base.OnContextMenu(menu, entry, property);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using RoyTheunissen.AssetPalette.CustomEditors;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -103,6 +104,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (!string.IsNullOrEmpty(CurrentCollectionGuid) && CurrentCollection == null)
                 CurrentCollectionGuid = null;
             
+            PaletteDrawing.ActivePaletteWindow = this;
+
             UpdateMouseOverStates();
             
             PerformKeyboardShortcuts();
