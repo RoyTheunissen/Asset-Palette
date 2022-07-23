@@ -156,11 +156,18 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             if (Event.current.type != EventType.KeyDown)
                 return;
-            
-            if (Event.current.keyCode == KeyCode.Return && IsRenaming)
+
+            if (IsRenaming)
             {
-                StopAllRenames();
-                return;
+                switch (Event.current.keyCode)
+                {
+                    case KeyCode.Escape:
+                    case KeyCode.Return:
+                    case KeyCode.KeypadEnter:
+                        // Using a delay call here to allow cancelling of the rename
+                        EditorApplication.delayCall += StopAllRenames;
+                        return;
+                }
             }
             
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
