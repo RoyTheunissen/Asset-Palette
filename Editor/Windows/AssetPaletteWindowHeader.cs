@@ -35,7 +35,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         }
 
         [NonSerialized] private AssetPaletteCollection cachedCurrentCollection;
-        private AssetPaletteCollection CurrentCollection
+
+        public AssetPaletteCollection CurrentCollection
         {
             get
             {
