@@ -90,9 +90,15 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             DrawContents(position, property, entry);
 
             // Draw a label with a nice semi-transparent backdrop.
-            GUIContent label = new GUIContent(entry.Name);
-            Rect labelRect = GetLabelRect(position, entry);
-            DrawLabel(position, labelRect, property, label, entry);
+            // NOTE: For some reason, if we don't filter out non-repaint events here then drawing the label will cause
+            // the Zoom Level control to lose focus when switching between list view and grid view.
+            // Doesn't make sense to me. How can a label steal focus mid-drag?
+            if (Event.current.type == EventType.Repaint)
+            {
+                GUIContent label = new GUIContent(entry.Name);
+                Rect labelRect = GetLabelRect(position, entry);
+                DrawLabel(position, labelRect, property, label, entry);
+            }
         }
 
         /// <inheritdoc />
