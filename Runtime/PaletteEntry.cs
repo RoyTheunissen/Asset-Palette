@@ -1,4 +1,5 @@
 using System;
+using RoyTheunissen.AssetPalette.Runtime;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -31,6 +32,8 @@ namespace RoyTheunissen.AssetPalette
         public bool IsRenaming => entryCurrentlyRenaming == this;
         public static bool IsEntryBeingRenamed => entryCurrentlyRenaming != null;
 
+        protected virtual PaletteEntrySortPriorities SortPriority => PaletteEntrySortPriorities.Default;
+
         public abstract void Open();
 
         public void StartRename()
@@ -50,6 +53,12 @@ namespace RoyTheunissen.AssetPalette
 
         public int CompareTo(PaletteEntry other)
         {
+            // First check if the sort priorities are different.
+            int priorityOrder = SortPriority.CompareTo(other.SortPriority);
+            if (priorityOrder != 0)
+                return priorityOrder;
+            
+            // Entries with the same sort priority are sorted by name.
             return String.Compare(Name, other.Name, StringComparison.Ordinal);
         }
 
