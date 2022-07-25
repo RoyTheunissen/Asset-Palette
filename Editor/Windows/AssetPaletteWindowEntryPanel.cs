@@ -682,6 +682,12 @@ namespace RoyTheunissen.AssetPalette.Windows
                 SerializedProperty customNameProperty = entryBeingRenamedProperty.FindPropertyRelative("customName");
                 customNameProperty.stringValue = renameText;
                 CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                
+                // Also sort the collection. Make sure to do this AFTER we apply the rename, otherwise the sort will
+                // be based on the old name! Don't worry, doing this in a separate Apply doesn't cause a separate Undo
+                CurrentCollectionSerializedObject.Update();
+                SortEntriesInSerializedObject();
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
             }
 
             PaletteEntry.CancelRename();
