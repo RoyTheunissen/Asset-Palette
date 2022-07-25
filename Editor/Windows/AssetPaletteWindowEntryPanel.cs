@@ -25,10 +25,15 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private SortModes SortMode
         {
-            get => (SortModes)EditorPrefs.GetInt(EntriesSortModeEditorPref);
+            get
+            {
+                if (!EditorPrefs.HasKey(EntriesSortModeEditorPref))
+                    SortMode = SortModes.Alphabetical;
+                return (SortModes)EditorPrefs.GetInt(EntriesSortModeEditorPref);
+            }
             set => EditorPrefs.SetInt(EntriesSortModeEditorPref, (int)value);
         }
-        
+
         [NonSerialized] private bool didCacheSelectedFolderEntriesSerializedProperty;
         [NonSerialized] private SerializedProperty cachedSelectedFolderEntriesSerializedProperty;
         private SerializedProperty SelectedFolderEntriesSerializedProperty
