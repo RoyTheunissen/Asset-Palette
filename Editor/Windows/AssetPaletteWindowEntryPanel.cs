@@ -64,31 +64,45 @@ namespace RoyTheunissen.AssetPalette.Windows
         }
         
         [NonSerialized] private static GUIStyle cachedGridEntryRenameTextStyle;
-        [NonSerialized] private static GUIStyle cachedListEntryRenameTextStyle;
-        [NonSerialized] private static bool didCacheEntryRenameTextStyle;
-        private GUIStyle EntryRenameTextStyle
+        [NonSerialized] private static bool didCacheGridEntryRenameTextStyle;
+        public static GUIStyle GridEntryRenameTextStyle
         {
             get
             {
-                if (!didCacheEntryRenameTextStyle)
+                if (!didCacheGridEntryRenameTextStyle)
                 {
-                    didCacheEntryRenameTextStyle = true;
+                    didCacheGridEntryRenameTextStyle = true;
                     cachedGridEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
                     {
                         wordWrap = true,
                         alignment = TextAnchor.LowerCenter,
                     };
-
+                }
+                return cachedGridEntryRenameTextStyle;
+            }
+        }
+        
+        [NonSerialized] private static GUIStyle cachedListEntryRenameTextStyle;
+        [NonSerialized] private static bool didCacheListEntryRenameTextStyle;
+        private GUIStyle ListEntryRenameTextStyle
+        {
+            get
+            {
+                if (!didCacheListEntryRenameTextStyle)
+                {
+                    didCacheListEntryRenameTextStyle = true;
                     cachedListEntryRenameTextStyle = new GUIStyle(EditorStyles.textField)
                     {
                         wordWrap = true,
                         alignment = TextAnchor.MiddleLeft
                     };
                 }
-
-                return ShouldDrawListView ? cachedListEntryRenameTextStyle : cachedGridEntryRenameTextStyle;
+                return cachedListEntryRenameTextStyle;
             }
         }
+
+        private GUIStyle EntryRenameTextStyle =>
+            ShouldDrawListView ? ListEntryRenameTextStyle : GridEntryRenameTextStyle;
         
         [NonSerialized] private PaletteEntry entryBelowCursorOnMouseDown;
 
@@ -364,10 +378,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             Rect entryContentsRect = rect;
             SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
 
+            PaletteDrawing.DrawGridEntry(entryContentsRect, entryProperty, entry);
+            
             if (entry.IsRenaming)
-                DrawRenameEntry(entryProperty, entryContentsRect);
-            else
-                PaletteDrawing.DrawGridEntry(entryContentsRect, entryProperty, entry);
+            {
+                Rect labelRect = PaletteEntryDrawerBase.GetRenameRect(entryContentsRect, renameText);
+                DrawRenameEntry(entryProperty, labelRect);
+            }
         }
 
         private void PurgeInvalidEntries(int index)
@@ -379,16 +396,19 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void DrawRenameEntry(SerializedProperty entryProperty, Rect entryContentsRect)
+        private void DrawRenameEntry(SerializedProperty entryProperty, Rect labelRect)
         {
             string renameControlId = GetRenameControlId(entryProperty);
             GUI.SetNextControlName(renameControlId);
-            renameText = EditorGUI.TextField(entryContentsRect, renameText, EntryRenameTextStyle);
-            GUI.FocusControl(renameControlId);
+            renameText = EditorGUI.TextField(labelRect, renameText, EntryRenameTextStyle);
+            EditorGUI.FocusTextInControl(renameControlId);
         }
 
         private void HandleEntrySelection(int index, Rect rect, PaletteEntry entry, ref bool didClickASpecificEntry)
         {
+            if (IsRenaming)
+                return;
+            
             // Allow this entry to be selected by clicking it.
             bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && isMouseInEntriesPanel;
             bool wasAlreadySelected = entriesSelected.Contains(entry);

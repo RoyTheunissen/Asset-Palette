@@ -58,6 +58,14 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             float height = LabelStyle.CalcHeight(label, position.width);
             return RectExtensions.GetSubRectFromBottom(position, height);
         }
+        
+        public static Rect GetRenameRect(Rect position, string name)
+        {
+            GUIContent label = new GUIContent(name);
+            GUIStyle style = AssetPaletteWindow.GridEntryRenameTextStyle;
+            float height = style.CalcHeight(label, position.width);
+            return RectExtensions.GetSubRectFromBottom(position, height);
+        }
 
         public abstract void OnGUI(Rect position, SerializedProperty property, PaletteEntry entry);
         public abstract void OnListGUI(Rect position, SerializedProperty property, PaletteEntry entry, bool isSelected);
@@ -96,7 +104,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             // NOTE: If an entry is being renamed in the grid view and we ONLY handle the repaint events here, then
             // for some reason the rename text field stops working correctly. Another weird bug. How can the label
             // rect even steal focus? It is not a named control...
-            if (Event.current.type == EventType.Repaint || PaletteEntry.IsEntryBeingRenamed)
+            if ((Event.current.type == EventType.Repaint || PaletteEntry.IsEntryBeingRenamed) && !entry.IsRenaming)
             {
                 GUIContent label = new GUIContent(entry.Name);
                 Rect labelRect = GetLabelRect(position, entry);
