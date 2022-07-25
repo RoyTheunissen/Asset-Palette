@@ -93,7 +93,10 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             // NOTE: For some reason, if we don't filter out non-repaint events here then drawing the label will cause
             // the Zoom Level control to lose focus when switching between list view and grid view.
             // Doesn't make sense to me. How can a label steal focus mid-drag?
-            if (Event.current.type == EventType.Repaint)
+            // NOTE: If an entry is being renamed in the grid view and we ONLY handle the repaint events here, then
+            // for some reason the rename text field stops working correctly. Another weird bug. How can the label
+            // rect even steal focus? It is not a named control...
+            if (Event.current.type == EventType.Repaint || PaletteEntry.IsEntryBeingRenamed)
             {
                 GUIContent label = new GUIContent(entry.Name);
                 Rect labelRect = GetLabelRect(position, entry);
