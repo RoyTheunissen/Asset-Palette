@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using RoyTheunissen.AssetPalette;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -17,6 +16,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private List<PotentialMacro> potentialMacros = new List<PotentialMacro>();
         [NonSerialized] private bool isDraggingAssetIntoEntryPanel;
+        
+        [NonSerialized] private readonly List<Object> draggedAssets = new List<Object>();
 
         private PaletteEntry GetEntryForAsset(Object asset)
         {
@@ -49,6 +50,10 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void HandleAssetDropping(Object[] objectsToProcess)
         {
+            // For processing you sometimes just want to know everything that was dragged.
+            draggedAssets.Clear();
+            draggedAssets.AddRange(objectsToProcess);
+            
             // Determine what entries are to be added as a result of these assets being dropped. Note that we may have
             // to ask the user how they want to handle certain special cases like scripts. Because of a Unity bug this
             // means that processing will stop, a context menu will be displayed, two frames will have to be waited,
@@ -125,7 +130,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private bool CheckUserInputForSpecialImportCases(Object draggedObject)
         {
-            if (draggedObject is MonoScript script)
+            // When you drag in ONE specific script, you may optionally add its static methods as macros.
+            if (draggedObject is MonoScript script && draggedAssets.Count == 1)
             {
                 potentialMacros.Clear();
                 PotentialMacro.FindPotentialMacros(ref potentialMacros, script);
@@ -133,7 +139,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 if (potentialMacros.Count > 0)
                 {
                     GenericMenu menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Add Script"), false, AddEntryForScript, script);
+                    menu.AddItem(new GUIContent($"Add Script '{script.name}'"), false, AddEntryForScript, script);
                     foreach (PotentialMacro potentialMacro in potentialMacros)
                     {
                         menu.AddItem(
