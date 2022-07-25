@@ -29,6 +29,8 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         public override bool IsValid => script != null && !string.IsNullOrEmpty(methodName);
 
+        protected override PaletteEntrySortPriorities SortPriority => PaletteEntrySortPriorities.Macros;
+
         public PaletteMacro(TextAsset script, string methodName)
         {
             this.script = script;

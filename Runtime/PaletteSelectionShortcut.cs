@@ -65,6 +65,8 @@ namespace RoyTheunissen.AssetPalette.Runtime
             }
         }
 
+        protected override PaletteEntrySortPriorities SortPriority => PaletteEntrySortPriorities.Shortcuts;
+
         public override void Open()
         {
             if (Selection.Length == 0)

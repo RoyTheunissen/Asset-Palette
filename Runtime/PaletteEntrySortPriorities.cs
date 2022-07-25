@@ -5,6 +5,8 @@ namespace RoyTheunissen.AssetPalette.Runtime
     /// </summary>
     public enum PaletteEntrySortPriorities 
     {
+        Shortcuts,
+        Macros,
         Default,
     }
 }
