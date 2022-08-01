@@ -187,23 +187,31 @@ namespace RoyTheunissen.AssetPalette.Windows
                  Event.current.command && Event.current.keyCode == KeyCode.Backspace) && !IsRenaming)
             {
                 if (isMouseInEntriesPanel)
-                {
                     RemoveSelectedEntries();
-                }
-                else if (isMouseInFolderPanel && HasCollection && CurrentCollection.Folders.Count > 1 &&
-                         !IsDraggingFolder)
-                {
-                    CurrentCollectionSerializedObject.Update();
-                    SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
-                    foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
-                    CurrentCollectionSerializedObject.ApplyModifiedProperties();
-
-                    // Select the last folder.
-                    SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
-
-                    Repaint();
-                }
+                else if (isMouseInFolderPanel && !IsDraggingFolder)
+                    RemoveSelectedFolder();
             }
+        }
+
+        private void RemoveSelectedFolder()
+        {
+            if (!HasCollection || CurrentCollection.Folders.Count <= 1)
+                return;
+            
+            CurrentCollectionSerializedObject.Update();
+            SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
+            foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+
+            // Select the last folder.
+            SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
+
+            Repaint();
+        }
+        
+        private void RenameSelectedFolder()
+        {
+            StartFolderRename(SelectedFolder);
         }
 
         public void RemoveSelectedEntries()

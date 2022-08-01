@@ -353,6 +353,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                     PaletteDrawing.DrawFolder(folderRect, folderProperty, folder);
                 }
 
+                if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && isMouseOver)
+                    DoFolderContextMenu(folder);
+
                 // Dragging and dropping folders.
                 if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOver &&
                     !isResizingFolderPanel && !isDraggingAssets && folderBelowCursorOnMouseDown == folder)
@@ -413,7 +416,18 @@ namespace RoyTheunissen.AssetPalette.Windows
                 }
             }
         }
-        
+
+        private void DoFolderContextMenu(PaletteFolder folder)
+        {
+            GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Rename"), false, RenameSelectedFolder);
+            
+            if (CurrentCollection.Folders.Count > 1)
+                menu.AddItem(new GUIContent("Delete"), false, RemoveSelectedFolder);
+            
+            menu.ShowAsContext();
+        }
+
         private void DrawResizableFolderPanelDivider()
         {
             EditorGUI.DrawRect(DividerRect, DividerColor);
