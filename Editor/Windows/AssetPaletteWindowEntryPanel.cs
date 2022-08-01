@@ -513,6 +513,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                     if (!wasAlreadySelected)
                         SelectEntry(entry, true);
 
+                    if (Event.current.alt)
+                        entry.SelectAsset();
+
                     // Allow assets to be opened by double clicking on them.
                     if (Event.current.clickCount == 2)
                     {

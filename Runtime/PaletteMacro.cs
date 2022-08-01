@@ -75,6 +75,15 @@ namespace RoyTheunissen.AssetPalette.Runtime
             methodInfo.Invoke(null, new object[] { });
 #endif // UNITY_EDITOR
         }
+        
+        public override void SelectAsset()
+        {
+            base.SelectAsset();
+            
+#if UNITY_EDITOR
+            UnityEditor.Selection.activeObject = script;
+#endif // UNITY_EDITOR
+        }
 
         public static bool CanCallMethodForMacro(MethodInfo methodInfo)
         {

@@ -64,5 +64,14 @@ namespace RoyTheunissen.AssetPalette
             UnityEditor.AssetDatabase.OpenAsset(Asset);
 #endif // UNITY_EDITOR
         }
+
+        public override void SelectAsset()
+        {
+            base.SelectAsset();
+            
+#if UNITY_EDITOR
+            UnityEditor.Selection.activeObject = asset;
+#endif // UNITY_EDITOR
+        }
     }
 }

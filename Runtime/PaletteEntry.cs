@@ -35,6 +35,10 @@ namespace RoyTheunissen.AssetPalette
         protected virtual PaletteEntrySortPriorities SortPriority => PaletteEntrySortPriorities.Default;
 
         public abstract void Open();
+        
+        public virtual void SelectAsset()
+        {
+        }
 
         public void StartRename()
         {

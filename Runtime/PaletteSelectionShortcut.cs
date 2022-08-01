@@ -84,6 +84,13 @@ namespace RoyTheunissen.AssetPalette.Runtime
             }
 #endif // UNITY_EDITOR
         }
+        
+        public override void SelectAsset()
+        {
+            base.SelectAsset();
+            
+            Open();
+        }
 
         public PaletteSelectionShortcut(Object[] selection)
         {
