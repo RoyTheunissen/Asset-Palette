@@ -204,15 +204,15 @@ namespace RoyTheunissen.AssetPalette.Windows
             return -1;
         }
 
-        private void RemoveEntry(PaletteEntry entry, bool apply = true)
+        private void RemoveEntry(PaletteEntry entry, bool apply)
         {
             int index = IndexOfEntry(entry);
             
             if (index != -1)
                 RemoveEntryAt(index, apply);
         }
-        
-        private void RemoveEntries(List<PaletteEntry> entries, bool apply = true)
+
+        private void RemoveEntries(List<PaletteEntry> entries, bool apply)
         {
             if (apply)
                 CurrentCollectionSerializedObject.Update();

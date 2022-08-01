@@ -309,7 +309,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                                 {
                                     // First remove all of the selected entries from the current folder.
                                     List<PaletteEntry> entriesToMove = new List<PaletteEntry>(entriesSelected);
-                                    RemoveEntries(entriesToMove);
+                                    RemoveEntries(entriesToMove, true);
 
                                     // Make the recipient folder the current folder.
                                     SelectedFolder = folder;

@@ -188,10 +188,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 if (isMouseInEntriesPanel)
                 {
                     // Pressing Delete will remove all selected entries from the palette.
-                    foreach (PaletteEntry entry in entriesSelected)
-                    {
-                        RemoveEntry(entry);
-                    }
+                    RemoveEntries(entriesSelected, true);
 
                     ClearEntrySelection();
                     Repaint();
