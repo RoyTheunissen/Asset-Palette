@@ -538,22 +538,36 @@ namespace RoyTheunissen.AssetPalette.Windows
                      !isResizingFolderPanel && isMouseInEntriesPanel && !IsZoomLevelFocused &&
                      entriesSelected.Contains(entryBelowCursorOnMouseDown))
             {
-                DragAndDrop.PrepareStartDrag();
-                List<Object> selectedAssets = new List<Object>();
-                foreach (PaletteEntry selectedEntry in entriesSelected)
-                {
-                    if (selectedEntry is PaletteAsset paletteAsset)
-                        selectedAssets.Add(paletteAsset.Asset);
-                }
-
-                DragAndDrop.objectReferences = selectedAssets.ToArray();
-                // Mark the drag as being an asset palette entry drag, so we know not to accept it again ourselves.
-                // Also pass along the name of the directory so we can handle stuff like dragging assets out into
-                // another folder (but ignore the folder it was originally dragged from).
-                DragAndDrop.SetGenericData(EntryDragGenericDataType, SelectedFolder.Name);
-                string dragName = selectedAssets.Count == 1 ? selectedAssets[0].ToString() : "<multiple>";
-                DragAndDrop.StartDrag(dragName);
+                StartEntriesDrag();
             }
+            else if (Event.current.type == EventType.DragExited)
+            {
+                CancelEntriesDrag();
+            }
+        }
+
+        private void StartEntriesDrag()
+        {
+            DragAndDrop.PrepareStartDrag();
+            List<Object> selectedAssets = new List<Object>();
+            foreach (PaletteEntry selectedEntry in entriesSelected)
+            {
+                if (selectedEntry is PaletteAsset paletteAsset)
+                    selectedAssets.Add(paletteAsset.Asset);
+            }
+
+            DragAndDrop.objectReferences = selectedAssets.ToArray();
+            // Mark the drag as being an asset palette entry drag, so we know not to accept it again ourselves.
+            // Also pass along the name of the directory so we can handle stuff like dragging assets out into
+            // another folder (but ignore the folder it was originally dragged from).
+            DragAndDrop.SetGenericData(EntryDragGenericDataType, SelectedFolder.Name);
+            string dragName = selectedAssets.Count == 1 ? selectedAssets[0].ToString() : "<multiple>";
+            DragAndDrop.StartDrag(dragName);
+        }
+
+        private static void CancelEntriesDrag()
+        {
+            DragAndDrop.SetGenericData(EntryDragGenericDataType, null);
         }
 
         private void DrawEntryPanelMessage(bool hasCollection)

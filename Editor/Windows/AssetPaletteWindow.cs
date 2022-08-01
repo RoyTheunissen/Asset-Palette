@@ -138,7 +138,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             isMouseInEntriesPanel = !isMouseInHeader && !isMouseInFooter && !isMouseInFolderPanel;
             
             // Store this once so that specific entries can consider if they should be handling an asset drop, or 
-            // if the entry panel as a whole should be handling.
+            // if the entry panel as a whole should be handling it.
             isDraggingAssetIntoEntryPanel = (Event.current.type == EventType.DragUpdated ||
                                              Event.current.type == EventType.DragPerform) && isMouseInEntriesPanel &&
                                             DragAndDrop.objectReferences.Length > 0 &&

@@ -245,20 +245,25 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             EditorGUILayout.EndScrollView();
 
-            if (IsDraggingFolder && Event.current.type == EventType.DragUpdated ||
-                Event.current.type == EventType.DragPerform)
+            if (IsDraggingFolder)
             {
-                if (!isMouseInFolderPanel)
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
-                else
+                if (Event.current.type == EventType.DragUpdated || Event.current.type == EventType.DragPerform)
                 {
-                    DragAndDrop.visualMode = currentFolderDragIndex < folderToDragIndex || currentFolderDragIndex > folderToDragIndex + 1
-                        ? DragAndDropVisualMode.Move
-                        : DragAndDropVisualMode.Rejected;
-                }
+                    if (!isMouseInFolderPanel)
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                    else
+                    {
+                        DragAndDrop.visualMode = currentFolderDragIndex < folderToDragIndex ||
+                                                 currentFolderDragIndex > folderToDragIndex + 1
+                            ? DragAndDropVisualMode.Move
+                            : DragAndDropVisualMode.Rejected;
+                    }
 
-                if (Event.current.type == EventType.DragPerform)
-                    StopFolderDrag();
+                    if (Event.current.type == EventType.DragPerform)
+                        StopFolderDrag();
+                }
+                else if (Event.current.type == EventType.DragExited)
+                    CancelFolderDrag();
             }
 
             DrawResizableFolderPanelDivider();
@@ -464,6 +469,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             DragAndDrop.StartDrag($"{folder.Name} (Asset Palette Folder)");
             folderToDragIndex = CurrentCollection.Folders.IndexOf(folder);
         }
+        
+        private void CancelFolderDrag()
+        {
+            DragAndDrop.SetGenericData(FolderDragGenericDataType, null);
+        }
 
         private void StopFolderDrag()
         {
@@ -492,6 +502,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             CurrentCollectionSerializedObject.ApplyModifiedProperties();
 
             SelectedFolderIndex = currentFolderDragIndex;
+            
+            CancelFolderDrag();
             
             Repaint();
         }
