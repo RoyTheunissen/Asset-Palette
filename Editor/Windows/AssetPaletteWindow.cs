@@ -138,7 +138,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             isMouseInEntriesPanel = !isMouseInHeader && !isMouseInFooter && !isMouseInFolderPanel;
             
             // Store this once so that specific entries can consider if they should be handling an asset drop, or 
-            // if the entry panel as a whole should be handling.
+            // if the entry panel as a whole should be handling it.
             isDraggingAssetIntoEntryPanel = (Event.current.type == EventType.DragUpdated ||
                                              Event.current.type == EventType.DragPerform) && isMouseInEntriesPanel &&
                                             DragAndDrop.objectReferences.Length > 0 &&
@@ -183,33 +183,43 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return;
             }
 
-            if (Event.current.keyCode == KeyCode.Delete && !IsRenaming)
+            if ((Event.current.keyCode == KeyCode.Delete ||
+                 Event.current.command && Event.current.keyCode == KeyCode.Backspace) && !IsRenaming)
             {
                 if (isMouseInEntriesPanel)
-                {
-                    // Pressing Delete will remove all selected entries from the palette.
-                    foreach (PaletteEntry entry in entriesSelected)
-                    {
-                        RemoveEntry(entry);
-                    }
-
-                    ClearEntrySelection();
-                    Repaint();
-                }
-                else if (isMouseInFolderPanel && HasCollection && CurrentCollection.Folders.Count > 1 &&
-                         !IsDraggingFolder)
-                {
-                    CurrentCollectionSerializedObject.Update();
-                    SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
-                    foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
-                    CurrentCollectionSerializedObject.ApplyModifiedProperties();
-
-                    // Select the last folder.
-                    SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
-
-                    Repaint();
-                }
+                    RemoveSelectedEntries();
+                else if (isMouseInFolderPanel && !IsDraggingFolder)
+                    RemoveSelectedFolder();
             }
+        }
+
+        private void RemoveSelectedFolder()
+        {
+            if (!HasCollection || CurrentCollection.Folders.Count <= 1)
+                return;
+            
+            CurrentCollectionSerializedObject.Update();
+            SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
+            foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+
+            // Select the last folder.
+            SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
+
+            Repaint();
+        }
+        
+        private void RenameSelectedFolder()
+        {
+            StartFolderRename(SelectedFolder);
+        }
+
+        public void RemoveSelectedEntries()
+        {
+            RemoveEntries(entriesSelected, true);
+
+            ClearEntrySelection();
+            Repaint();
         }
 
         private void StopAllRenames(bool isCancel)
