@@ -447,7 +447,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             DragAndDrop.PrepareStartDrag();
             DragAndDrop.SetGenericData(FolderDragGenericDataType, folder);
-            DragAndDrop.StartDrag("Drag Palette Folder");
+            DragAndDrop.StartDrag($"{folder.Name} (Asset Palette Folder)");
             folderToDragIndex = CurrentCollection.Folders.IndexOf(folder);
         }
 

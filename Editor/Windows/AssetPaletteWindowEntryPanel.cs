@@ -551,7 +551,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 // Also pass along the name of the directory so we can handle stuff like dragging assets out into
                 // another folder (but ignore the folder it was originally dragged from).
                 DragAndDrop.SetGenericData(EntryDragGenericDataType, SelectedFolder.Name);
-                DragAndDrop.StartDrag("Drag from Asset Palette");
+                DragAndDrop.StartDrag($"{selectedAssets.Count} Asset Palette Entries");
             }
         }
 
