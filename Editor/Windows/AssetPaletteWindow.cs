@@ -187,11 +187,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 if (isMouseInEntriesPanel)
                 {
-                    // Pressing Delete will remove all selected entries from the palette.
-                    RemoveEntries(entriesSelected, true);
-
-                    ClearEntrySelection();
-                    Repaint();
+                    RemoveSelectedEntries();
                 }
                 else if (isMouseInFolderPanel && HasCollection && CurrentCollection.Folders.Count > 1 &&
                          !IsDraggingFolder)
@@ -207,6 +203,14 @@ namespace RoyTheunissen.AssetPalette.Windows
                     Repaint();
                 }
             }
+        }
+
+        public void RemoveSelectedEntries()
+        {
+            RemoveEntries(entriesSelected, true);
+
+            ClearEntrySelection();
+            Repaint();
         }
 
         private void StopAllRenames(bool isCancel)

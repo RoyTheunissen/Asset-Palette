@@ -179,6 +179,9 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             menu.AddItem(new GUIContent(OpenText), false, entry.Open);
             if (entry.CanRename)
                 menu.AddItem(new GUIContent("Rename"), false, StartRename, entry);
+            
+            // Calling it "Delete" instead of "Remove" here to make it more distinct from "Rename" to avoid mistakes.
+            menu.AddItem(new GUIContent("Delete"), false, DeleteSelectedEntries, entry);
         }
 
         private void StartRename(object userData)
@@ -189,6 +192,15 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
                 return;
             
             window.StartEntryRename(entry);
+        }
+
+        private void DeleteSelectedEntries(object userData)
+        {
+            AssetPaletteWindow window = EditorWindow.GetWindow<AssetPaletteWindow>();
+            if (window == null)
+                return;
+            
+            window.RemoveSelectedEntries();
         }
 
         protected void ShowAssetInExplorer(Object asset)
