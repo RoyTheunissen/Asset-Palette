@@ -183,7 +183,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return;
             }
 
-            if (Event.current.keyCode == KeyCode.Delete && !IsRenaming)
+            if ((Event.current.keyCode == KeyCode.Delete ||
+                 Event.current.command && Event.current.keyCode == KeyCode.Backspace) && !IsRenaming)
             {
                 if (isMouseInEntriesPanel)
                 {
