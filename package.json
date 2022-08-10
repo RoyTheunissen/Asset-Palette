@@ -1,7 +1,7 @@
 {
   "name": "com.roytheunissen.assetpalette",
   "displayName": "Asset Palette",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "unity": "2021.3",
   "description": "Allows you to quickly organize assets for certain workflows, such as organizing prefabs for level design.",
   "keywords": [
@@ -12,6 +12,10 @@
 	"prefabs",
 	"shortcuts"
   ],
+  "author": {
+    "name": "Roy Theunissen",
+    "url": "https://www.roytheunissen.com"
+  },
   "category": "editor extensions",
   "homepage": "https://github.com/RoyTheunissen/Asset-Palette",
   "repository": {
