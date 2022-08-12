@@ -14,12 +14,24 @@ namespace RoyTheunissen.AssetPalette.Windows
     /// </summary>
     public partial class AssetPaletteWindow : EditorWindow, IHasCustomMenu
     {
-        private const string EditorPrefPrefix = "RoyTheunissen/PrefabPalette/";
-        private const string CurrentCollectionGUIDEditorPref = EditorPrefPrefix + "CurrentCollectionGUID";
-        private const string FolderPanelWidthEditorPref = EditorPrefPrefix + "FolderPanelWidth";
-        private const string ZoomLevelEditorPref = EditorPrefPrefix + "ZoomLevel";
-        private const string SelectedFolderIndexEditorPref = EditorPrefPrefix + "SelectedFolderIndex";
-        private const string EntriesSortModeEditorPref = EditorPrefPrefix + "EntriesSortMode";
+        private static string ProjectName
+        {
+            get
+            {
+                string[] sections = Application.dataPath.Split(
+                    Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                
+                // The name of the project is the dataPath i.e. Project/Assets and then go up a directory.
+                return sections[^2];
+            }
+        }
+        
+        private static string EditorPrefPrefix => $"RoyTheunissen/PrefabPalette/{ProjectName}/";
+        private static string CurrentCollectionGUIDEditorPref => EditorPrefPrefix + "CurrentCollectionGUID";
+        private static string FolderPanelWidthEditorPref => EditorPrefPrefix + "FolderPanelWidth";
+        private static string ZoomLevelEditorPref => EditorPrefPrefix + "ZoomLevel";
+        private static string SelectedFolderIndexEditorPref => EditorPrefPrefix + "SelectedFolderIndex";
+        private static string EntriesSortModeEditorPref => EditorPrefPrefix + "EntriesSortMode";
 
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
         private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
