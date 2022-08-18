@@ -32,6 +32,29 @@ If you want my help in supporting an even earlier version, feel free to reach ou
 
 ## Installation
 
+### Package Manager
+
+Go to `Edit > Project Settings > Package Manager`. Under 'Scoped Registries' make sure there is an OpenUPM entry.
+
+If you don't have one: click the `+` button and enter the following values:
+
+- Name: `OpenUPM` <br />
+- URL: `https://package.openupm.com` <br />
+
+Then under 'Scope(s)' press the `+` button and add `com.roytheunissen`.
+
+It should look something like this: <br />
+![image](https://user-images.githubusercontent.com/3997055/185363839-37b3bb3d-f70c-4dbd-b30d-cc8a93b592bb.png)
+
+<br />
+All of my packages will now be available to you in the Package Manager in the 'My Registries' section and can be installed from there.
+<br />
+
+
+### Git Submodule
+
+You can check out this repository as a submodule into your project's Assets folder. This is recommended if you intend to contribute to the repository yourself.
+
 ### OpenUPM
 The package is available on the [openupm registry](https://openupm.com). It's recommended to install it via [openupm-cli](https://github.com/openupm/openupm-cli).
 
