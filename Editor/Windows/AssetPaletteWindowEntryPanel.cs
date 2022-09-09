@@ -492,7 +492,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                         else
                         {
                             // Grow the selection from the last individually selected entry.
-                            PaletteEntry lastEntryIndividuallySelected = entriesIndividuallySelected[^1];
+                            PaletteEntry lastEntryIndividuallySelected =
+                                entriesIndividuallySelected[entriesIndividuallySelected.Count - 1];
                             int indexOfLastIndividuallySelectedEntry =
                                 GetEntries().IndexOf(lastEntryIndividuallySelected);
                             SelectEntriesByRange(indexOfLastIndividuallySelectedEntry, index, false);
