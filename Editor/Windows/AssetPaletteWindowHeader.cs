@@ -230,7 +230,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return;
 
             // Make the path relative to the project.
-            path = Path.Combine("Assets", Path.GetRelativePath(Application.dataPath, path));
+            path = "Assets" + path.Replace(Application.dataPath, string.Empty);
 
             Directory.CreateDirectory(path);
 

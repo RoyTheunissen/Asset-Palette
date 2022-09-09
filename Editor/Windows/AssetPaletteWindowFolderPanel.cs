@@ -538,7 +538,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = 0; i < FoldersSerializedProperty.arraySize; i++)
             {
                 PaletteFolder folderAtIndex =
-                    (PaletteFolder)FoldersSerializedProperty.GetArrayElementAtIndex(i).managedReferenceValue;
+                    FoldersSerializedProperty.GetArrayElementAtIndex(i).GetValue<PaletteFolder>();
                 if (folderAtIndex == folder)
                     return i;
             }

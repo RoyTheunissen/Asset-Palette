@@ -22,7 +22,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 
                 // The name of the project is the dataPath i.e. Project/Assets and then go up a directory.
-                return sections[^2];
+                return sections[sections.Length - 2];
             }
         }
         

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using RoyTheunissen.AssetPalette;
 using RoyTheunissen.AssetPalette.CustomEditors;
+using RoyTheunissen.AssetPalette.Extensions;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -139,7 +140,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = 0; i < SelectedFolderEntriesSerializedProperty.arraySize; i++)
             {
                 SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(i);
-                PaletteEntry entry = (PaletteEntry)entryProperty.managedReferenceValue;
+                PaletteEntry entry = entryProperty.GetValue<PaletteEntry>();
                 entries.Add(entry);
             }
             
@@ -168,6 +169,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             if (apply)
             {
+                // Applying it before the sorting because otherwise the sorting will be unable to find the items
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+
                 SortEntriesInSerializedObject();
                 CurrentCollectionSerializedObject.ApplyModifiedProperties();
             }
@@ -196,8 +200,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             for (int i = 0; i < SelectedFolderEntriesSerializedProperty.arraySize; i++)
             {
-                PaletteEntry entryAtIndex = (PaletteEntry)SelectedFolderEntriesSerializedProperty
-                    .GetArrayElementAtIndex(i).managedReferenceValue;
+                PaletteEntry entryAtIndex = SelectedFolderEntriesSerializedProperty
+                    .GetArrayElementAtIndex(i).GetValue<PaletteEntry>();
                 if (entryAtIndex == entry)
                     return i;
             }
@@ -492,7 +496,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                         else
                         {
                             // Grow the selection from the last individually selected entry.
-                            PaletteEntry lastEntryIndividuallySelected = entriesIndividuallySelected[^1];
+                            PaletteEntry lastEntryIndividuallySelected =
+                                entriesIndividuallySelected[entriesIndividuallySelected.Count - 1];
                             int indexOfLastIndividuallySelectedEntry =
                                 GetEntries().IndexOf(lastEntryIndividuallySelected);
                             SelectEntriesByRange(indexOfLastIndividuallySelectedEntry, index, false);
