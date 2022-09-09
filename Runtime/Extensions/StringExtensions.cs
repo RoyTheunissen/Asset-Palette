@@ -175,7 +175,7 @@
         {
             number = -1;
 
-            if (!name.EndsWith(')'))
+            if (!name.EndsWith(")"))
                 return false;
 
             int openingParenthesis = name.LastIndexOf('(');
@@ -195,7 +195,7 @@
 
         public static string SetNumberSuffix(this string name, int number)
         {
-            if (!name.EndsWith(')'))
+            if (!name.EndsWith(")"))
                 return $"{name} ({number})";
 
             int openingParenthesis = name.LastIndexOf('(');
