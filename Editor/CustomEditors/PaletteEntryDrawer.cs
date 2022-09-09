@@ -206,8 +206,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         protected void ShowAssetInExplorer(Object asset)
         {
             string pathRelativeToProject = AssetDatabase.GetAssetPath(asset);
-            string pathRelativeToAssetsFolder = Path.GetRelativePath("Assets", pathRelativeToProject);
-            string pathAbsolute = Path.GetFullPath(pathRelativeToAssetsFolder, Application.dataPath);
+            string pathAbsolute = Path.GetFullPath(pathRelativeToProject);
             EditorUtility.RevealInFinder(pathAbsolute);
         }
     }
