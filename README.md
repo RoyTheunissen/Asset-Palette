@@ -26,7 +26,7 @@ Also lets you turn static methods into macros that you can run at any time by do
 
 ## Compatibility
 
-It is recommended to be used in Unity 2021. It seems there's a few issues in Unity 2020, but we'll look into that soon.
+It is recommended to be used in Unity 2021, though with a little help from [@Thundernerd](https://github.com/Thundernerd) it is now compatible with 2020 too.
 
 If you want my help in supporting an even earlier version, feel free to reach out.
 
