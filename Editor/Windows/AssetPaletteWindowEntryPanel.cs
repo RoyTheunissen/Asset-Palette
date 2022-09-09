@@ -191,6 +191,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             if (apply)
             {
+                // Applying it before the sorting because otherwise the sorting will be unable to find the items
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+
                 SortEntriesInSerializedObject();
                 CurrentCollectionSerializedObject.ApplyModifiedProperties();
             }
