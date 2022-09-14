@@ -211,36 +211,31 @@ namespace RoyTheunissen.AssetPalette.Windows
             return -1;
         }
 
-        private void RemoveEntry(PaletteEntry entry, bool apply)
+        private void RemoveEntry(PaletteEntry entry)
         {
             int index = IndexOfEntry(entry);
             
             if (index != -1)
-                RemoveEntryAt(index, apply);
+                RemoveEntryAt(index);
         }
 
-        private void RemoveEntries(List<PaletteEntry> entries, bool apply)
+        private void RemoveEntries(List<PaletteEntry> entries)
         {
-            if (apply)
-                CurrentCollectionSerializedObject.Update();
-
             for (int i = 0; i < entries.Count; i++)
             {
-                RemoveEntry(entries[i], false);
+                RemoveEntry(entries[i]);
             }
-            
-            if (apply)
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
         }
         
-        private void RemoveEntryAt(int index, bool apply = true)
+        private void RemoveEntryAt(int index)
         {
-            if (apply)
-                CurrentCollectionSerializedObject.Update();
+            CurrentCollectionSerializedObject.Update();
             SelectedFolderEntriesSerializedProperty.DeleteArrayElementAtIndex(index);
             
-            if (apply)
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            // NOTE: *Need* to apply this after every individual change because otherwise GetValue<> will not return
+            // correct values, and we need to do it that way to have 2020 support because Unity 2020 has a setter for
+            // managedReferenceValue but not a setter >_>
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
         }
 
         private void DrawEntriesPanel()
