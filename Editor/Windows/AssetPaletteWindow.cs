@@ -228,7 +228,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         public void RemoveSelectedEntries()
         {
-            RemoveEntries(entriesSelected, true);
+            RemoveEntries(entriesSelected);
 
             ClearEntrySelection();
             Repaint();
