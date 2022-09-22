@@ -153,17 +153,24 @@ namespace RoyTheunissen.AssetPalette.Windows
             GUI.enabled = HasCollection;
             bool showSortModeRect = GUI.Button(
                 sortModeButtonRect, SortMode.ToString().ToHumanReadable(), EditorStyles.toolbarDropDown);
-            GUI.enabled = true;
             if (showSortModeRect)
                 DoSortModeDropDown(sortModeButtonRect);
 
             // Dropdown for adding a special entry.
             Rect addEntryForProjectWindowSelectionRect = RectExtensions.GetSubRectFromRight(
-                remainder, AddSpecialButtonWidth);
+                remainder, AddSpecialButtonWidth, out remainder);
             bool addEntryForProjectWindowSelection = GUI.Button(
                 addEntryForProjectWindowSelectionRect, "Add Special", EditorStyles.toolbarDropDown);
             if (addEntryForProjectWindowSelection)
                 DoAddSpecialDropDown(addEntryForProjectWindowSelectionRect);
+            
+            // Button to refresh the icons.
+            Rect refreshButtonRect = RectExtensions.GetSubRectFromRight(remainder, RefreshButtonWidth);
+            bool refresh = GUI.Button(refreshButtonRect, "Refresh", EditorStyles.toolbarButton);
+            if (refresh)
+                DoEntryRefresh();
+            
+            GUI.enabled = true;
         }
 
         private void DoSortModeDropDown(Rect buttonRect)
@@ -285,6 +292,14 @@ namespace RoyTheunissen.AssetPalette.Windows
             DoAddSpecialDropDown(dropdownMenu, "");
 
             dropdownMenu.DropDown(position);
+        }
+        
+        private void DoEntryRefresh()
+        {
+            foreach (PaletteEntry entry in SelectedFolder.Entries)
+            {
+                entry.Refresh();
+            }
         }
         
         /// <summary>

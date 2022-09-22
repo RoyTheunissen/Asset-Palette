@@ -50,6 +50,10 @@ namespace RoyTheunissen.AssetPalette
             entryCurrentlyRenaming = null;
         }
         
+        public virtual void Refresh()
+        {
+        }
+        
         public override string ToString()
         {
             return $"{GetType().Name}({Name})";

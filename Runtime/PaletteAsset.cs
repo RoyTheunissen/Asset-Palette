@@ -73,5 +73,15 @@ namespace RoyTheunissen.AssetPalette
             UnityEditor.Selection.activeObject = asset;
 #endif // UNITY_EDITOR
         }
+
+        public override void Refresh()
+        {
+            base.Refresh();
+            
+#if UNITY_EDITOR
+            didCachePreviewTexture = false;
+            cachedPreviewTexture = null;
+#endif // UNITY_EDITOR
+        }
     }
 }
