@@ -121,9 +121,20 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             // Basically any Object is fine as long as it's not a scene GameObject.
-            if ((!(draggedObject is GameObject go) || GameObjectExtensions.IsPrefab(go)) &&
-                !HasEntryForAsset(draggedObject))
+            if (!HasEntryForAsset(draggedObject))
             {
+                if (draggedObject is GameObject go && !GameObjectExtensions.IsPrefab(go))
+                {
+                    // You can't add scene game objects.
+                    if (!PrefabUtility.IsPartOfAnyPrefab(go))
+                        return;
+
+                    // You CAN add an object from the scene if it's a valid prefab... 
+                    draggedObject = PrefabUtility.GetOutermostPrefabInstanceRoot(go);
+                    if (draggedObject == null)
+                        return;
+                }
+                
                 entriesToAddFromDraggedAssets.Add(new PaletteAsset(draggedObject));
             }
         }
