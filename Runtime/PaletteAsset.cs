@@ -2,6 +2,10 @@ using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif // UNITY_EDITOR
+
 namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
@@ -30,25 +34,13 @@ namespace RoyTheunissen.AssetPalette
                 {
                     didCachePreviewTexture = true;
 
-                    string path = UnityEditor.AssetDatabase.GetAssetPath(Asset.GetInstanceID());
-                    cachedPreviewTexture = Editor.RenderStaticPreview(path, null, TextureSize, TextureSize);
+                    string path = AssetDatabase.GetAssetPath(Asset.GetInstanceID());
+                    
+                    Editor editor = Editor.CreateEditor(Asset, null);
+                    cachedPreviewTexture = editor.RenderStaticPreview(path, null, TextureSize, TextureSize);
+                    Object.DestroyImmediate(editor);
                 }
                 return cachedPreviewTexture;
-            }
-        }
-
-        [NonSerialized] private UnityEditor.Editor cachedEditor;
-        [NonSerialized] private bool didCacheEditor;
-        private UnityEditor.Editor Editor
-        {
-            get
-            {
-                if (!didCacheEditor)
-                {
-                    didCacheEditor = true;
-                    UnityEditor.Editor.CreateCachedEditor(Asset, null, ref cachedEditor);
-                }
-                return cachedEditor;
             }
         }
 #endif // UNITY_EDITOR
@@ -61,7 +53,7 @@ namespace RoyTheunissen.AssetPalette
         public override void Open()
         {
 #if UNITY_EDITOR
-            UnityEditor.AssetDatabase.OpenAsset(Asset);
+            AssetDatabase.OpenAsset(Asset);
 #endif // UNITY_EDITOR
         }
 
@@ -70,7 +62,7 @@ namespace RoyTheunissen.AssetPalette
             base.SelectAsset();
             
 #if UNITY_EDITOR
-            UnityEditor.Selection.activeObject = asset;
+            Selection.activeObject = asset;
 #endif // UNITY_EDITOR
         }
 
