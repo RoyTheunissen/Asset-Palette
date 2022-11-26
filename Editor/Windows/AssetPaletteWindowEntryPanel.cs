@@ -18,6 +18,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const float EntrySpacing = 4;
         private const int EntrySizeMax = 128;
         private const float EntrySizeMin = EntrySizeMax * 0.45f;
+        private const float ScrollBarWidth = 13;
         
         [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
         [NonSerialized] private readonly List<PaletteEntry> entriesIndividuallySelected = new List<PaletteEntry>();
@@ -259,8 +260,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 GUILayout.EndScrollView();
                 return;
             }
-
-            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - FolderPanelWidth;
+            
+            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - FolderPanelWidth - ScrollBarWidth;
 
             GUILayout.Space(Padding);
 
