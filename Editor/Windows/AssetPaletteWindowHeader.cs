@@ -232,7 +232,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void CreateNewCollection()
         {
             string directory = Application.dataPath;
-            string path = EditorUtility.SaveFilePanel("Create New Asset Palette", directory, "Asset Palette", "asset");
+            string path = EditorUtility.SaveFilePanel("Create New Asset Palette", directory, "New Palette", "asset");
             if (string.IsNullOrEmpty(path))
                 return;
 
