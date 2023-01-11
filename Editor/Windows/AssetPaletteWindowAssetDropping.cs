@@ -130,7 +130,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                         return;
 
                     // You CAN add an object from the scene if it's a valid prefab... 
-                    draggedObject = PrefabUtility.GetOutermostPrefabInstanceRoot(go);
+                    draggedObject = PrefabUtility.GetCorrespondingObjectFromSource(go);
                     if (draggedObject == null)
                         return;
                 }
