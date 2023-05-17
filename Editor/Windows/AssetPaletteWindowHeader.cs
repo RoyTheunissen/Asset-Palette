@@ -239,7 +239,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Make the path relative to the project.
             path = "Assets" + path.Replace(Application.dataPath, string.Empty);
 
-            Directory.CreateDirectory(path);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
 
             AssetPaletteCollection newCollection = CreateInstance<AssetPaletteCollection>();
             AssetDatabase.CreateAsset(newCollection, path);
