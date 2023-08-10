@@ -12,6 +12,26 @@ namespace RoyTheunissen.AssetPalette.Windows
     public partial class AssetPaletteWindow
     {
         private const string AddEntryForCurrentSelectionText = "Add Shortcut For Project Window Selection";
+
+        private readonly string favoritesGuid = new Guid().ToString();
+        private AssetPaletteCollection cachedFavoritesCollection;
+        private AssetPaletteCollection FavoritesCollection
+        {
+            get
+            {
+                if (cachedFavoritesCollection == null)
+                {
+                    cachedFavoritesCollection = CreateInstance<AssetPaletteCollection>();
+                    cachedFavoritesCollection.name = "Favorites";
+                    
+                    string storedJson = EditorPrefs.GetString(FavoritesStorageKeyEditorPref, "");
+                    if (!string.IsNullOrEmpty(storedJson))
+                        EditorJsonUtility.FromJsonOverwrite(storedJson, cachedFavoritesCollection);
+                }
+
+                return cachedFavoritesCollection;
+            }
+        }
         
         private string CurrentCollectionGuid
         {
@@ -42,16 +62,24 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 if (cachedCurrentCollection == null)
                 {
-                    string guid = CurrentCollectionGuid;
+                    if (CurrentCollectionGuid == favoritesGuid)
+                    {
+                        cachedCurrentCollection = FavoritesCollection;
+                    }
+                    else
+                    {
+                        string guid = CurrentCollectionGuid;
                     
-                    if (string.IsNullOrEmpty(guid))
-                        return null;
+                        if (string.IsNullOrEmpty(guid))
+                            return null;
 
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    if (string.IsNullOrEmpty(path))
-                        return null;
+                        string path = AssetDatabase.GUIDToAssetPath(guid);
+                        if (string.IsNullOrEmpty(path))
+                            return null;
 
-                    cachedCurrentCollection = AssetDatabase.LoadAssetAtPath<AssetPaletteCollection>(path);
+                        cachedCurrentCollection = AssetDatabase.LoadAssetAtPath<AssetPaletteCollection>(path);
+                        
+                    }
                 }
 
                 return cachedCurrentCollection;
@@ -67,7 +95,14 @@ namespace RoyTheunissen.AssetPalette.Windows
                     return;
                 }
 
-                CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
+                if (value == FavoritesCollection)
+                {
+                    CurrentCollectionGuid = favoritesGuid;
+                }
+                else
+                {
+                    CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
+                }
             }
         }
 
@@ -207,22 +242,24 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DoCollectionDropDown(Rect collectionRect)
         {
-            string[] existingCollectionGuids = AssetDatabase.FindAssets($"t:{typeof(AssetPaletteCollection).Name}");
+            
+            string[] existingCollectionGuids = AssetDatabase.FindAssets($"t:{nameof(AssetPaletteCollection)}");
 
             // Allow a new collection to be created.
             GenericMenu dropdownMenu = new GenericMenu();
 
             // Add any existing collections that we find as options.
-            foreach (string collectionGuid in existingCollectionGuids)
+            for (int i = 0; i < existingCollectionGuids.Length; i++)
             {
+                string collectionGuid = existingCollectionGuids[i];
                 bool isCurrentCollection = collectionGuid == CurrentCollectionGuid;
                 string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collectionGuid));
-                dropdownMenu.AddItem(
-                    new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
+                dropdownMenu.AddItem(new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
             }
 
-            if (existingCollectionGuids.Length > 0)
-                dropdownMenu.AddSeparator("");
+            dropdownMenu.AddItem(new GUIContent("Favorites"), CurrentCollectionGuid == favoritesGuid, LoadFavoritesCollection,  favoritesGuid);
+            
+            dropdownMenu.AddSeparator("");
             
             dropdownMenu.AddItem(new GUIContent("Create New..."), false, CreateNewCollection);
 
@@ -256,6 +293,12 @@ namespace RoyTheunissen.AssetPalette.Windows
             string guid = (string)userdata;
             CurrentCollectionGuid = guid;
 
+            Repaint();
+        }
+
+        private void LoadFavoritesCollection(object userdata)
+        {
+            CurrentCollectionGuid = favoritesGuid;
             Repaint();
         }
         

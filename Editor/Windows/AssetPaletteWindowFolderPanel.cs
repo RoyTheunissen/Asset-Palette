@@ -202,7 +202,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             SerializedProperty newElement = SerializedPropertyExtensions.AddArrayElement(foldersProperty);
             newElement.managedReferenceValue = newFolder;
 
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            ApplyModifiedProperties();
 
             SelectedFolder = newFolder;
 
@@ -499,7 +499,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             foldersProperty.InsertArrayElementAtIndex(currentFolderDragIndex);
             SerializedProperty movedFolderProperty = foldersProperty.GetArrayElementAtIndex(currentFolderDragIndex);
             movedFolderProperty.managedReferenceValue = folderBeingDragged;
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            ApplyModifiedProperties();
 
             SelectedFolderIndex = currentFolderDragIndex;
             
@@ -572,7 +572,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 SerializedProperty folderBeingRenamedProperty = foldersProperty.GetArrayElementAtIndex(index);
                 SerializedProperty nameProperty = folderBeingRenamedProperty.FindPropertyRelative("name");
                 nameProperty.stringValue = renameText;
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                ApplyModifiedProperties();
             }
 
             PaletteFolder.CancelRename();

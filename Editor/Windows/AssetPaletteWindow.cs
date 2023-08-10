@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using RoyTheunissen.AssetPalette.CustomEditors;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
@@ -35,6 +32,9 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
         private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
+        
+        private static string FavoritesStorageKeyEditorPref => EditorPrefPrefix + "FavoritesStorageKey";
+
 
         private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;
         private static float EntriesPanelWidthMin => RefreshButtonWidth + AddSpecialButtonWidth + SortModeButtonWidth;
@@ -79,7 +79,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             if (darkModeIcon == null)
                 darkModeIcon = Resources.Load<Texture2D>("d_AssetPaletteWindow Icon");
-
+            
             titleContent = new GUIContent(
                 "Asset Palette", EditorGUIUtility.isProSkin ? darkModeIcon : lightModeIcon);
             minSize = new Vector2(WindowWidthMin, WindowHeightMin);
@@ -107,7 +107,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             // Clear the currently saved GUID when the collection has been destroyed.
             if (!string.IsNullOrEmpty(CurrentCollectionGuid) && CurrentCollection == null)
-                CurrentCollectionGuid = null;
+                CurrentCollectionGuid = favoritesGuid;
             
             PaletteDrawing.ActivePaletteWindow = this;
 
@@ -214,7 +214,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             CurrentCollectionSerializedObject.Update();
             SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
             foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            ApplyModifiedProperties();
 
             // Select the last folder.
             SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
