@@ -26,8 +26,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         [NonSerialized] private bool isResizingFolderPanel;
         
-        [SerializeField] private TreeViewState directoriesTreeViewState;
-        private AssetPaletteDirectoryTreeView directoriesTreeView;
+        [SerializeField] private TreeViewState foldersTreeViewState;
+        private AssetPaletteFolderTreeView foldersTreeView;
         
         private Vector2 folderPanelScrollPosition;
         
@@ -143,28 +143,28 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private PaletteFolder folderBelowCursorOnMouseDown;
         
-        private void InitializeDirectoriesTreeView(SerializedProperty foldersProperty)
+        private void InitializeFoldersTreeView(SerializedProperty foldersProperty)
         {
-            if (directoriesTreeViewState == null)
-                directoriesTreeViewState = new TreeViewState();
-            if (directoriesTreeView == null)
+            if (foldersTreeViewState == null)
+                foldersTreeViewState = new TreeViewState();
+            if (foldersTreeView == null)
             {
-                directoriesTreeView = new AssetPaletteDirectoryTreeView(directoriesTreeViewState, foldersProperty);
-                directoriesTreeView.SelectedFolderEvent += HandleTreeViewSelectedFolderEvent;
+                foldersTreeView = new AssetPaletteFolderTreeView(foldersTreeViewState, foldersProperty);
+                foldersTreeView.SelectedFolderEvent += HandleTreeViewSelectedFolderEvent;
             }
         }
 
-        private void ClearDirectoriesTreeView()
+        private void ClearFoldersTreeView()
         {
-            directoriesTreeViewState = null;
-            if (directoriesTreeView != null)
+            foldersTreeViewState = null;
+            if (foldersTreeView != null)
             {
-                directoriesTreeView.SelectedFolderEvent -= HandleTreeViewSelectedFolderEvent;
-                directoriesTreeView = null;
+                foldersTreeView.SelectedFolderEvent -= HandleTreeViewSelectedFolderEvent;
+                foldersTreeView = null;
             }
         }
 
-        private void HandleTreeViewSelectedFolderEvent(AssetPaletteDirectoryTreeView treeView, PaletteFolder folder)
+        private void HandleTreeViewSelectedFolderEvent(AssetPaletteFolderTreeView treeView, PaletteFolder folder)
         {
             SelectedFolder = folder;
         }
@@ -457,13 +457,13 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DrawFoldersUsingTreeView(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
         {
-            InitializeDirectoriesTreeView(foldersProperty);
+            InitializeFoldersTreeView(foldersProperty);
             
             Rect position = GUILayoutUtility.GetRect(
                 GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             position.xMax -= 2;
             
-            directoriesTreeView.OnGUI(position);
+            foldersTreeView.OnGUI(position);
         }
 
         private void DoFolderContextMenu(PaletteFolder folder)

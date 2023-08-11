@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
     /// <summary>
-    /// Visualizes the palette's directories using a treeview.
+    /// Visualizes the palette's folders using a treeview.
     /// </summary>
-    public class AssetPaletteDirectoryTreeView : TreeView
+    public class AssetPaletteFolderTreeView : TreeView
     {
         [NonSerialized] private SerializedProperty foldersProperty;
 
@@ -20,10 +19,10 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private Dictionary<int, PaletteFolder> itemIndexToFolder = new Dictionary<int, PaletteFolder>();
         
-        public delegate void SelectedFolderHandler(AssetPaletteDirectoryTreeView treeView, PaletteFolder folder);
+        public delegate void SelectedFolderHandler(AssetPaletteFolderTreeView treeView, PaletteFolder folder);
         public event SelectedFolderHandler SelectedFolderEvent;
         
-        public AssetPaletteDirectoryTreeView(TreeViewState state, SerializedProperty foldersProperty)
+        public AssetPaletteFolderTreeView(TreeViewState state, SerializedProperty foldersProperty)
             : base(state)
         {
             this.foldersProperty = foldersProperty;
