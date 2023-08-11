@@ -201,7 +201,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             GenericMenu menu = new GenericMenu();
             menu.AddItem(new GUIContent("Rename"), false, () => BeginRename(folder));
             
-            if (id > 1)
+            if (itemIndexToFolder.Count > 1)
                 menu.AddItem(new GUIContent("Delete"), false, () => DeleteFolderRequestedEvent?.Invoke(this, folder));
             
             menu.ShowAsContext();
