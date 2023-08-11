@@ -58,8 +58,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private string renameText;
 
-        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed
-                                   || foldersTreeView != null && foldersTreeView.IsRenaming;
+        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed || IsFolderBeingRenamed;
 
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;
@@ -165,7 +164,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void PerformKeyboardShortcuts()
         {
-            if (Event.current.type != EventType.KeyDown)
+            if (Event.current.type != EventType.KeyDown || IsFolderBeingRenamed)
                 return;
 
             if (IsRenaming)

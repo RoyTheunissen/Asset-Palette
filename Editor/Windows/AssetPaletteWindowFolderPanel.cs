@@ -135,6 +135,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return cachedSelectedFolderSerializedProperty;
             }
         }
+        
+        private bool IsFolderBeingRenamed => foldersTreeView != null && foldersTreeView.IsRenaming;
 
         private void InitializeFoldersTreeView()
         {
