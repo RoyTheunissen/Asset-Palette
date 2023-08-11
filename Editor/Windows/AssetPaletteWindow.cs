@@ -100,6 +100,12 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void OnUndoRedoPerformed()
         {
             // Repaint immediately otherwise you don't see the result of your undo!
+            UpdateAndRepaint();
+        }
+
+        private void UpdateAndRepaint()
+        {
+            UpdateFoldersTreeView();
             Repaint();
         }
 
@@ -108,7 +114,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Fall back to the personal palette when no valid palette asset is available.
             if (string.IsNullOrEmpty(CurrentCollectionGuid) || CurrentCollection == null)
                 CurrentCollectionGuid = personalPaletteGuid;
-            
             PaletteDrawing.ActivePaletteWindow = this;
 
             UpdateMouseOverStates();
@@ -240,6 +245,35 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             StopEntryRename(isCancel);
             CancelFolderRename();
+        }
+        
+        private void OnLostFocus()
+        {
+            StopAllRenames(false);
+        }
+
+        private void OnSelectionChange()
+        {
+            StopAllRenames(false);
+        }
+
+        private void OnFocus()
+        {
+            StopAllRenames(false);
+        }
+
+        private void OnProjectChange()
+        {
+            StopAllRenames(false);
+            
+            UpdateAndRepaint();
+        }
+
+        public void OnPaletteAssetImported()
+        {
+            StopAllRenames(false);
+            
+            UpdateAndRepaint();
         }
     }
 }

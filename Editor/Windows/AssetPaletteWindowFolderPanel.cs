@@ -26,8 +26,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         [NonSerialized] private bool isResizingFolderPanel;
         
-        [SerializeField] private TreeViewState foldersTreeViewState;
-        private AssetPaletteFolderTreeView foldersTreeView;
+        [NonSerialized] private TreeViewState foldersTreeViewState;
+        [NonSerialized] private AssetPaletteFolderTreeView foldersTreeView;
         
         private Vector2 folderPanelScrollPosition;
         
@@ -610,26 +610,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             nameProperty.stringValue = newName;
             ApplyModifiedProperties();
             Repaint();
-        }
-        
-        private void OnLostFocus()
-        {
-            StopAllRenames(false);
-        }
-
-        private void OnSelectionChange()
-        {
-            StopAllRenames(false);
-        }
-
-        private void OnFocus()
-        {
-            StopAllRenames(false);
-        }
-
-        private void OnProjectChange()
-        {
-            StopAllRenames(false);
         }
     }
 }
