@@ -13,6 +13,8 @@ namespace RoyTheunissen.AssetPalette.Windows
     public class AssetPaletteFolderTreeView : TreeView
     {
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
+
+        private const float FolderSpacing = 1;
         
         [NonSerialized] private SerializedProperty foldersProperty;
 
@@ -217,9 +219,17 @@ namespace RoyTheunissen.AssetPalette.Windows
             menu.AddItem(new GUIContent("Create Folder"), false, () => CreateFolderRequestedEvent?.Invoke(this));
             menu.ShowAsContext();
         }
+        
+        protected override float GetCustomRowHeight(int row, TreeViewItem item)
+        {
+            return base.GetCustomRowHeight(row, item) + FolderSpacing * 2;
+        }
 
         protected override void RowGUI(RowGUIArgs args)
         {
+            args.rowRect.y += FolderSpacing;
+            args.rowRect.height -= FolderSpacing * 2;
+
             base.RowGUI(args);
 
             // This is the only way we can detect if we're currently renaming or not.
