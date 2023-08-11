@@ -62,6 +62,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             TreeViewItem root = new TreeViewItem { id = 0, depth = -1, displayName = "Root" };
 
+            // Add an item for every folder.
             itemIndexToFolder.Clear();
             for (int i = 0; i < foldersProperty.arraySize; i++)
             {
