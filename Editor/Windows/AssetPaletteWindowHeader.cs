@@ -258,7 +258,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 dropdownMenu.AddItem(new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
             }
 
-            dropdownMenu.AddItem(new GUIContent("Favorites"), CurrentCollectionGuid == personalPaletteGuid, LoadFavoritesCollection,  personalPaletteGuid);
+            dropdownMenu.AddItem(new GUIContent("Personal Palette"), CurrentCollectionGuid == personalPaletteGuid, LoadPersonalPaletteCollection,  personalPaletteGuid);
             
             dropdownMenu.AddSeparator("");
             
@@ -297,7 +297,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             Repaint();
         }
 
-        private void LoadFavoritesCollection(object userdata)
+        private void LoadPersonalPaletteCollection(object userdata)
         {
             CurrentCollectionGuid = personalPaletteGuid;
             Repaint();

@@ -33,7 +33,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
         private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
         
-        private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "FavoritesStorageKey";
+        private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";
 
 
         private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;

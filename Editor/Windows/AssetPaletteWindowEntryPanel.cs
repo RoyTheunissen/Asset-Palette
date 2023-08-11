@@ -184,16 +184,16 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             CurrentCollectionSerializedObject.ApplyModifiedProperties();
             if (CurrentCollection == PersonalPalette)
-               SaveFavoritesCollection();
+               SavePersonalPaletteCollection();
         }
 
-        private void SaveFavoritesCollection()
+        private void SavePersonalPaletteCollection()
         {
             if (cachedPersonalPalette == null)
                 return;
 
-            string favoritesJson = JsonUtility.ToJson(cachedPersonalPalette);
-            EditorPrefs.SetString(PersonalPaletteStorageKeyEditorPref, favoritesJson);
+            string personalPaletteJson = JsonUtility.ToJson(cachedPersonalPalette);
+            EditorPrefs.SetString(PersonalPaletteStorageKeyEditorPref, personalPaletteJson);
         }
 
         private void AddEntries(List<PaletteEntry> entries, bool apply = true)
