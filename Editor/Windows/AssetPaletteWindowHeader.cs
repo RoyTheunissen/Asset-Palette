@@ -12,6 +12,26 @@ namespace RoyTheunissen.AssetPalette.Windows
     public partial class AssetPaletteWindow
     {
         private const string AddEntryForCurrentSelectionText = "Add Shortcut For Project Window Selection";
+
+        private readonly string personalPaletteGuid = "Personal Palette Guid";
+        private AssetPaletteCollection cachedPersonalPalette;
+        private AssetPaletteCollection PersonalPalette
+        {
+            get
+            {
+                if (cachedPersonalPalette == null)
+                {
+                    cachedPersonalPalette = CreateInstance<AssetPaletteCollection>();
+                    cachedPersonalPalette.name = "Personal Palette";
+                    
+                    string storedJson = EditorPrefs.GetString(PersonalPaletteStorageKeyEditorPref, "");
+                    if (!string.IsNullOrEmpty(storedJson))
+                        JsonUtility.FromJsonOverwrite(storedJson, cachedPersonalPalette);
+                }
+
+                return cachedPersonalPalette;
+            }
+        }
         
         private string CurrentCollectionGuid
         {
@@ -42,16 +62,24 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 if (cachedCurrentCollection == null)
                 {
-                    string guid = CurrentCollectionGuid;
+                    if (CurrentCollectionGuid == personalPaletteGuid)
+                    {
+                        cachedCurrentCollection = PersonalPalette;
+                    }
+                    else
+                    {
+                        string guid = CurrentCollectionGuid;
                     
-                    if (string.IsNullOrEmpty(guid))
-                        return null;
+                        if (string.IsNullOrEmpty(guid))
+                            return null;
 
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    if (string.IsNullOrEmpty(path))
-                        return null;
+                        string path = AssetDatabase.GUIDToAssetPath(guid);
+                        if (string.IsNullOrEmpty(path))
+                            return null;
 
-                    cachedCurrentCollection = AssetDatabase.LoadAssetAtPath<AssetPaletteCollection>(path);
+                        cachedCurrentCollection = AssetDatabase.LoadAssetAtPath<AssetPaletteCollection>(path);
+                        
+                    }
                 }
 
                 return cachedCurrentCollection;
@@ -67,7 +95,15 @@ namespace RoyTheunissen.AssetPalette.Windows
                     return;
                 }
 
-                CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
+                
+                if (value == PersonalPalette)
+                {
+                    CurrentCollectionGuid = personalPaletteGuid;
+                }
+                else
+                {
+                    CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
+                }
             }
         }
 
@@ -79,7 +115,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
-                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null)
+                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null || cachedCurrentCollectionSerializedObject.targetObject == null)
                 {
                     didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
@@ -89,7 +125,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return cachedCurrentCollectionSerializedObject;
             }
         }
-        
+
         [NonSerialized] private static Type[] cachedFolderTypes;
         [NonSerialized] private static bool didCacheFolderTypes;
         private static Type[] FolderTypes
@@ -207,22 +243,28 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DoCollectionDropDown(Rect collectionRect)
         {
-            string[] existingCollectionGuids = AssetDatabase.FindAssets($"t:{typeof(AssetPaletteCollection).Name}");
+            
+            string[] existingCollectionGuids = AssetDatabase.FindAssets($"t:{nameof(AssetPaletteCollection)}");
 
             // Allow a new collection to be created.
             GenericMenu dropdownMenu = new GenericMenu();
 
+            dropdownMenu.AddItem(new GUIContent("Personal Palette"), string.Equals(CurrentCollectionGuid, personalPaletteGuid, StringComparison.Ordinal), 
+                LoadPersonalPaletteCollection,  personalPaletteGuid);
+
+            dropdownMenu.AddSeparator("");
+
             // Add any existing collections that we find as options.
-            foreach (string collectionGuid in existingCollectionGuids)
+            for (int i = 0; i < existingCollectionGuids.Length; i++)
             {
-                bool isCurrentCollection = collectionGuid == CurrentCollectionGuid;
+                string collectionGuid = existingCollectionGuids[i];
+                bool isCurrentCollection = string.Equals(collectionGuid, CurrentCollectionGuid, StringComparison.Ordinal);
                 string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collectionGuid));
                 dropdownMenu.AddItem(
                     new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
             }
 
-            if (existingCollectionGuids.Length > 0)
-                dropdownMenu.AddSeparator("");
+            dropdownMenu.AddSeparator("");
             
             dropdownMenu.AddItem(new GUIContent("Create New..."), false, CreateNewCollection);
 
@@ -256,6 +298,12 @@ namespace RoyTheunissen.AssetPalette.Windows
             string guid = (string)userdata;
             CurrentCollectionGuid = guid;
 
+            Repaint();
+        }
+
+        private void LoadPersonalPaletteCollection(object userdata)
+        {
+            CurrentCollectionGuid = personalPaletteGuid;
             Repaint();
         }
         

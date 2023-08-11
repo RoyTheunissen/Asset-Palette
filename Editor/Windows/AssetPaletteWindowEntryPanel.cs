@@ -171,13 +171,29 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (apply)
             {
                 // Applying it before the sorting because otherwise the sorting will be unable to find the items
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                ApplyModifiedProperties();
 
                 SortEntriesInSerializedObject();
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                ApplyModifiedProperties();
             }
             
             SelectEntry(entry, false);
+        }
+
+        private void ApplyModifiedProperties()
+        {
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            if (CurrentCollection == PersonalPalette)
+               SavePersonalPaletteCollection();
+        }
+
+        private void SavePersonalPaletteCollection()
+        {
+            if (cachedPersonalPalette == null)
+                return;
+
+            string personalPaletteJson = JsonUtility.ToJson(cachedPersonalPalette);
+            EditorPrefs.SetString(PersonalPaletteStorageKeyEditorPref, personalPaletteJson);
         }
 
         private void AddEntries(List<PaletteEntry> entries, bool apply = true)
@@ -193,10 +209,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (apply)
             {
                 // Applying it before the sorting because otherwise the sorting will be unable to find the items
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                ApplyModifiedProperties();
 
                 SortEntriesInSerializedObject();
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                ApplyModifiedProperties();
             }
         }
 
@@ -236,7 +252,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             // NOTE: *Need* to apply this after every individual change because otherwise GetValue<> will not return
             // correct values, and we need to do it that way to have 2020 support because Unity 2020 has a setter for
             // managedReferenceValue but not a setter >_>
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            ApplyModifiedProperties();
         }
 
         private void DrawEntriesPanel()
@@ -252,11 +268,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorGUI.DrawRect(entriesPanelRect, new Color(0, 0, 0, 0.1f));
 
             // If the current state is invalid, draw a message instead.
-            bool hasCollection = HasCollection;
-            bool hasEntries = hasCollection && GetEntryCount() > 0;
-            if (!hasCollection || !hasEntries)
+            bool hasEntries = GetEntryCount() > 0;
+            if (!hasEntries)
             {
-                DrawEntryPanelMessage(hasCollection);
+                DrawEntryPanelMessage();
                 GUILayout.EndScrollView();
                 return;
             }
@@ -431,7 +446,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     CurrentCollectionSerializedObject.Update();
                     SerializedProperty serializedProperty = GetSerializedPropertyForEntry(entry);
                     entry.AcceptDraggedAssets(DragAndDrop.objectReferences, serializedProperty);
-                    CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                    ApplyModifiedProperties();
                 }
 
                 // Make sure nothing else handles this, like the entry panel itself.
@@ -571,29 +586,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             DragAndDrop.SetGenericData(EntryDragGenericDataType, null);
         }
 
-        private void DrawEntryPanelMessage(bool hasCollection)
+        private void DrawEntryPanelMessage()
         {
             GUILayout.FlexibleSpace();
 
-            if (!hasCollection)
-            {
-                EditorGUILayout.LabelField(
-                    "To begin organizing assets, create a collection.", MessageTextStyle);
-                EditorGUILayout.BeginHorizontal();
-                {
-                    GUILayout.FlexibleSpace();
-                    bool shouldCreate = GUILayout.Button("Create", GUILayout.Width(100));
-                    GUILayout.FlexibleSpace();
-
-                    if (shouldCreate)
-                        CreateNewCollection();
-                }
-                EditorGUILayout.EndHorizontal();
-            }
-            else
-            {
-                EditorGUILayout.LabelField("Drag assets here!", MessageTextStyle);
-            }
+            EditorGUILayout.LabelField("Drag assets here!", MessageTextStyle);
 
             GUILayout.FlexibleSpace();
         }
@@ -702,13 +699,13 @@ namespace RoyTheunissen.AssetPalette.Windows
                     SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
                 SerializedProperty customNameProperty = entryBeingRenamedProperty.FindPropertyRelative("customName");
                 customNameProperty.stringValue = renameText;
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                ApplyModifiedProperties();
                 
                 // Also sort the collection. Make sure to do this AFTER we apply the rename, otherwise the sort will
                 // be based on the old name! Don't worry, doing this in a separate Apply doesn't cause a separate Undo
                 CurrentCollectionSerializedObject.Update();
                 SortEntriesInSerializedObject();
-                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+                ApplyModifiedProperties();
             }
 
             PaletteEntry.CancelRename();
