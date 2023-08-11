@@ -60,12 +60,6 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         protected override TreeViewItem BuildRoot()
         {
-            // BuildRoot is called every time Reload is called to ensure that TreeViewItems 
-            // are created from data. Here we create a fixed set of items. In a real world example,
-            // a data model should be passed into the TreeView and the items created from the model.
-
-            // This section illustrates that IDs should be unique. The root item is required to 
-            // have a depth of -1, and the rest of the items increment from that.
             TreeViewItem root = new TreeViewItem { id = 0, depth = -1, displayName = "Root" };
 
             itemIndexToFolder.Clear();
@@ -77,8 +71,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 itemIndexToFolder.Add(folderItem.id, folder);
                 root.AddChild(folderItem);
             }
-
-            // Return root of the tree
+            
             return root;
         }
         
