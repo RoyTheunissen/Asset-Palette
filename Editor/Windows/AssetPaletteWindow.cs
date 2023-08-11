@@ -29,8 +29,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static string ZoomLevelEditorPref => EditorPrefPrefix + "ZoomLevel";
         private static string SelectedFolderIndexEditorPref => EditorPrefPrefix + "SelectedFolderIndex";
         private static string EntriesSortModeEditorPref => EditorPrefPrefix + "EntriesSortMode";
-
-        private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
+        
         private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
         
         private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";

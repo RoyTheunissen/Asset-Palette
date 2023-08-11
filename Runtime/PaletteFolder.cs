@@ -17,5 +17,10 @@ namespace RoyTheunissen.AssetPalette
         {
             this.name = name;
         }
+
+        public override string ToString()
+        {
+            return $"{GetType().Name}({Name})";
+        }
     }
 }

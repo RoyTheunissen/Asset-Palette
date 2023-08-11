@@ -12,11 +12,15 @@ namespace RoyTheunissen.AssetPalette.Windows
     /// </summary>
     public class AssetPaletteFolderTreeView : TreeView
     {
+        private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
+        
         [NonSerialized] private SerializedProperty foldersProperty;
 
-        [NonSerialized] private int lastItemIndex;
+        [NonSerialized] private int lastItemIndex = 1;
 
         [NonSerialized] private bool didInitialSelection;
+
+        public bool IsDragging => isDragging;
         
         private Dictionary<int, PaletteFolder> itemIndexToFolder = new Dictionary<int, PaletteFolder>();
         
@@ -26,6 +30,9 @@ namespace RoyTheunissen.AssetPalette.Windows
         public delegate void RenamedFolderHandler(
             AssetPaletteFolderTreeView treeView, PaletteFolder folder, string oldName, string newName);
         public event RenamedFolderHandler RenamedFolderEvent;
+        
+        public delegate void MovedFolderHandler(AssetPaletteFolderTreeView treeView, PaletteFolder folder, int toIndex);
+        public event MovedFolderHandler MovedFolderEvent;
         
         public AssetPaletteFolderTreeView(
             TreeViewState state, SerializedProperty foldersProperty, PaletteFolder selectedFolder)
@@ -66,7 +73,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private PaletteFolder GetFolder(int id)
         {
-            return itemIndexToFolder[id];
+            return id != 0 ? itemIndexToFolder[id] : null;
         }
 
         private TreeViewItem GetTreeViewItem(PaletteFolder folder)
@@ -93,6 +100,43 @@ namespace RoyTheunissen.AssetPalette.Windows
         protected override bool CanRename(TreeViewItem item)
         {
             return true;
+        }
+
+        protected override bool CanStartDrag(CanStartDragArgs args)
+        {
+            return itemIndexToFolder.Count > 1;
+        }
+
+        protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
+        {
+            int draggedItemID = args.draggedItemIDs[0];
+            PaletteFolder folder = GetFolder(draggedItemID);
+            
+            DragAndDrop.PrepareStartDrag();
+            DragAndDrop.SetGenericData(FolderDragGenericDataType, folder);
+            DragAndDrop.StartDrag($"{folder.Name} (Asset Palette Folder)");
+        }
+
+        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
+        {
+            if (args.performDrop)
+                Drop(args);
+
+            return args.dragAndDropPosition != DragAndDropPosition.UponItem
+                ? DragAndDropVisualMode.Move : DragAndDropVisualMode.Rejected;
+        }
+
+        private void Drop(DragAndDropArgs args)
+        {
+            PaletteFolder folder = (PaletteFolder)DragAndDrop.GetGenericData(FolderDragGenericDataType);
+            PaletteFolder parentFolder = args.parentItem == null ? null : GetFolder(args.parentItem.id);
+
+            // If you dragged a folder outside, it should just be at the bottom of the root.
+            if (parentFolder == null && args.insertAtIndex == -1)
+                args.insertAtIndex = rootItem.children.Count;
+
+            DragAndDrop.SetGenericData(FolderDragGenericDataType, null);
+            MovedFolderEvent?.Invoke(this, folder, args.insertAtIndex);
         }
 
         public void BeginRename(PaletteFolder folder)

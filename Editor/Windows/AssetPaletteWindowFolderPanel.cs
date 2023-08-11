@@ -19,10 +19,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
 
-        private bool IsDraggingFolder => DragAndDrop.GetGenericData(FolderDragGenericDataType) != null;
-        
-        [NonSerialized] private int currentFolderDragIndex;
-        [NonSerialized] private int folderToDragIndex;
+        private bool IsDraggingFolder => foldersTreeView != null && foldersTreeView.IsDragging;
 
         [NonSerialized] private bool isResizingFolderPanel;
         
@@ -154,6 +151,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     foldersTreeViewState, FoldersSerializedProperty, SelectedFolder);
                 foldersTreeView.SelectedFolderEvent += HandleTreeViewSelectedFolderEvent;
                 foldersTreeView.RenamedFolderEvent += HandleTreeViewRenamedFolderEvent;
+                foldersTreeView.MovedFolderEvent += HandleTreeViewMovedFolderEvent;
             }
         }
         
@@ -170,6 +168,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 foldersTreeView.SelectedFolderEvent -= HandleTreeViewSelectedFolderEvent;
                 foldersTreeView.RenamedFolderEvent -= HandleTreeViewRenamedFolderEvent;
+                foldersTreeView.MovedFolderEvent -= HandleTreeViewMovedFolderEvent;
                 foldersTreeView = null;
             }
         }
@@ -278,8 +277,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 EnsureFolderExists();
 
-                currentFolderDragIndex = -1;
-                
                 if (HasCollection)
                 {
                     CurrentCollectionSerializedObject.Update();
@@ -290,170 +287,12 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             EditorGUILayout.EndScrollView();
 
-            if (IsDraggingFolder)
-            {
-                if (Event.current.type == EventType.DragUpdated || Event.current.type == EventType.DragPerform)
-                {
-                    if (!isMouseInFolderPanel)
-                        DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
-                    else
-                    {
-                        DragAndDrop.visualMode = currentFolderDragIndex < folderToDragIndex ||
-                                                 currentFolderDragIndex > folderToDragIndex + 1
-                            ? DragAndDropVisualMode.Move
-                            : DragAndDropVisualMode.Rejected;
-                    }
-
-                    if (Event.current.type == EventType.DragPerform)
-                        StopFolderDrag();
-                }
-                else if (Event.current.type == EventType.DragExited)
-                    CancelFolderDrag();
-            }
-
             DrawResizableFolderPanelDivider();
         }
 
         private void DrawFolders(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
         {
             DrawFoldersUsingTreeView(didClickAnywhereInWindow);
-            return;
-            
-            bool isDraggingAssets = DragAndDrop.objectReferences.Length > 0;
-            string folderDraggedFrom = (string)DragAndDrop.GetGenericData(EntryDragGenericDataType);
-            bool isDraggingEntriesFromAFolder = folderDraggedFrom != null;
-
-            for (int i = 0; i < foldersProperty.arraySize; i++)
-            {
-                SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
-                PaletteFolder folder = SerializedPropertyExtensions.GetValue<PaletteFolder>(folderProperty);
-                
-                float folderHeight = PaletteDrawing.GetFolderHeight(folderProperty, folder);
-                float folderWidth = FolderPanelWidth;
-                Rect folderRect = GUILayoutUtility.GetRect(folderWidth, folderHeight);
-                folderRect = RectExtensions.Indent(folderRect, 1);
-                bool isSelected = SelectedFolderIndex == i;
-
-                bool isMouseOver = isMouseInFolderPanel && folderRect.Contains(Event.current.mousePosition);
-                
-                // Dragging and dropping assets into folders. Need to handle this early because it affects the way we
-                // draw the folder (might have to be highlighted).
-                bool isHighlighted = false;
-                if (isDraggingAssets && isMouseOver)
-                {
-                    bool isValidDrag = !isDraggingEntriesFromAFolder || folderDraggedFrom != folder.Name;
-                    if (isValidDrag)
-                    {
-                        isHighlighted = true;
-
-                        if (Event.current.type == EventType.DragUpdated || Event.current.type == EventType.DragPerform)
-                        {
-                            DragAndDrop.AcceptDrag();
-                            DragAndDrop.visualMode = isDraggingEntriesFromAFolder
-                                ? DragAndDropVisualMode.Move
-                                : DragAndDropVisualMode.Copy;
-                            
-                            // Need to repaint now to draw a highlight underneath the hovered folder.
-                            Repaint();
-
-                            if (Event.current.type == EventType.DragPerform)
-                            {
-                                if (isDraggingEntriesFromAFolder)
-                                {
-                                    // First remove all of the selected entries from the current folder.
-                                    List<PaletteEntry> entriesToMove = new List<PaletteEntry>(entriesSelected);
-                                    RemoveEntries(entriesToMove);
-
-                                    // Make the recipient folder the current folder.
-                                    SelectedFolder = folder;
-                                    
-                                    // Now add all of the entries to the recipient folder.
-                                    AddEntries(entriesToMove);
-                                }
-                                else
-                                {
-                                    // Make the recipient folder the current folder.
-                                    SelectedFolder = folder;
-                                    
-                                    // Just act as if these assets were dropped into the entries panel.
-                                    HandleAssetDropping(DragAndDrop.objectReferences);
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Draw a background for the folder using the Reorderable List Element style.
-                if (Event.current.type == EventType.Repaint)
-                {
-                    GUIStyle reorderableListElementStyle = "RL Element";
-                    Rect backgroundRect = folderRect;
-                    backgroundRect.xMin = 0;
-                    reorderableListElementStyle.Draw(
-                        backgroundRect, false, isSelected, isSelected || isHighlighted, true);
-                }
-
-                // Draw the actual folder itself.
-                PaletteDrawing.DrawFolder(folderRect, folderProperty, folder);
-
-                if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && isMouseOver)
-                    DoFolderContextMenu(folder);
-
-                // Dragging and dropping folders.
-                if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOver &&
-                    !isResizingFolderPanel && !isDraggingAssets && folderBelowCursorOnMouseDown == folder)
-                {
-                    StartFolderDrag(folder);
-                }
-
-                if (IsDraggingFolder)
-                {
-                    bool didFindDragIndex = false;
-                    Rect dragMarkerRect = Rect.zero;
-                    if (Event.current.mousePosition.y <= folderRect.center.y &&
-                        (currentFolderDragIndex == -1 || i < currentFolderDragIndex))
-                    {
-                        currentFolderDragIndex = i;
-                        didFindDragIndex = true;
-                        dragMarkerRect = RectExtensions.GetSubRectFromTop(folderRect, 0);
-                        Repaint();
-                    }
-                    else if (currentFolderDragIndex == -1 && i == foldersProperty.arraySize - 1)
-                    {
-                        currentFolderDragIndex = i + 1;
-                        didFindDragIndex = true;
-                        dragMarkerRect = RectExtensions.GetSubRectFromBottom(folderRect, 0);
-                        Repaint();
-                    }
-
-                    if (didFindDragIndex && currentFolderDragIndex != folderToDragIndex &&
-                        currentFolderDragIndex != folderToDragIndex + 1 &&
-                        DragAndDrop.visualMode == DragAndDropVisualMode.Move && Event.current.type == EventType.Repaint)
-                    {
-                        GUIStyle dragMarkerStyle = "TV Insertion";
-                        dragMarkerRect.height = dragMarkerStyle.fixedHeight;
-                        dragMarkerRect.y -= dragMarkerStyle.fixedHeight / 2 - 1;
-                        dragMarkerStyle.Draw(dragMarkerRect, true, true, false, false);
-                    }
-                }
-
-                // Allow users to select a folder by clicking with LMB.
-                if (didClickAnywhereInWindow)
-                {
-                    if (!IsRenaming && isMouseOver && !isMouseOverFolderPanelResizeBorder)
-                    {
-                        SelectedFolderIndex = i;
-
-                        folderBelowCursorOnMouseDown = folder;
-
-                        // Allow starting a rename by clicking on it twice.
-                        if (Event.current.clickCount == 2)
-                            StartFolderRename(folder);
-
-                        Repaint();
-                    }
-                }
-            }
         }
 
         private void DrawFoldersUsingTreeView(bool didClickAnywhereInWindow)
@@ -461,6 +300,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             Rect position = GUILayoutUtility.GetRect(
                 GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             position.xMax -= 2;
+            position.yMin += 2;
             
             foldersTreeView.OnGUI(position);
         }
@@ -505,52 +345,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void StartFolderDrag(PaletteFolder folder)
-        {
-            DragAndDrop.PrepareStartDrag();
-            DragAndDrop.SetGenericData(FolderDragGenericDataType, folder);
-            DragAndDrop.StartDrag($"{folder.Name} (Asset Palette Folder)");
-            folderToDragIndex = CurrentCollection.Folders.IndexOf(folder);
-        }
-        
-        private void CancelFolderDrag()
-        {
-            DragAndDrop.SetGenericData(FolderDragGenericDataType, null);
-        }
-
-        private void StopFolderDrag()
-        {
-            if (!IsDraggingFolder)
-                return;
-
-            bool isValidDrop = DragAndDrop.visualMode == DragAndDropVisualMode.Move;
-            if (!isValidDrop)
-                return;
-
-            PaletteFolder folderBeingDragged = (PaletteFolder)DragAndDrop.GetGenericData(FolderDragGenericDataType);
-            DragAndDrop.AcceptDrag();
-
-            // If you want to drag a folder downwards, keep in mind that the indices will shift as a result from the
-            // dragged folder not being where it used to be any more.
-            if (currentFolderDragIndex > folderToDragIndex)
-                currentFolderDragIndex--;
-
-            // Remove the folder from the list and add it back at the specified position.
-            CurrentCollectionSerializedObject.Update();
-            FoldersSerializedProperty.DeleteArrayElementAtIndex(folderToDragIndex);
-            FoldersSerializedProperty.InsertArrayElementAtIndex(currentFolderDragIndex);
-            SerializedProperty movedFolderProperty = FoldersSerializedProperty
-                .GetArrayElementAtIndex(currentFolderDragIndex);
-            movedFolderProperty.managedReferenceValue = folderBeingDragged;
-            ApplyModifiedProperties();
-
-            SelectedFolderIndex = currentFolderDragIndex;
-            
-            CancelFolderDrag();
-            
-            Repaint();
-        }
-        
         private void StartFolderRename(PaletteFolder folder)
         {
             foldersTreeView.BeginRename(folder);
@@ -610,6 +404,30 @@ namespace RoyTheunissen.AssetPalette.Windows
             nameProperty.stringValue = newName;
             ApplyModifiedProperties();
             Repaint();
+        }
+        
+        private void HandleTreeViewMovedFolderEvent(
+            AssetPaletteFolderTreeView treeView, PaletteFolder folder, int toIndex)
+        {
+            int folderToDragIndex = CurrentCollection.Folders.IndexOf(folder);
+            
+            // If you want to drag a folder downwards, keep in mind that the indices will shift as a result from the
+            // dragged folder not being where it used to be any more.
+            if (toIndex > folderToDragIndex)
+                toIndex--;
+
+            // Remove the folder from the list and add it back at the specified position.
+            CurrentCollectionSerializedObject.Update();
+            FoldersSerializedProperty.DeleteArrayElementAtIndex(folderToDragIndex);
+            FoldersSerializedProperty.InsertArrayElementAtIndex(toIndex);
+            SerializedProperty movedFolderProperty = FoldersSerializedProperty
+                .GetArrayElementAtIndex(toIndex);
+            movedFolderProperty.managedReferenceValue = folder;
+            ApplyModifiedProperties();
+
+            SelectedFolderIndex = toIndex;
+
+            UpdateAndRepaint();
         }
     }
 }
