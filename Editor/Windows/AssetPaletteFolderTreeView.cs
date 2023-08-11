@@ -4,6 +4,7 @@ using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
@@ -26,8 +27,13 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private bool isRenaming;
         public bool IsRenaming => isRenaming;
+        
+        private bool IsDraggingAssets => DragAndDrop.objectReferences.Length > 0;
 
-        private Dictionary<int, PaletteFolder> itemIndexToFolder = new Dictionary<int, PaletteFolder>();
+        private readonly Dictionary<int, PaletteFolder> itemIndexToFolder = new Dictionary<int, PaletteFolder>();
+        
+        private string FolderDraggedFromName => (string)DragAndDrop.GetGenericData(
+            AssetPaletteWindow.EntryDragGenericDataType);
 
         public delegate void SelectedFolderHandler(AssetPaletteFolderTreeView treeView, PaletteFolder folder);
         public event SelectedFolderHandler SelectedFolderEvent;
@@ -44,6 +50,10 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         public delegate void CreateFolderRequestedHandler(AssetPaletteFolderTreeView treeView);
         public event CreateFolderRequestedHandler CreateFolderRequestedEvent;
+        
+        public delegate void DroppedAssetsIntoFolderHandler(
+            AssetPaletteFolderTreeView treeView, Object[] assets, PaletteFolder folder, bool isDraggedFromFolder);
+        public event DroppedAssetsIntoFolderHandler DroppedAssetsIntoFolderEvent;
         
         public AssetPaletteFolderTreeView(
             TreeViewState state, SerializedProperty foldersProperty, PaletteFolder selectedFolder)
@@ -79,6 +89,11 @@ namespace RoyTheunissen.AssetPalette.Windows
         private PaletteFolder GetFolder(int id)
         {
             return id != 0 ? itemIndexToFolder[id] : null;
+        }
+        
+        private PaletteFolder GetFolder(TreeViewItem item)
+        {
+            return item == null ? null : GetFolder(item.id);
         }
 
         private TreeViewItem GetTreeViewItem(PaletteFolder folder)
@@ -126,6 +141,16 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             if (args.performDrop)
                 Drop(args);
+            
+            if (IsDraggingAssets)
+            {
+                PaletteFolder folderDraggedInto = GetFolder(args.parentItem);
+
+                return args.dragAndDropPosition == DragAndDropPosition.UponItem
+                       && folderDraggedInto != null && FolderDraggedFromName != folderDraggedInto.Name
+                    ? DragAndDropVisualMode.Copy
+                    : DragAndDropVisualMode.None;
+            }
 
             return args.dragAndDropPosition != DragAndDropPosition.UponItem
                 ? DragAndDropVisualMode.Move : DragAndDropVisualMode.Rejected;
@@ -133,15 +158,24 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void Drop(DragAndDropArgs args)
         {
-            PaletteFolder folder = (PaletteFolder)DragAndDrop.GetGenericData(FolderDragGenericDataType);
             PaletteFolder parentFolder = args.parentItem == null ? null : GetFolder(args.parentItem.id);
+            
+            if (IsDraggingAssets)
+            {
+                bool isDraggingEntriesFromAFolder = !string.IsNullOrEmpty(FolderDraggedFromName);
+                DroppedAssetsIntoFolderEvent?.Invoke(
+                    this, DragAndDrop.objectReferences, parentFolder, isDraggingEntriesFromAFolder);
+                return;
+            }
+            
+            PaletteFolder folderDragged = (PaletteFolder)DragAndDrop.GetGenericData(FolderDragGenericDataType);
 
             // If you dragged a folder outside, it should just be at the bottom of the root.
             if (parentFolder == null && args.insertAtIndex == -1)
                 args.insertAtIndex = rootItem.children.Count;
 
             DragAndDrop.SetGenericData(FolderDragGenericDataType, null);
-            MovedFolderEvent?.Invoke(this, folder, args.insertAtIndex);
+            MovedFolderEvent?.Invoke(this, folderDragged, args.insertAtIndex);
         }
 
         public void BeginRename(PaletteFolder folder)

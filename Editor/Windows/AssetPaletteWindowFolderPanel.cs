@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using Object = UnityEngine.Object;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
 namespace RoyTheunissen.AssetPalette.Windows
@@ -151,6 +153,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.MovedFolderEvent += HandleTreeViewMovedFolderEvent;
                 foldersTreeView.DeleteFolderRequestedEvent += HandleTreeViewDeleteFolderRequestedEvent;
                 foldersTreeView.CreateFolderRequestedEvent += HandleTreeViewCreateFolderRequestedEvent;
+                foldersTreeView.DroppedAssetsIntoFolderEvent += HandleTreeViewDroppedAssetsIntoFolderEvent;
             }
         }
 
@@ -170,6 +173,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.MovedFolderEvent -= HandleTreeViewMovedFolderEvent;
                 foldersTreeView.DeleteFolderRequestedEvent -= HandleTreeViewDeleteFolderRequestedEvent;
                 foldersTreeView.CreateFolderRequestedEvent -= HandleTreeViewCreateFolderRequestedEvent;
+                foldersTreeView.DroppedAssetsIntoFolderEvent -= HandleTreeViewDroppedAssetsIntoFolderEvent;
                 foldersTreeView = null;
             }
         }
@@ -462,9 +466,36 @@ namespace RoyTheunissen.AssetPalette.Windows
             RemoveSelectedFolder();
         }
         
-        private void HandleTreeViewCreateFolderRequestedEvent(AssetPaletteFolderTreeView treeview)
+        private void HandleTreeViewCreateFolderRequestedEvent(AssetPaletteFolderTreeView treeView)
         {
             TryCreateNewFolderContext();
+        }
+        
+        private void HandleTreeViewDroppedAssetsIntoFolderEvent(
+            AssetPaletteFolderTreeView treeView, Object[] assets, PaletteFolder folder, bool isDraggedFromFolder)
+        {
+            if (isDraggedFromFolder)
+            {
+                // First remove all of the selected entries from the current folder.
+                List<PaletteEntry> entriesToMove = new List<PaletteEntry>(entriesSelected);
+                RemoveEntries(entriesToMove);
+
+                // Make the recipient folder the current folder.
+                SelectedFolder = folder;
+
+                // Now add all of the entries to the recipient folder.
+                AddEntries(entriesToMove);
+            }
+            else
+            {
+                // Make the recipient folder the current folder.
+                SelectedFolder = folder;
+
+                // Just act as if these assets were dropped into the entries panel.
+                HandleAssetDropping(assets);
+            }
+            
+            UpdateAndRepaint();
         }
         
         private void RemoveFolder(PaletteFolder folder)
