@@ -253,12 +253,14 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = 0; i < existingCollectionGuids.Length; i++)
             {
                 string collectionGuid = existingCollectionGuids[i];
-                bool isCurrentCollection = collectionGuid == CurrentCollectionGuid;
+                bool isCurrentCollection = string.Equals(
+                    collectionGuid, CurrentCollectionGuid, StringComparison.Ordinal);
                 string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collectionGuid));
                 dropdownMenu.AddItem(new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
             }
 
-            dropdownMenu.AddItem(new GUIContent("Personal Palette"), CurrentCollectionGuid == personalPaletteGuid, LoadPersonalPaletteCollection,  personalPaletteGuid);
+            dropdownMenu.AddItem(new GUIContent("Personal Palette"), string.Equals(CurrentCollectionGuid, personalPaletteGuid, StringComparison.Ordinal), 
+                LoadPersonalPaletteCollection,  personalPaletteGuid);
             
             dropdownMenu.AddSeparator("");
             
