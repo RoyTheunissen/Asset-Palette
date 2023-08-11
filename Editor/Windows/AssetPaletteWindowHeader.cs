@@ -50,9 +50,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 cachedCurrentCollectionSerializedObject?.Dispose();
                 cachedCurrentCollectionSerializedObject = null;
                 didCacheCurrentCollectionSerializedObject = false;
-                ClearCachedFolderSerializedProperties();
-                
-                ClearFoldersTreeView();
+                ClearCachedFoldersSerializedProperties();
             }
         }
 
@@ -122,7 +120,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
                     
-                    ClearCachedFolderSerializedProperties();
+                    ClearCachedFoldersSerializedProperties();
                 }
                 return cachedCurrentCollectionSerializedObject;
             }

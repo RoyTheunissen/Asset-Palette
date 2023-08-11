@@ -59,7 +59,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private string renameText;
 
-        private bool IsRenaming => PaletteFolder.IsFolderBeingRenamed || PaletteEntry.IsEntryBeingRenamed;
+        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed;
 
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;
@@ -212,12 +212,13 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return;
             
             CurrentCollectionSerializedObject.Update();
-            SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
-            foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
+            FoldersSerializedProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
             ApplyModifiedProperties();
 
             // Select the last folder.
             SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
+            
+            UpdateFoldersTreeView();
 
             Repaint();
         }
@@ -237,8 +238,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void StopAllRenames(bool isCancel)
         {
-            StopFolderRename(isCancel);
             StopEntryRename(isCancel);
+            CancelFolderRename();
         }
     }
 }

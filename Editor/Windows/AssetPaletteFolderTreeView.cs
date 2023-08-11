@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
@@ -22,15 +23,21 @@ namespace RoyTheunissen.AssetPalette.Windows
         public delegate void SelectedFolderHandler(AssetPaletteFolderTreeView treeView, PaletteFolder folder);
         public event SelectedFolderHandler SelectedFolderEvent;
         
-        public AssetPaletteFolderTreeView(TreeViewState state, SerializedProperty foldersProperty)
+        public delegate void RenamedFolderHandler(
+            AssetPaletteFolderTreeView treeView, PaletteFolder folder, string oldName, string newName);
+        public event RenamedFolderHandler RenamedFolderEvent;
+        
+        public AssetPaletteFolderTreeView(
+            TreeViewState state, SerializedProperty foldersProperty, PaletteFolder selectedFolder)
             : base(state)
         {
             this.foldersProperty = foldersProperty;
             
             Reload();
             
-            // Make sure the first item is always selected by default.
-            SelectionClick(rootItem.children[0], false);
+            // Make sure we select whatever folder should currently be selected.
+            TreeViewItem defaultSelectedItem = GetTreeViewItem(selectedFolder);
+            SelectionClick(defaultSelectedItem, false);
         }
 
         protected override TreeViewItem BuildRoot()
@@ -56,10 +63,56 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Return root of the tree
             return root;
         }
+        
+        private PaletteFolder GetFolder(int id)
+        {
+            return itemIndexToFolder[id];
+        }
+
+        private TreeViewItem GetTreeViewItem(PaletteFolder folder)
+        {
+            foreach (KeyValuePair<int,PaletteFolder> kvp in itemIndexToFolder)
+            {
+                if (kvp.Value == folder)
+                    return GetTreeViewItem(kvp.Key);
+            }
+
+            return null;
+        }
+        
+        private TreeViewItem GetTreeViewItem(int id)
+        {
+            return FindItem(id, rootItem);
+        }
 
         protected override bool CanMultiSelect(TreeViewItem item)
         {
             return false;
+        }
+
+        protected override bool CanRename(TreeViewItem item)
+        {
+            return true;
+        }
+
+        public void BeginRename(PaletteFolder folder)
+        {
+            TreeViewItem item = GetTreeViewItem(folder);
+            BeginRename(item);
+        }
+
+        protected override void RenameEnded(RenameEndedArgs args)
+        {
+            base.RenameEnded(args);
+
+            if (!args.acceptedRename)
+                return;
+            
+            PaletteFolder folder = GetFolder(args.itemID);
+            TreeViewItem item = GetTreeViewItem(args.itemID);
+            item.displayName = args.newName;
+            
+            RenamedFolderEvent?.Invoke(this, folder, args.originalName, args.newName);
         }
 
         protected override void SelectionChanged(IList<int> selectedIds)
