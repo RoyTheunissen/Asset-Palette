@@ -17,7 +17,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private const float FolderSpacing = 1;
         
-        [NonSerialized] private SerializedProperty foldersProperty;
+        [NonSerialized] private readonly SerializedProperty foldersProperty;
 
         [NonSerialized] private int lastItemIndex = 1;
 
@@ -30,7 +30,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private bool IsDraggingAssets => DragAndDrop.objectReferences.Length > 0;
 
-        private readonly Dictionary<int, PaletteFolder> itemIndexToFolder = new Dictionary<int, PaletteFolder>();
+        private readonly List<AssetPaletteFolderTreeViewItem> items = new List<AssetPaletteFolderTreeViewItem>();
         
         private string FolderDraggedFromName => (string)DragAndDrop.GetGenericData(
             AssetPaletteWindow.EntryDragGenericDataType);
@@ -64,7 +64,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             Reload();
             
             // Make sure we select whatever folder should currently be selected.
-            TreeViewItem defaultSelectedItem = GetTreeViewItem(selectedFolder);
+            TreeViewItem defaultSelectedItem = GetItem(selectedFolder);
             SelectionClick(defaultSelectedItem, false);
         }
 
@@ -73,43 +73,32 @@ namespace RoyTheunissen.AssetPalette.Windows
             TreeViewItem root = new TreeViewItem { id = 0, depth = -1, displayName = "Root" };
 
             // Add an item for every folder.
-            itemIndexToFolder.Clear();
             for (int i = 0; i < foldersProperty.arraySize; i++)
             {
                 SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
                 PaletteFolder folder = SerializedPropertyExtensions.GetValue<PaletteFolder>(folderProperty);
-                TreeViewItem folderItem = new TreeViewItem(lastItemIndex++, 0, folder.Name);
-                itemIndexToFolder.Add(folderItem.id, folder);
-                root.AddChild(folderItem);
+                AssetPaletteFolderTreeViewItem item = new AssetPaletteFolderTreeViewItem(
+                    lastItemIndex++, 0, folder.Name, folderProperty, folder);
+                root.AddChild(item);
+                items.Add(item);
             }
             
             return root;
         }
-        
-        private PaletteFolder GetFolder(int id)
+        private AssetPaletteFolderTreeViewItem GetItem(PaletteFolder folder)
         {
-            return id != 0 ? itemIndexToFolder[id] : null;
-        }
-        
-        private PaletteFolder GetFolder(TreeViewItem item)
-        {
-            return item == null ? null : GetFolder(item.id);
-        }
-
-        private TreeViewItem GetTreeViewItem(PaletteFolder folder)
-        {
-            foreach (KeyValuePair<int,PaletteFolder> kvp in itemIndexToFolder)
+            foreach (AssetPaletteFolderTreeViewItem item in items)
             {
-                if (kvp.Value == folder)
-                    return GetTreeViewItem(kvp.Key);
+                if (item.Folder == folder)
+                    return item;
             }
 
             return null;
         }
         
-        private TreeViewItem GetTreeViewItem(int id)
+        private AssetPaletteFolderTreeViewItem GetItem(int id)
         {
-            return FindItem(id, rootItem);
+            return (AssetPaletteFolderTreeViewItem)FindItem(id, rootItem);
         }
 
         protected override bool CanMultiSelect(TreeViewItem item)
@@ -124,13 +113,13 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
-            return itemIndexToFolder.Count > 1;
+            return items.Count > 1;
         }
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
         {
             int draggedItemID = args.draggedItemIDs[0];
-            PaletteFolder folder = GetFolder(draggedItemID);
+            PaletteFolder folder = GetItem(draggedItemID).Folder;
             
             DragAndDrop.PrepareStartDrag();
             DragAndDrop.SetGenericData(FolderDragGenericDataType, folder);
@@ -144,7 +133,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             if (IsDraggingAssets)
             {
-                PaletteFolder folderDraggedInto = GetFolder(args.parentItem);
+                AssetPaletteFolderTreeViewItem itemDraggedInto = args.parentItem as AssetPaletteFolderTreeViewItem;
+                PaletteFolder folderDraggedInto = itemDraggedInto?.Folder;
 
                 return args.dragAndDropPosition == DragAndDropPosition.UponItem
                        && folderDraggedInto != null && FolderDraggedFromName != folderDraggedInto.Name
@@ -158,20 +148,21 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void Drop(DragAndDropArgs args)
         {
-            PaletteFolder parentFolder = args.parentItem == null ? null : GetFolder(args.parentItem.id);
+            AssetPaletteFolderTreeViewItem itemDraggedInto = args.parentItem as AssetPaletteFolderTreeViewItem;
+            PaletteFolder folderDraggedInto = itemDraggedInto?.Folder;
             
             if (IsDraggingAssets)
             {
                 bool isDraggingEntriesFromAFolder = !string.IsNullOrEmpty(FolderDraggedFromName);
                 DroppedAssetsIntoFolderEvent?.Invoke(
-                    this, DragAndDrop.objectReferences, parentFolder, isDraggingEntriesFromAFolder);
+                    this, DragAndDrop.objectReferences, folderDraggedInto, isDraggingEntriesFromAFolder);
                 return;
             }
             
             PaletteFolder folderDragged = (PaletteFolder)DragAndDrop.GetGenericData(FolderDragGenericDataType);
 
             // If you dragged a folder outside, it should just be at the bottom of the root.
-            if (parentFolder == null && args.insertAtIndex == -1)
+            if (folderDraggedInto == null && args.insertAtIndex == -1)
                 args.insertAtIndex = rootItem.children.Count;
 
             DragAndDrop.SetGenericData(FolderDragGenericDataType, null);
@@ -180,7 +171,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         public void BeginRename(PaletteFolder folder)
         {
-            TreeViewItem item = GetTreeViewItem(folder);
+            TreeViewItem item = GetItem(folder);
             BeginRename(item);
         }
 
@@ -193,11 +184,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (!args.acceptedRename)
                 return;
             
-            PaletteFolder folder = GetFolder(args.itemID);
-            TreeViewItem item = GetTreeViewItem(args.itemID);
+            AssetPaletteFolderTreeViewItem item = GetItem(args.itemID);
             item.displayName = args.newName;
             
-            RenamedFolderEvent?.Invoke(this, folder, args.originalName, args.newName);
+            RenamedFolderEvent?.Invoke(this, item.Folder, args.originalName, args.newName);
         }
 
         protected override void SelectionChanged(IList<int> selectedIds)
@@ -214,24 +204,26 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (selectedIds.Count != 1)
                 return;
 
-            if (!itemIndexToFolder.TryGetValue(selectedIds[0], out PaletteFolder folder))
+            AssetPaletteFolderTreeViewItem item = GetItem(selectedIds[0]);
+            if (item == null)
                 return;
             
-            SelectedFolderEvent?.Invoke(this, folder);
+            SelectedFolderEvent?.Invoke(this, item.Folder);
         }
 
         protected override void ContextClickedItem(int id)
         {
             base.ContextClickedItem(id);
 
-            PaletteFolder folder = GetFolder(id);
+            AssetPaletteFolderTreeViewItem item = GetItem(id);
+            PaletteFolder folder = item.Folder;
             if (folder == null)
                 return;
 
             GenericMenu menu = new GenericMenu();
             menu.AddItem(new GUIContent("Rename"), false, () => BeginRename(folder));
             
-            if (itemIndexToFolder.Count > 1)
+            if (items.Count > 1)
                 menu.AddItem(new GUIContent("Delete"), false, () => DeleteFolderRequestedEvent?.Invoke(this, folder));
             
             menu.AddItem(new GUIContent("Create Folder"), false, () => CreateFolderRequestedEvent?.Invoke(this));
