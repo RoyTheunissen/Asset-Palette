@@ -13,23 +13,23 @@ namespace RoyTheunissen.AssetPalette.Windows
     {
         private const string AddEntryForCurrentSelectionText = "Add Shortcut For Project Window Selection";
 
-        private readonly string favoritesGuid = new Guid().ToString();
-        private AssetPaletteCollection cachedFavoritesCollection;
-        private AssetPaletteCollection FavoritesCollection
+        private readonly string personalPaletteGuid = "Personal Palette Guid";
+        private AssetPaletteCollection cachedPersonalPalette;
+        private AssetPaletteCollection PersonalPalette
         {
             get
             {
-                if (cachedFavoritesCollection == null)
+                if (cachedPersonalPalette == null)
                 {
-                    cachedFavoritesCollection = CreateInstance<AssetPaletteCollection>();
-                    cachedFavoritesCollection.name = "Favorites";
+                    cachedPersonalPalette = CreateInstance<AssetPaletteCollection>();
+                    cachedPersonalPalette.name = "Personal Palette";
                     
-                    string storedJson = EditorPrefs.GetString(FavoritesStorageKeyEditorPref, "");
+                    string storedJson = EditorPrefs.GetString(PersonalPaletteStorageKeyEditorPref, "");
                     if (!string.IsNullOrEmpty(storedJson))
-                        EditorJsonUtility.FromJsonOverwrite(storedJson, cachedFavoritesCollection);
+                        JsonUtility.FromJsonOverwrite(storedJson, cachedPersonalPalette);
                 }
 
-                return cachedFavoritesCollection;
+                return cachedPersonalPalette;
             }
         }
         
@@ -62,9 +62,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 if (cachedCurrentCollection == null)
                 {
-                    if (CurrentCollectionGuid == favoritesGuid)
+                    if (CurrentCollectionGuid == personalPaletteGuid)
                     {
-                        cachedCurrentCollection = FavoritesCollection;
+                        cachedCurrentCollection = PersonalPalette;
                     }
                     else
                     {
@@ -95,9 +95,10 @@ namespace RoyTheunissen.AssetPalette.Windows
                     return;
                 }
 
-                if (value == FavoritesCollection)
+                
+                if (value == PersonalPalette)
                 {
-                    CurrentCollectionGuid = favoritesGuid;
+                    CurrentCollectionGuid = personalPaletteGuid;
                 }
                 else
                 {
@@ -257,7 +258,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 dropdownMenu.AddItem(new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
             }
 
-            dropdownMenu.AddItem(new GUIContent("Favorites"), CurrentCollectionGuid == favoritesGuid, LoadFavoritesCollection,  favoritesGuid);
+            dropdownMenu.AddItem(new GUIContent("Favorites"), CurrentCollectionGuid == personalPaletteGuid, LoadFavoritesCollection,  personalPaletteGuid);
             
             dropdownMenu.AddSeparator("");
             
@@ -298,7 +299,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void LoadFavoritesCollection(object userdata)
         {
-            CurrentCollectionGuid = favoritesGuid;
+            CurrentCollectionGuid = personalPaletteGuid;
             Repaint();
         }
         

@@ -33,7 +33,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
         private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
         
-        private static string FavoritesStorageKeyEditorPref => EditorPrefPrefix + "FavoritesStorageKey";
+        private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "FavoritesStorageKey";
 
 
         private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;
@@ -107,7 +107,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             // Clear the currently saved GUID when the collection has been destroyed.
             if (!string.IsNullOrEmpty(CurrentCollectionGuid) && CurrentCollection == null)
-                CurrentCollectionGuid = favoritesGuid;
+                CurrentCollectionGuid = personalPaletteGuid;
             
             PaletteDrawing.ActivePaletteWindow = this;
 
