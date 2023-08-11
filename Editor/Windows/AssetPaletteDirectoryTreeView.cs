@@ -1,5 +1,9 @@
+using System;
 using System.Collections.Generic;
+using RoyTheunissen.AssetPalette.Extensions;
+using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
@@ -8,14 +12,26 @@ namespace RoyTheunissen.AssetPalette.Windows
     /// </summary>
     public class AssetPaletteDirectoryTreeView : TreeView
     {
-        public AssetPaletteDirectoryTreeView(TreeViewState state) : base(state)
-        {
-            Reload();
-        }
+        [NonSerialized] private SerializedProperty foldersProperty;
 
-        public AssetPaletteDirectoryTreeView(TreeViewState state, MultiColumnHeader multiColumnHeader)
-            : base(state, multiColumnHeader)
+        [NonSerialized] private int lastItemIndex;
+
+        [NonSerialized] private bool didInitialSelection;
+        
+        private Dictionary<int, PaletteFolder> itemIndexToFolder = new Dictionary<int, PaletteFolder>();
+        
+        public delegate void SelectedFolderHandler(AssetPaletteDirectoryTreeView treeView, PaletteFolder folder);
+        public event SelectedFolderHandler SelectedFolderEvent;
+        
+        public AssetPaletteDirectoryTreeView(TreeViewState state, SerializedProperty foldersProperty)
+            : base(state)
         {
+            this.foldersProperty = foldersProperty;
+            
+            Reload();
+            
+            // Make sure the first item is always selected by default.
+            SelectionClick(rootItem.children[0], false);
         }
 
         protected override TreeViewItem BuildRoot()
@@ -27,24 +43,44 @@ namespace RoyTheunissen.AssetPalette.Windows
             // This section illustrates that IDs should be unique. The root item is required to 
             // have a depth of -1, and the rest of the items increment from that.
             TreeViewItem root = new TreeViewItem { id = 0, depth = -1, displayName = "Root" };
-            List<TreeViewItem> allItems = new List<TreeViewItem> 
+
+            itemIndexToFolder.Clear();
+            for (int i = 0; i < foldersProperty.arraySize; i++)
             {
-                new TreeViewItem {id = 1, depth = 0, displayName = "Animals that are very nice and should definitely be respected all the time not just on Sundays"},
-                new TreeViewItem {id = 2, depth = 1, displayName = "Mammals"},
-                new TreeViewItem {id = 3, depth = 2, displayName = "Tiger"},
-                new TreeViewItem {id = 4, depth = 2, displayName = "Elephant"},
-                new TreeViewItem {id = 5, depth = 2, displayName = "Okapi"},
-                new TreeViewItem {id = 6, depth = 2, displayName = "Armadillo"},
-                new TreeViewItem {id = 7, depth = 1, displayName = "Reptiles"},
-                new TreeViewItem {id = 8, depth = 2, displayName = "Crocodile"},
-                new TreeViewItem {id = 9, depth = 2, displayName = "Lizard"},
-            };
-            
-            // Utility method that initializes the TreeViewItem.children and .parent for all items.
-            SetupParentsAndChildrenFromDepths(root, allItems);
-            
+                SerializedProperty folderProperty = foldersProperty.GetArrayElementAtIndex(i);
+                PaletteFolder folder = SerializedPropertyExtensions.GetValue<PaletteFolder>(folderProperty);
+                TreeViewItem folderItem = new TreeViewItem(lastItemIndex++, 0, folder.Name);
+                itemIndexToFolder.Add(folderItem.id, folder);
+                root.AddChild(folderItem);
+            }
+
             // Return root of the tree
             return root;
+        }
+
+        protected override bool CanMultiSelect(TreeViewItem item)
+        {
+            return false;
+        }
+
+        protected override void SelectionChanged(IList<int> selectedIds)
+        {
+            base.SelectionChanged(selectedIds);
+
+            // The initial selection is not a selection "change" so we don't need to inform the window.
+            if (!didInitialSelection)
+            {
+                didInitialSelection = true;
+                return;
+            }
+            
+            if (selectedIds.Count != 1)
+                return;
+
+            if (!itemIndexToFolder.TryGetValue(selectedIds[0], out PaletteFolder folder))
+                return;
+            
+            SelectedFolderEvent?.Invoke(this, folder);
         }
     }
 }

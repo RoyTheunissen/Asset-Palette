@@ -143,13 +143,32 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private PaletteFolder folderBelowCursorOnMouseDown;
         
-        private void InitializeDirectoriesTreeView()
+        private void InitializeDirectoriesTreeView(SerializedProperty foldersProperty)
         {
             if (directoriesTreeViewState == null)
                 directoriesTreeViewState = new TreeViewState();
-            directoriesTreeView = new AssetPaletteDirectoryTreeView(directoriesTreeViewState);
+            if (directoriesTreeView == null)
+            {
+                directoriesTreeView = new AssetPaletteDirectoryTreeView(directoriesTreeViewState, foldersProperty);
+                directoriesTreeView.SelectedFolderEvent += HandleTreeViewSelectedFolderEvent;
+            }
         }
-        
+
+        private void ClearDirectoriesTreeView()
+        {
+            directoriesTreeViewState = null;
+            if (directoriesTreeView != null)
+            {
+                directoriesTreeView.SelectedFolderEvent -= HandleTreeViewSelectedFolderEvent;
+                directoriesTreeView = null;
+            }
+        }
+
+        private void HandleTreeViewSelectedFolderEvent(AssetPaletteDirectoryTreeView treeView, PaletteFolder folder)
+        {
+            SelectedFolder = folder;
+        }
+
         private void EnsureFolderExists()
         {
             if (CurrentCollection.Folders.Count > 0)
@@ -438,6 +457,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DrawFoldersUsingTreeView(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
         {
+            InitializeDirectoriesTreeView(foldersProperty);
+            
             Rect position = GUILayoutUtility.GetRect(
                 GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             position.xMax -= 2;

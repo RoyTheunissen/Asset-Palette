@@ -51,6 +51,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 cachedCurrentCollectionSerializedObject = null;
                 didCacheCurrentCollectionSerializedObject = false;
                 ClearCachedFolderSerializedProperties();
+                
+                ClearDirectoriesTreeView();
             }
         }
 
