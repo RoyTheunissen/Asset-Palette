@@ -115,7 +115,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
-                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null)
+                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null || cachedCurrentCollectionSerializedObject.targetObject == null)
                 {
                     didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
@@ -125,7 +125,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return cachedCurrentCollectionSerializedObject;
             }
         }
-        
+
         [NonSerialized] private static Type[] cachedFolderTypes;
         [NonSerialized] private static bool didCacheFolderTypes;
         private static Type[] FolderTypes
