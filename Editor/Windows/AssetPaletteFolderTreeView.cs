@@ -234,6 +234,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (itemIndexToFolder.Count > 1)
                 menu.AddItem(new GUIContent("Delete"), false, () => DeleteFolderRequestedEvent?.Invoke(this, folder));
             
+            menu.AddItem(new GUIContent("Create Folder"), false, () => CreateFolderRequestedEvent?.Invoke(this));
+            
             menu.ShowAsContext();
             
             Event.current.Use();
