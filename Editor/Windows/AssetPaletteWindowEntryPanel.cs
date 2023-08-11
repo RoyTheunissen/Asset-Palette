@@ -251,7 +251,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             // NOTE: *Need* to apply this after every individual change because otherwise GetValue<> will not return
             // correct values, and we need to do it that way to have 2020 support because Unity 2020 has a setter for
-            // managedReferenceValue but not a setter >_>
+            // managedReferenceValue but not a getter >_>
             ApplyModifiedProperties();
         }
 

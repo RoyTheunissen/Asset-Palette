@@ -29,9 +29,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static string ZoomLevelEditorPref => EditorPrefPrefix + "ZoomLevel";
         private static string SelectedFolderIndexEditorPref => EditorPrefPrefix + "SelectedFolderIndex";
         private static string EntriesSortModeEditorPref => EditorPrefPrefix + "EntriesSortMode";
-
-        private const string FolderDragGenericDataType = "AssetPaletteFolderDrag";
-        private const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
+        
+        public const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
         
         private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";
 
@@ -59,7 +58,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private string renameText;
 
-        private bool IsRenaming => PaletteFolder.IsFolderBeingRenamed || PaletteEntry.IsEntryBeingRenamed;
+        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed || IsFolderBeingRenamed;
 
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;
@@ -99,16 +98,21 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void OnUndoRedoPerformed()
         {
-            // Repaint immediately otherwise you don't see the result of your undo!
+            // Repaint otherwise it may have done the undo but you won't see the result.
+            EditorApplication.delayCall += UpdateAndRepaint;
+        }
+
+        private void UpdateAndRepaint()
+        {
+            UpdateFoldersTreeView();
             Repaint();
         }
 
         private void OnGUI()
         {
-            // Clear the currently saved GUID when the collection has been destroyed or none is selected.
+            // Fall back to the personal palette when no valid palette asset is available.
             if (string.IsNullOrEmpty(CurrentCollectionGuid) || CurrentCollection == null)
                 CurrentCollectionGuid = personalPaletteGuid;
-            
             PaletteDrawing.ActivePaletteWindow = this;
 
             UpdateMouseOverStates();
@@ -160,7 +164,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void PerformKeyboardShortcuts()
         {
-            if (Event.current.type != EventType.KeyDown)
+            if (Event.current.type != EventType.KeyDown || IsFolderBeingRenamed)
                 return;
 
             if (IsRenaming)
@@ -177,6 +181,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                         Event.current.Use();
                         return;
                 }
+
+                // Busy with a rename, don't do any special shortcuts.
+                return;
             }
 
             if (Event.current.keyCode == KeyCode.F2 && entriesSelected.Count == 1)
@@ -187,7 +194,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
-            if (Event.current.control && Event.current.keyCode == KeyCode.A && !IsRenaming)
+            if (Event.current.control && Event.current.keyCode == KeyCode.A)
             {
                 SelectEntries(GetEntries(), true);
                 if (GetEntryCount() > 0)
@@ -197,34 +204,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             if ((Event.current.keyCode == KeyCode.Delete ||
-                 Event.current.command && Event.current.keyCode == KeyCode.Backspace) && !IsRenaming)
+                 Event.current.command && Event.current.keyCode == KeyCode.Backspace))
             {
                 if (isMouseInEntriesPanel)
                     RemoveSelectedEntries();
                 else if (isMouseInFolderPanel && !IsDraggingFolder)
                     RemoveSelectedFolder();
             }
-        }
-
-        private void RemoveSelectedFolder()
-        {
-            if (!HasCollection || CurrentCollection.Folders.Count <= 1)
-                return;
-            
-            CurrentCollectionSerializedObject.Update();
-            SerializedProperty foldersProperty = CurrentCollectionSerializedObject.FindProperty("folders");
-            foldersProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
-            ApplyModifiedProperties();
-
-            // Select the last folder.
-            SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
-
-            Repaint();
-        }
-        
-        private void RenameSelectedFolder()
-        {
-            StartFolderRename(SelectedFolder);
         }
 
         public void RemoveSelectedEntries()
@@ -237,8 +223,37 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void StopAllRenames(bool isCancel)
         {
-            StopFolderRename(isCancel);
             StopEntryRename(isCancel);
+            CancelFolderRename();
+        }
+        
+        private void OnLostFocus()
+        {
+            StopAllRenames(false);
+        }
+
+        private void OnSelectionChange()
+        {
+            StopAllRenames(false);
+        }
+
+        private void OnFocus()
+        {
+            StopAllRenames(false);
+        }
+
+        private void OnProjectChange()
+        {
+            StopAllRenames(false);
+            
+            UpdateAndRepaint();
+        }
+
+        public void OnPaletteAssetImported()
+        {
+            StopAllRenames(false);
+            
+            UpdateAndRepaint();
         }
     }
 }
