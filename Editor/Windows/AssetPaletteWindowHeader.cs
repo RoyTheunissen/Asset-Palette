@@ -249,19 +249,21 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Allow a new collection to be created.
             GenericMenu dropdownMenu = new GenericMenu();
 
+            dropdownMenu.AddItem(new GUIContent("Personal Palette"), string.Equals(CurrentCollectionGuid, personalPaletteGuid, StringComparison.Ordinal), 
+                LoadPersonalPaletteCollection,  personalPaletteGuid);
+
+            dropdownMenu.AddSeparator("");
+
             // Add any existing collections that we find as options.
             for (int i = 0; i < existingCollectionGuids.Length; i++)
             {
                 string collectionGuid = existingCollectionGuids[i];
-                bool isCurrentCollection = string.Equals(
-                    collectionGuid, CurrentCollectionGuid, StringComparison.Ordinal);
+                bool isCurrentCollection = string.Equals(collectionGuid, CurrentCollectionGuid, StringComparison.Ordinal);
                 string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collectionGuid));
-                dropdownMenu.AddItem(new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
+                dropdownMenu.AddItem(
+                    new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
             }
 
-            dropdownMenu.AddItem(new GUIContent("Personal Palette"), string.Equals(CurrentCollectionGuid, personalPaletteGuid, StringComparison.Ordinal), 
-                LoadPersonalPaletteCollection,  personalPaletteGuid);
-            
             dropdownMenu.AddSeparator("");
             
             dropdownMenu.AddItem(new GUIContent("Create New..."), false, CreateNewCollection);

@@ -268,11 +268,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorGUI.DrawRect(entriesPanelRect, new Color(0, 0, 0, 0.1f));
 
             // If the current state is invalid, draw a message instead.
-            bool hasCollection = HasCollection;
-            bool hasEntries = hasCollection && GetEntryCount() > 0;
-            if (!hasCollection || !hasEntries)
+            bool hasEntries = GetEntryCount() > 0;
+            if (!hasEntries)
             {
-                DrawEntryPanelMessage(hasCollection);
+                DrawEntryPanelMessage();
                 GUILayout.EndScrollView();
                 return;
             }
@@ -587,29 +586,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             DragAndDrop.SetGenericData(EntryDragGenericDataType, null);
         }
 
-        private void DrawEntryPanelMessage(bool hasCollection)
+        private void DrawEntryPanelMessage()
         {
             GUILayout.FlexibleSpace();
 
-            if (!hasCollection)
-            {
-                EditorGUILayout.LabelField(
-                    "To begin organizing assets, create a collection.", MessageTextStyle);
-                EditorGUILayout.BeginHorizontal();
-                {
-                    GUILayout.FlexibleSpace();
-                    bool shouldCreate = GUILayout.Button("Create", GUILayout.Width(100));
-                    GUILayout.FlexibleSpace();
-
-                    if (shouldCreate)
-                        CreateNewCollection();
-                }
-                EditorGUILayout.EndHorizontal();
-            }
-            else
-            {
-                EditorGUILayout.LabelField("Drag assets here!", MessageTextStyle);
-            }
+            EditorGUILayout.LabelField("Drag assets here!", MessageTextStyle);
 
             GUILayout.FlexibleSpace();
         }
