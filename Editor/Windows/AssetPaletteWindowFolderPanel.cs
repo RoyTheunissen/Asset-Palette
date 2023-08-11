@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using RoyTheunissen.AssetPalette.CustomEditors;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
@@ -24,6 +25,9 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private int folderToDragIndex;
 
         [NonSerialized] private bool isResizingFolderPanel;
+        
+        [SerializeField] private TreeViewState directoriesTreeViewState;
+        private AssetPaletteDirectoryTreeView directoriesTreeView;
         
         private Vector2 folderPanelScrollPosition;
         
@@ -138,6 +142,13 @@ namespace RoyTheunissen.AssetPalette.Windows
         }
         
         [NonSerialized] private PaletteFolder folderBelowCursorOnMouseDown;
+        
+        private void InitializeDirectoriesTreeView()
+        {
+            if (directoriesTreeViewState == null)
+                directoriesTreeViewState = new TreeViewState();
+            directoriesTreeView = new AssetPaletteDirectoryTreeView(directoriesTreeViewState);
+        }
         
         private void EnsureFolderExists()
         {
@@ -271,6 +282,9 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DrawFolders(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
         {
+            DrawFoldersUsingTreeView(foldersProperty, didClickAnywhereInWindow);
+            return;
+            
             bool isDraggingAssets = DragAndDrop.objectReferences.Length > 0;
             string folderDraggedFrom = (string)DragAndDrop.GetGenericData(EntryDragGenericDataType);
             bool isDraggingEntriesFromAFolder = folderDraggedFrom != null;
@@ -420,6 +434,15 @@ namespace RoyTheunissen.AssetPalette.Windows
                     }
                 }
             }
+        }
+
+        private void DrawFoldersUsingTreeView(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
+        {
+            Rect position = GUILayoutUtility.GetRect(
+                GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            position.xMax -= 2;
+            
+            directoriesTreeView.OnGUI(position);
         }
 
         private void DoFolderContextMenu(PaletteFolder folder)

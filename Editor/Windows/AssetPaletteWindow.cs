@@ -88,6 +88,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void OnEnable()
         {
+            InitializeDirectoriesTreeView();
+            
             Undo.undoRedoPerformed -= OnUndoRedoPerformed;
             Undo.undoRedoPerformed += OnUndoRedoPerformed;
         }
