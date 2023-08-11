@@ -135,9 +135,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return cachedSelectedFolderSerializedProperty;
             }
         }
-        
-        [NonSerialized] private PaletteFolder folderBelowCursorOnMouseDown;
-        
+
         private void InitializeFoldersTreeView()
         {
             if (foldersTreeViewState == null)
@@ -262,11 +260,6 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void DrawFolderPanel()
         {
-            // It seems like mouse events are relative to scroll views.
-            bool didClickAnywhereInWindow = Event.current.type == EventType.MouseDown && Event.current.button == 0;
-            if (didClickAnywhereInWindow)
-                folderBelowCursorOnMouseDown = null;
-
             folderPanelScrollPosition = EditorGUILayout.BeginScrollView(
                 folderPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
                 GUILayout.Width(FolderPanelWidth));
