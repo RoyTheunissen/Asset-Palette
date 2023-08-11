@@ -115,7 +115,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
-                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null || cachedCurrentCollectionSerializedObject.targetObject == null)
+                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null
+                                                    || cachedCurrentCollectionSerializedObject.targetObject == null)
                 {
                     didCacheCurrentCollectionSerializedObject = true;
                     cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
