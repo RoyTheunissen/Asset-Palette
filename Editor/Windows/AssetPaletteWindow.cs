@@ -58,7 +58,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private string renameText;
 
-        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed;
+        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed
+                                   || foldersTreeView != null && foldersTreeView.IsRenaming;
 
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;
@@ -181,6 +182,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                         Event.current.Use();
                         return;
                 }
+
+                // Busy with a rename, don't do any special shortcuts.
+                return;
             }
 
             if (Event.current.keyCode == KeyCode.F2 && entriesSelected.Count == 1)
@@ -191,7 +195,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
-            if (Event.current.control && Event.current.keyCode == KeyCode.A && !IsRenaming)
+            if (Event.current.control && Event.current.keyCode == KeyCode.A)
             {
                 SelectEntries(GetEntries(), true);
                 if (GetEntryCount() > 0)
@@ -201,7 +205,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             if ((Event.current.keyCode == KeyCode.Delete ||
-                 Event.current.command && Event.current.keyCode == KeyCode.Backspace) && !IsRenaming)
+                 Event.current.command && Event.current.keyCode == KeyCode.Backspace))
             {
                 if (isMouseInEntriesPanel)
                     RemoveSelectedEntries();

@@ -22,8 +22,11 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         public bool IsDragging => isDragging;
         
+        private bool isRenaming;
+        public bool IsRenaming => isRenaming;
+
         private Dictionary<int, PaletteFolder> itemIndexToFolder = new Dictionary<int, PaletteFolder>();
-        
+
         public delegate void SelectedFolderHandler(AssetPaletteFolderTreeView treeView, PaletteFolder folder);
         public event SelectedFolderHandler SelectedFolderEvent;
         
@@ -151,6 +154,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         protected override void RenameEnded(RenameEndedArgs args)
         {
             base.RenameEnded(args);
+            
+            isRenaming = false;
 
             if (!args.acceptedRename)
                 return;
@@ -197,6 +202,15 @@ namespace RoyTheunissen.AssetPalette.Windows
                 menu.AddItem(new GUIContent("Delete"), false, () => DeleteFolderRequestedEvent?.Invoke(this, folder));
             
             menu.ShowAsContext();
+        }
+
+        protected override void RowGUI(RowGUIArgs args)
+        {
+            base.RowGUI(args);
+
+            // This is the only way we can detect if we're currently renaming or not.
+            if (args.isRenaming)
+                isRenaming = true;
         }
     }
 }
