@@ -98,8 +98,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void OnUndoRedoPerformed()
         {
-            // Repaint immediately otherwise you don't see the result of your undo!
-            UpdateAndRepaint();
+            // Repaint otherwise it may have done the undo but you won't see the result.
+            EditorApplication.delayCall += UpdateAndRepaint;
         }
 
         private void UpdateAndRepaint()
