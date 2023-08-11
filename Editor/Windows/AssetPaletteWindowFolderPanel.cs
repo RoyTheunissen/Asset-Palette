@@ -152,9 +152,10 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.SelectedFolderEvent += HandleTreeViewSelectedFolderEvent;
                 foldersTreeView.RenamedFolderEvent += HandleTreeViewRenamedFolderEvent;
                 foldersTreeView.MovedFolderEvent += HandleTreeViewMovedFolderEvent;
+                foldersTreeView.DeleteFolderRequestedEvent += HandleTreeViewDeleteFolderRequestedEvent;
             }
         }
-        
+
         private void UpdateFoldersTreeView()
         {
             ClearFoldersTreeView();
@@ -169,6 +170,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.SelectedFolderEvent -= HandleTreeViewSelectedFolderEvent;
                 foldersTreeView.RenamedFolderEvent -= HandleTreeViewRenamedFolderEvent;
                 foldersTreeView.MovedFolderEvent -= HandleTreeViewMovedFolderEvent;
+                foldersTreeView.DeleteFolderRequestedEvent -= HandleTreeViewDeleteFolderRequestedEvent;
                 foldersTreeView = null;
             }
         }
@@ -305,17 +307,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             foldersTreeView.OnGUI(position);
         }
 
-        private void DoFolderContextMenu(PaletteFolder folder)
-        {
-            GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Rename"), false, RenameSelectedFolder);
-            
-            if (CurrentCollection.Folders.Count > 1)
-                menu.AddItem(new GUIContent("Delete"), false, RemoveSelectedFolder);
-            
-            menu.ShowAsContext();
-        }
-
         private void DrawResizableFolderPanelDivider()
         {
             EditorGUI.DrawRect(DividerRect, DividerColor);
@@ -405,11 +396,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             ApplyModifiedProperties();
             Repaint();
         }
-        
+
+        private int GetFolderIndex(PaletteFolder folder) => CurrentCollection.Folders.IndexOf(folder);
+
         private void HandleTreeViewMovedFolderEvent(
             AssetPaletteFolderTreeView treeView, PaletteFolder folder, int toIndex)
         {
-            int folderToDragIndex = CurrentCollection.Folders.IndexOf(folder);
+            int folderToDragIndex = GetFolderIndex(folder);
             
             // If you want to drag a folder downwards, keep in mind that the indices will shift as a result from the
             // dragged folder not being where it used to be any more.
@@ -428,6 +421,34 @@ namespace RoyTheunissen.AssetPalette.Windows
             SelectedFolderIndex = toIndex;
 
             UpdateAndRepaint();
+        }
+        
+        private void HandleTreeViewDeleteFolderRequestedEvent(AssetPaletteFolderTreeView treeView, PaletteFolder folder)
+        {
+            RemoveSelectedFolder();
+        }
+        
+        private void RemoveFolder(PaletteFolder folder)
+        {
+            if (folder == null || !HasCollection || CurrentCollection.Folders.Count <= 1)
+                return;
+
+            int folderIndex = GetFolderIndex(folder);
+            CurrentCollectionSerializedObject.Update();
+            FoldersSerializedProperty.DeleteArrayElementAtIndex(folderIndex);
+            ApplyModifiedProperties();
+
+            // Select the last folder.
+            SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
+            
+            UpdateFoldersTreeView();
+
+            Repaint();
+        }
+
+        private void RemoveSelectedFolder()
+        {
+            RemoveFolder(SelectedFolder);
         }
     }
 }

@@ -210,28 +210,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void RemoveSelectedFolder()
-        {
-            if (!HasCollection || CurrentCollection.Folders.Count <= 1)
-                return;
-            
-            CurrentCollectionSerializedObject.Update();
-            FoldersSerializedProperty.DeleteArrayElementAtIndex(SelectedFolderIndex);
-            ApplyModifiedProperties();
-
-            // Select the last folder.
-            SelectedFolderIndex = CurrentCollection.Folders.Count - 1;
-            
-            UpdateFoldersTreeView();
-
-            Repaint();
-        }
-        
-        private void RenameSelectedFolder()
-        {
-            StartFolderRename(SelectedFolder);
-        }
-
         public void RemoveSelectedEntries()
         {
             RemoveEntries(entriesSelected);
