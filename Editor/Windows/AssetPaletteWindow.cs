@@ -105,7 +105,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void OnGUI()
         {
-            // Clear the currently saved GUID when the collection has been destroyed or none is selected.
+            // Fall back to the personal palette when no valid palette asset is available.
             if (string.IsNullOrEmpty(CurrentCollectionGuid) || CurrentCollection == null)
                 CurrentCollectionGuid = personalPaletteGuid;
             
