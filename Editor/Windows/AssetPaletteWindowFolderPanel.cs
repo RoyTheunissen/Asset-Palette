@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
-using RoyTheunissen.AssetPalette.CustomEditors;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using RectExtensions = RoyTheunissen.AssetPalette.Extensions.RectExtensions;
 using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
 namespace RoyTheunissen.AssetPalette.Windows
@@ -282,7 +279,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 if (HasCollection)
                 {
                     CurrentCollectionSerializedObject.Update();
-                    DrawFolders(FoldersSerializedProperty, didClickAnywhereInWindow);
+                    DrawFolders();
                     CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
                 }
             }
@@ -292,13 +289,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             DrawResizableFolderPanelDivider();
         }
 
-        private void DrawFolders(SerializedProperty foldersProperty, bool didClickAnywhereInWindow)
+        private void DrawFolders()
         {
-            DrawFoldersUsingTreeView(didClickAnywhereInWindow);
-        }
-
-        private void DrawFoldersUsingTreeView(bool didClickAnywhereInWindow)
-        {
+            InitializeFoldersTreeView();
+            
             Rect position = GUILayoutUtility.GetRect(
                 GUIContent.none, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             position.xMax -= 2;
