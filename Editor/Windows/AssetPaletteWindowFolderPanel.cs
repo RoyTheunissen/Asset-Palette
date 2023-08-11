@@ -150,6 +150,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.RenamedFolderEvent += HandleTreeViewRenamedFolderEvent;
                 foldersTreeView.MovedFolderEvent += HandleTreeViewMovedFolderEvent;
                 foldersTreeView.DeleteFolderRequestedEvent += HandleTreeViewDeleteFolderRequestedEvent;
+                foldersTreeView.CreateFolderRequestedEvent += HandleTreeViewCreateFolderRequestedEvent;
             }
         }
 
@@ -168,6 +169,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.RenamedFolderEvent -= HandleTreeViewRenamedFolderEvent;
                 foldersTreeView.MovedFolderEvent -= HandleTreeViewMovedFolderEvent;
                 foldersTreeView.DeleteFolderRequestedEvent -= HandleTreeViewDeleteFolderRequestedEvent;
+                foldersTreeView.CreateFolderRequestedEvent -= HandleTreeViewCreateFolderRequestedEvent;
                 foldersTreeView = null;
             }
         }
@@ -233,9 +235,49 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             return GetUniqueFolderName(desiredName, previousAttempts + 1);
         }
-
-        private PaletteFolder CreateNewFolderOfType(Type type, string name)
+        
+        private void TryCreateNewFolderDropDown(Rect newFolderRect)
         {
+            if (!HasMultipleFolderTypes)
+            {
+                CreateNewFolder<PaletteFolder>();
+                return;
+            }
+
+            GenericMenu dropdownMenu = GetCreateNewFolderDropdown();
+            dropdownMenu.DropDown(newFolderRect);
+        }
+        
+        private void TryCreateNewFolderContext()
+        {
+            if (!HasMultipleFolderTypes)
+            {
+                CreateNewFolder<PaletteFolder>();
+                return;
+            }
+
+            GenericMenu dropdownMenu = GetCreateNewFolderDropdown();
+            dropdownMenu.ShowAsContext();
+        }
+        
+        private GenericMenu GetCreateNewFolderDropdown()
+        {
+            GenericMenu dropdownMenu = new GenericMenu();
+
+            foreach (Type type in FolderTypes)
+            {
+                string name = type.Name.RemoveSuffix("Folder").ToHumanReadable();
+                dropdownMenu.AddItem(new GUIContent(name), false, () => CreateNewFolder(type));
+            }
+
+            return dropdownMenu;
+        }
+
+        private PaletteFolder CreateNewFolder(Type type, string name = null)
+        {
+            if (string.IsNullOrEmpty(name))
+                name = GetUniqueFolderName(NewFolderName);
+
             PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
             newFolder.Initialize(name);
 
@@ -251,13 +293,16 @@ namespace RoyTheunissen.AssetPalette.Windows
             SelectedFolder = newFolder;
 
             UpdateFoldersTreeView();
+            
+            StartFolderRename(newFolder);
 
             return newFolder;
         }
 
-        private FolderType CreateNewFolder<FolderType>(string name) where FolderType : PaletteFolder
+        private FolderType CreateNewFolder<FolderType>(string name = null)
+            where FolderType : PaletteFolder
         {
-            return (FolderType)CreateNewFolderOfType(typeof(FolderType), name);
+            return (FolderType)CreateNewFolder(typeof(FolderType), name);
         }
         
         private void DrawFolderPanel()
@@ -415,6 +460,11 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void HandleTreeViewDeleteFolderRequestedEvent(AssetPaletteFolderTreeView treeView, PaletteFolder folder)
         {
             RemoveSelectedFolder();
+        }
+        
+        private void HandleTreeViewCreateFolderRequestedEvent(AssetPaletteFolderTreeView treeview)
+        {
+            TryCreateNewFolderContext();
         }
         
         private void RemoveFolder(PaletteFolder folder)

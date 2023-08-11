@@ -174,12 +174,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 HasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
             GUI.enabled = true;
             if (createNewFolder)
-            {
-                if (HasMultipleFolderTypes)
-                    DoCreateNewFolderDropDown(newFolderRect);
-                else
-                    CreateNewFolderFromDropDown(typeof(PaletteFolder));
-            }
+                TryCreateNewFolderDropDown(newFolderRect);
         }
 
         private void DrawEntryPanelHeader(Rect headerRect)
@@ -307,27 +302,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             CurrentCollectionGuid = personalPaletteGuid;
             Repaint();
         }
-        
-        private void DoCreateNewFolderDropDown(Rect position)
-        {
-            GenericMenu dropdownMenu = new GenericMenu();
 
-            foreach (Type type in FolderTypes)
-            {
-                string name = type.Name.RemoveSuffix("Folder").ToHumanReadable();
-                dropdownMenu.AddItem(new GUIContent(name), false, CreateNewFolderFromDropDown, type);
-            }
-
-            dropdownMenu.DropDown(position);
-        }
-        
-        private void CreateNewFolderFromDropDown(object userdata)
-        {
-            // Create a new instance of the specified folder type.
-            PaletteFolder newFolder = CreateNewFolderOfType((Type)userdata, GetUniqueFolderName(NewFolderName));
-            StartFolderRename(newFolder);
-        }
-        
         private bool HasProjectWindowSelection()
         {
             Object[] selectionFiltered = Selection.GetFiltered<Object>(SelectionMode.Assets);

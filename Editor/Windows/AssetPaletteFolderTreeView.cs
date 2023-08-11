@@ -40,6 +40,9 @@ namespace RoyTheunissen.AssetPalette.Windows
         public delegate void DeleteFolderRequestedHandler(AssetPaletteFolderTreeView treeView, PaletteFolder folder);
         public event DeleteFolderRequestedHandler DeleteFolderRequestedEvent;
         
+        public delegate void CreateFolderRequestedHandler(AssetPaletteFolderTreeView treeView);
+        public event CreateFolderRequestedHandler CreateFolderRequestedEvent;
+        
         public AssetPaletteFolderTreeView(
             TreeViewState state, SerializedProperty foldersProperty, PaletteFolder selectedFolder)
             : base(state)
@@ -201,6 +204,17 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (id > 1)
                 menu.AddItem(new GUIContent("Delete"), false, () => DeleteFolderRequestedEvent?.Invoke(this, folder));
             
+            menu.ShowAsContext();
+            
+            Event.current.Use();
+        }
+
+        protected override void ContextClicked()
+        {
+            base.ContextClicked();
+
+            GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Create Folder"), false, () => CreateFolderRequestedEvent?.Invoke(this));
             menu.ShowAsContext();
         }
 
