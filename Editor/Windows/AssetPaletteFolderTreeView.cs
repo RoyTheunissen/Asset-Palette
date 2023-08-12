@@ -271,9 +271,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 menu.AddItem(new GUIContent("Delete"), false, () => DeleteFolderRequestedEvent?.Invoke(this, item.Property));
             
             menu.AddItem(new GUIContent("Create Folder"), false, () => CreateNewFolder(item));
-            
-            menu.AddItem(new GUIContent("TEST"), false, () => TestFolderReferencePath(item));
-            
+
             menu.ShowAsContext();
             
             Event.current.Use();
@@ -282,15 +280,6 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void CreateNewFolder(AssetPaletteFolderTreeViewItem parentItem = null)
         {
             CreateFolderRequestedEvent?.Invoke(this, parentItem?.Property);
-        }
-
-        private void TestFolderReferencePath(AssetPaletteFolderTreeViewItem item)
-        {
-            string referencePath = item.Property.GetReferenceIdPath("children");
-            SerializedProperty validatedProperty = SerializedObject.FindPropertyFromReferenceIdPath(
-                referencePath, "folders", "children");
-            PaletteFolder folder = validatedProperty?.GetValue<PaletteFolder>();
-            Debug.Log($"Folder {item.Folder} reference path is: '{referencePath}' => '{folder}'");
         }
 
         protected override void ContextClicked()
