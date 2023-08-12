@@ -234,44 +234,45 @@ namespace RoyTheunissen.AssetPalette.Windows
             return GetUniqueFolderName(parentFolderProperty, desiredName, previousAttempts + 1);
         }
         
-        private void TryCreateNewFolderDropDown(Rect newFolderRect, SerializedProperty folderListProperty)
+        private void TryCreateNewFolderDropDown(Rect buttonRect)
         {
             if (!HasMultipleFolderTypes)
             {
-                CreateNewFolder<PaletteFolder>(folderListProperty);
+                CreateNewFolder<PaletteFolder>();
                 return;
             }
 
-            GenericMenu dropdownMenu = GetCreateNewFolderDropdown(folderListProperty);
-            dropdownMenu.DropDown(newFolderRect);
+            GenericMenu dropdownMenu = GetCreateNewFolderDropdown();
+            dropdownMenu.DropDown(buttonRect);
         }
         
-        private void TryCreateNewFolderContext(SerializedProperty folderListProperty)
+        private void TryCreateNewFolderContext(SerializedProperty parentFolderProperty)
         {
             if (!HasMultipleFolderTypes)
             {
-                CreateNewFolder<PaletteFolder>(folderListProperty);
+                CreateNewFolder<PaletteFolder>(parentFolderProperty);
                 return;
             }
 
-            GenericMenu dropdownMenu = GetCreateNewFolderDropdown(folderListProperty);
+            GenericMenu dropdownMenu = GetCreateNewFolderDropdown(parentFolderProperty);
             dropdownMenu.ShowAsContext();
         }
         
-        private GenericMenu GetCreateNewFolderDropdown(SerializedProperty folderListProperty)
+        private GenericMenu GetCreateNewFolderDropdown(SerializedProperty parentFolderProperty = null)
         {
             GenericMenu dropdownMenu = new GenericMenu();
 
             foreach (Type type in FolderTypes)
             {
                 string name = type.Name.RemoveSuffix("Folder").ToHumanReadable();
-                dropdownMenu.AddItem(new GUIContent(name), false, () => CreateNewFolder(type, folderListProperty));
+                dropdownMenu.AddItem(new GUIContent(name), false, () => CreateNewFolder(type, parentFolderProperty));
             }
 
             return dropdownMenu;
         }
 
-        private PaletteFolder CreateNewFolder(Type type, SerializedProperty parentFolderProperty, string name = null)
+        private PaletteFolder CreateNewFolder(
+            Type type, SerializedProperty parentFolderProperty = null, string name = null)
         {
             if (string.IsNullOrEmpty(name))
                 name = GetUniqueFolderName(parentFolderProperty, NewFolderName);
@@ -304,10 +305,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             return newFolder;
         }
 
-        private FolderType CreateNewFolder<FolderType>(SerializedProperty folderListProperty, string name = null)
+        private FolderType CreateNewFolder<FolderType>(
+            SerializedProperty parentFolderProperty = null, string name = null)
             where FolderType : PaletteFolder
         {
-            return (FolderType)CreateNewFolder(typeof(FolderType), folderListProperty, name);
+            return (FolderType)CreateNewFolder(typeof(FolderType), parentFolderProperty, name);
         }
         
         private void DrawFolderPanel()

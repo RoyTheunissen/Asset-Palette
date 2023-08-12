@@ -184,7 +184,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 HasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
             GUI.enabled = true;
             if (createNewFolder)
-                TryCreateNewFolderDropDown(newFolderRect, FoldersSerializedProperty);
+                TryCreateNewFolderDropDown(newFolderRect);
         }
 
         private void DrawEntryPanelHeader(Rect headerRect)
