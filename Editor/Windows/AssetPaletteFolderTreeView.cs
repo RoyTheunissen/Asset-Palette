@@ -22,12 +22,12 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         [NonSerialized] private int lastItemIndex = 1;
 
-        [NonSerialized] private bool didInitialSelection;
-
         public bool IsDragging => isDragging;
         
         private bool isRenaming;
         public bool IsRenaming => isRenaming;
+
+        private bool isDoingInitialSelection;
         
         private bool IsDraggingAssets => DragAndDrop.objectReferences.Length > 0;
 
@@ -70,7 +70,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             // Make sure we select whatever folder should currently be selected.
             TreeViewItem defaultSelectedItem = GetItem(selectedFolder);
+            isDoingInitialSelection = true;
             SelectionClick(defaultSelectedItem, false);
+            isDoingInitialSelection = false;
         }
 
         protected override TreeViewItem BuildRoot()
@@ -239,14 +241,10 @@ namespace RoyTheunissen.AssetPalette.Windows
         protected override void SelectionChanged(IList<int> selectedIds)
         {
             base.SelectionChanged(selectedIds);
-
-            // The initial selection is not a selection "change" so we don't need to inform the window.
-            if (!didInitialSelection)
-            {
-                didInitialSelection = true;
-                return;
-            }
             
+            if (isDoingInitialSelection)
+                return;
+
             if (selectedIds.Count != 1)
                 return;
 
