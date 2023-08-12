@@ -86,7 +86,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
-                if (!didCacheSelectedFolderSerializedProperty || cachedSelectedFolderSerializedProperty == null)
+                if (!didCacheSelectedFolderSerializedProperty || cachedSelectedFolderSerializedProperty == null
+                                    || cachedSelectedFolderSerializedProperty.GetValue<PaletteFolder>() == null)
                 {
                     EnsureFolderExists();
                     didCacheSelectedFolderSerializedProperty = true;
