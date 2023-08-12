@@ -5,7 +5,6 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.SerializedPropertyExtensions;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
@@ -22,11 +21,9 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         [NonSerialized] private bool isResizingFolderPanel;
         
-        [NonSerialized] private TreeViewState foldersTreeViewState;
+        [SerializeField] private TreeViewState foldersTreeViewState;
         [NonSerialized] private AssetPaletteFolderTreeView foldersTreeView;
-        
-        private Vector2 folderPanelScrollPosition;
-        
+
         private const int DividerRectThickness = 1;
         private Rect DividerRect => new Rect(
             FolderPanelWidth - DividerRectThickness, HeaderHeight, DividerRectThickness, position.height);
@@ -67,13 +64,13 @@ namespace RoyTheunissen.AssetPalette.Windows
                 {
                     didCacheFoldersSerializedProperty = true;
                     cachedFoldersSerializedProperty = CurrentCollectionSerializedObject.FindProperty("folders");
-                    UpdateFoldersTreeView();
+                    UpdateFoldersTreeView(true);
                 }
 
                 return cachedFoldersSerializedProperty;
             }
         }
-        
+
         private string SelectedFolderReferenceIdPath
         {
             get => EditorPrefs.GetString(SelectedFolderReferenceIdPathEditorPref);
@@ -147,15 +144,16 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void UpdateFoldersTreeView()
+        private void UpdateFoldersTreeView(bool clearState)
         {
-            ClearFoldersTreeView();
+            ClearFoldersTreeView(clearState);
             InitializeFoldersTreeView();
         }
 
-        private void ClearFoldersTreeView()
+        private void ClearFoldersTreeView(bool clearState)
         {
-            foldersTreeViewState = null;
+            if (clearState)
+                foldersTreeViewState = null;
             if (foldersTreeView != null)
             {
                 foldersTreeView.SelectedFolderEvent -= HandleTreeViewSelectedFolderEvent;
@@ -196,7 +194,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             ClearCachedSelectedFolderSerializedProperties();
             
             didCacheFoldersSerializedProperty = false;
-            ClearFoldersTreeView();
+            ClearFoldersTreeView(true);
         }
 
         private string GetUniqueFolderName(string desiredName, int previousAttempts = 0)
@@ -294,7 +292,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             SelectedFolderSerializedProperty = newFolderProperty;
 
-            UpdateFoldersTreeView();
+            UpdateFoldersTreeView(false);
             
             StartFolderRename(newFolder);
 
@@ -309,9 +307,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void DrawFolderPanel()
         {
-            folderPanelScrollPosition = EditorGUILayout.BeginScrollView(
-                folderPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar,
-                GUILayout.Width(FolderPanelWidth));
+            EditorGUILayout.BeginVertical(GUILayout.Width(FolderPanelWidth));
 
             // Cancel out if there's no collection available.
             if (HasCollection)
@@ -326,7 +322,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 }
             }
             
-            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
 
             DrawResizableFolderPanelDivider();
         }
@@ -535,7 +531,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 SelectedFolderSerializedProperty = listProperty.GetArrayElementAtIndex(folderIndex);
             }
             
-            UpdateFoldersTreeView();
+            UpdateFoldersTreeView(false);
 
             Repaint();
         }

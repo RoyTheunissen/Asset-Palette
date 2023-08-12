@@ -104,7 +104,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void UpdateAndRepaint()
         {
-            UpdateFoldersTreeView();
+            UpdateFoldersTreeView(true);
             Repaint();
         }
 
