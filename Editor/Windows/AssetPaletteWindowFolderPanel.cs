@@ -79,6 +79,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         [NonSerialized] private bool didCacheSelectedFolderSerializedProperty;
         [NonSerialized] private SerializedProperty cachedSelectedFolderSerializedProperty;
+        [NonSerialized] private SerializedProperty cachedSelectedFolderSerializedPropertyParent;
+        [NonSerialized] private string cachedSelectedFolderSerializedPropertyPath;
         private SerializedProperty SelectedFolderSerializedProperty
         {
             get
@@ -86,6 +88,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 // Sanity check: if the folder selection is no longer valid, reset the selected folder.
                 // This is something that can happen with undo...
                 if (didCacheSelectedFolderSerializedProperty && (cachedSelectedFolderSerializedProperty == null
+                                    || !cachedSelectedFolderSerializedProperty.ExistsInParentArray(
+                                        cachedSelectedFolderSerializedPropertyParent,
+                                        cachedSelectedFolderSerializedPropertyPath)
                                     || cachedSelectedFolderSerializedProperty.GetValue<PaletteFolder>() == null))
                 {
                     ClearCachedSelectedFolderSerializedProperties();
@@ -106,6 +111,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                     // Did not exist. Just select the first folder.
                     if (cachedSelectedFolderSerializedProperty == null)
                         cachedSelectedFolderSerializedProperty = FoldersSerializedProperty.GetArrayElementAtIndex(0);
+
+                    cachedSelectedFolderSerializedPropertyParent = cachedSelectedFolderSerializedProperty.GetParent();
+                    cachedSelectedFolderSerializedPropertyPath = cachedSelectedFolderSerializedProperty.propertyPath;
                 }
 
                 return cachedSelectedFolderSerializedProperty;

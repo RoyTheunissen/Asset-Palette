@@ -225,6 +225,43 @@ namespace RoyTheunissen.AssetPalette.Extensions
                 }
             }
         }
+        
+        /// <summary>
+        /// It's possible to get an error called "SerializedProperty folders.Array.data[X] has disappeared!" sometimes.
+        /// I think it's to do with undo/redo causing an array element to disappear but you still have a reference to
+        /// it. If you then use the property at all, for instance by calling .propertyPath, you will get an error.
+        /// Now, the system recovers from this quite gracefully. But I want to be able to detect this issue WITHOUT
+        /// triggering the error because if it's not causing a problem then it shouldn't alarm users. So we have to
+        /// somehow detect whether the specified property exists in its parent array without calling propertyPath
+        /// or GetParent() on it or anything like that. CONVOLUTED
+        /// </summary>
+        public static bool ExistsInParentArray(this SerializedProperty serializedProperty,
+            SerializedProperty parentArray = null, string propertyPath = null)
+        {
+            if (parentArray == null)
+                parentArray = serializedProperty.GetParent();
+            
+            if (parentArray == null)
+                return false;
+
+            if (string.IsNullOrEmpty(propertyPath))
+                propertyPath = serializedProperty.propertyPath;
+            
+            for (int i = 0; i < parentArray.arraySize; i++)
+            {
+                SerializedProperty element = parentArray.GetArrayElementAtIndex(i);
+                if (element == null)
+                    continue;
+                
+                // Make it possible to use a specified path, because this function exists mostly to try and prevent an
+                // error about a property going missing *without* triggering an error, and calling propertyPath on the
+                // serialized property actually triggers the error already.
+                if (string.Equals(propertyPath, element.propertyPath, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// The regular propertyPath of a SerializedProperty hierarchy has the indices of arrays baked into it.
