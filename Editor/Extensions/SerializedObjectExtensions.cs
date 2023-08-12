@@ -15,15 +15,13 @@ namespace RoyTheunissen.AssetPalette.Extensions
         {
             if (string.IsNullOrEmpty(path))
                 return null;
-            
-            const string separator = "/";
 
             if (string.IsNullOrEmpty(childPropertyName))
                 childPropertyName = rootCollectionName;
 
             SerializedProperty rootCollectionProperty = serializedObject.FindProperty(rootCollectionName);
 
-            List<string> sections = new List<string>(path.Split(separator));
+            List<string> sections = new List<string>(path.Split(SerializedPropertyExtensions.ReferenceIdSeparator));
 
             SerializedProperty propertyOfFirstSection = GetArrayElementWithReferenceId(
                 rootCollectionProperty, sections[0]);
@@ -37,7 +35,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
 
             // There were other sections in the path, so recurse deeper.
             sections.RemoveAt(0);
-            string remainingPath = string.Join(separator, sections);
+            string remainingPath = string.Join(SerializedPropertyExtensions.ReferenceIdSeparator, sections);
             
             return GetPropertyFromReferenceIdPathRecursive(
                 propertyOfFirstSection, remainingPath, childPropertyName);
@@ -59,11 +57,9 @@ namespace RoyTheunissen.AssetPalette.Extensions
         private static SerializedProperty GetPropertyFromReferenceIdPathRecursive(
             SerializedProperty serializedProperty, string path, string childPropertyName)
         {
-            const string separator = "/";
-            
             SerializedProperty collectionProperty = serializedProperty.FindPropertyRelative(childPropertyName);
 
-            List<string> sections = new List<string>(path.Split(separator));
+            List<string> sections = new List<string>(path.Split(SerializedPropertyExtensions.ReferenceIdSeparator));
 
             SerializedProperty propertyOfFirstSection = GetArrayElementWithReferenceId(
                 collectionProperty, sections[0]);
@@ -77,7 +73,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
 
             // There were other sections in the path, so recurse deeper.
             sections.RemoveAt(0);
-            string remainingPath = string.Join(separator, sections);
+            string remainingPath = string.Join(SerializedPropertyExtensions.ReferenceIdSeparator, sections);
             
             return GetPropertyFromReferenceIdPathRecursive(
                 propertyOfFirstSection, remainingPath, childPropertyName);

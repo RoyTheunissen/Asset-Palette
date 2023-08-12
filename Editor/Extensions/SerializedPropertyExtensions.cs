@@ -12,6 +12,8 @@ namespace RoyTheunissen.AssetPalette.Extensions
     /// </summary>
     public static partial class SerializedPropertyExtensions
     {
+        public const string ReferenceIdSeparator = "/";
+        
         /// <summary>
         /// Courtesy of douduck08. Cheers.
         /// https://gist.github.com/douduck08/6d3e323b538a741466de00c30aa4b61f
@@ -283,8 +285,6 @@ namespace RoyTheunissen.AssetPalette.Extensions
         private static string GetReferenceIdPathRecursive(
             this SerializedProperty serializedProperty, string path, string childrenPropertyName)
         {
-            const string separator = "/";
-            
             SerializedProperty parentProperty = serializedProperty.GetParent();
             
             string id = serializedProperty.managedReferenceId.ToString();
@@ -292,7 +292,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
             if (parentProperty.name == childrenPropertyName)
             {
                 return parentProperty.GetParent()
-                           .GetReferenceIdPathRecursive(path, childrenPropertyName) + separator + id;
+                           .GetReferenceIdPathRecursive(path, childrenPropertyName) + ReferenceIdSeparator + id;
             }
             
             return id;
