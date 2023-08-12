@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
@@ -188,10 +189,76 @@ namespace RoyTheunissen.AssetPalette.Extensions
             return parentSerializedProperty;
         }
         
+        public static bool PathEquals(
+            this SerializedProperty a, SerializedProperty b)
+        {
+            string pathA = a?.propertyPath;
+            string pathB = b?.propertyPath;
+            return string.Equals(pathA, pathB, StringComparison.Ordinal);
+        }
+        
+        public static int GetIndexOfArrayElement(
+            this SerializedProperty serializedProperty, SerializedProperty element)
+        {
+            for (int i = 0; i < serializedProperty.arraySize; i++)
+            {
+                if (serializedProperty.GetArrayElementAtIndex(i).PathEquals(element))
+                    return i;
+            }
+            return -1;
+        }
+        
         public static SerializedProperty AddArrayElement(this SerializedProperty serializedProperty)
         {
             serializedProperty.InsertArrayElementAtIndex(serializedProperty.arraySize);
             return serializedProperty.GetArrayElementAtIndex(serializedProperty.arraySize - 1);
+        }
+        
+        public static void DeleteArrayElement(this SerializedProperty serializedProperty, SerializedProperty element)
+        {
+            for (int i = 0; i < serializedProperty.arraySize; i++)
+            {
+                if (serializedProperty.GetArrayElementAtIndex(i).PathEquals(element))
+                {
+                    serializedProperty.DeleteArrayElementAtIndex(i);
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The regular propertyPath of a SerializedProperty hierarchy has the indices of arrays baked into it.
+        /// For example: folders.Array.data[9].children.Array.data[1]. When you're dealing with moving properties
+        /// from one parent to another across a complex hierarchy, working with paths like this is problematic because
+        /// the indices change in complex ways. For that purpose it is more convenient to work with order-independent
+        /// paths. For example, just using the property's reference ID instead of naming. Then you end up with a path
+        /// like "1373151034781990912/7504083557633490975" and you can heuristically figure out which serialized
+        /// property that represents. See: SerializedObjectExtensions.FindPropertyFromReferenceIdPath
+        /// </summary>
+        public static string GetReferenceIdPath(this SerializedProperty serializedProperty, string childrenPropertyName)
+        {
+            if (serializedProperty == null)
+                return null;
+            
+            return serializedProperty.GetReferenceIdPathRecursive(string.Empty, childrenPropertyName);
+        }
+        
+        private static string GetReferenceIdPathRecursive(
+            this SerializedProperty serializedProperty, string path, string childrenPropertyName)
+        {
+            const string separator = "/";
+            
+            SerializedProperty parentProperty = serializedProperty.GetParent();
+            
+            string id = serializedProperty.managedReferenceId.ToString();
+            
+            if (parentProperty.name == childrenPropertyName)
+            {
+                return parentProperty.GetParent()
+                           .GetReferenceIdPathRecursive(path, childrenPropertyName) + separator + id;
+            }
+            
+            return id;
         }
     }
 }
