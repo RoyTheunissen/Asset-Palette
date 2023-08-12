@@ -67,6 +67,9 @@ namespace RoyTheunissen.AssetPalette.Extensions
 
             SerializedProperty propertyOfFirstSection = GetArrayElementWithReferenceId(
                 collectionProperty, sections[0]);
+
+            if (propertyOfFirstSection == null)
+                return null;
             
             // If there was only one section remaining in the path, the property of the first section is the one we need.
             if (sections.Count == 1)
