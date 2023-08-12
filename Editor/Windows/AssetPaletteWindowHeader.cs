@@ -51,6 +51,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 cachedCurrentCollectionSerializedObject = null;
                 didCacheCurrentCollectionSerializedObject = false;
                 ClearCachedFoldersSerializedProperties();
+
+                // Clear the selected folder.
+                SelectedFolderReferenceIdPath = null;
             }
         }
 
@@ -140,6 +143,13 @@ namespace RoyTheunissen.AssetPalette.Windows
                 }
                 return cachedFolderTypes;
             }
+        }
+        
+        private void ClearCachedCollection()
+        {
+            cachedCurrentCollection = null;
+            didCacheCurrentCollectionSerializedObject = false;
+            ClearCachedFoldersSerializedProperties();
         }
 
         private void DrawHeader()

@@ -10,6 +10,9 @@ namespace RoyTheunissen.AssetPalette
         [SerializeField] private string name;
         public string Name => name;
 
+        [SerializeReference] private List<PaletteFolder> children = new List<PaletteFolder>();
+        public List<PaletteFolder> Children => children;
+        
         [SerializeReference] private List<PaletteEntry> entries = new List<PaletteEntry>();
         public List<PaletteEntry> Entries => entries;
 

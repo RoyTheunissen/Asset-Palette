@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
@@ -11,6 +12,8 @@ namespace RoyTheunissen.AssetPalette.Extensions
     /// </summary>
     public static partial class SerializedPropertyExtensions
     {
+        public const string ReferenceIdSeparator = "/";
+        
         /// <summary>
         /// Courtesy of douduck08. Cheers.
         /// https://gist.github.com/douduck08/6d3e323b538a741466de00c30aa4b61f
@@ -188,10 +191,111 @@ namespace RoyTheunissen.AssetPalette.Extensions
             return parentSerializedProperty;
         }
         
+        public static bool PathEquals(
+            this SerializedProperty a, SerializedProperty b)
+        {
+            string pathA = a?.propertyPath;
+            string pathB = b?.propertyPath;
+            return string.Equals(pathA, pathB, StringComparison.Ordinal);
+        }
+        
+        public static int GetIndexOfArrayElement(
+            this SerializedProperty serializedProperty, SerializedProperty element)
+        {
+            for (int i = 0; i < serializedProperty.arraySize; i++)
+            {
+                if (serializedProperty.GetArrayElementAtIndex(i).PathEquals(element))
+                    return i;
+            }
+            return -1;
+        }
+        
         public static SerializedProperty AddArrayElement(this SerializedProperty serializedProperty)
         {
             serializedProperty.InsertArrayElementAtIndex(serializedProperty.arraySize);
             return serializedProperty.GetArrayElementAtIndex(serializedProperty.arraySize - 1);
+        }
+        
+        public static void DeleteArrayElement(this SerializedProperty serializedProperty, SerializedProperty element)
+        {
+            for (int i = 0; i < serializedProperty.arraySize; i++)
+            {
+                if (serializedProperty.GetArrayElementAtIndex(i).PathEquals(element))
+                {
+                    serializedProperty.DeleteArrayElementAtIndex(i);
+                    return;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// It's possible to get an error called "SerializedProperty folders.Array.data[X] has disappeared!" sometimes.
+        /// I think it's to do with undo/redo causing an array element to disappear but you still have a reference to
+        /// it. If you then use the property at all, for instance by calling .propertyPath, you will get an error.
+        /// Now, the system recovers from this quite gracefully. But I want to be able to detect this issue WITHOUT
+        /// triggering the error because if it's not causing a problem then it shouldn't alarm users. So we have to
+        /// somehow detect whether the specified property exists in its parent array without calling propertyPath
+        /// or GetParent() on it or anything like that. CONVOLUTED
+        /// </summary>
+        public static bool ExistsInParentArray(this SerializedProperty serializedProperty,
+            SerializedProperty parentArray = null, string propertyPath = null)
+        {
+            if (parentArray == null)
+                parentArray = serializedProperty.GetParent();
+            
+            if (parentArray == null)
+                return false;
+
+            if (string.IsNullOrEmpty(propertyPath))
+                propertyPath = serializedProperty.propertyPath;
+            
+            for (int i = 0; i < parentArray.arraySize; i++)
+            {
+                SerializedProperty element = parentArray.GetArrayElementAtIndex(i);
+                if (element == null)
+                    continue;
+                
+                // Make it possible to use a specified path, because this function exists mostly to try and prevent an
+                // error about a property going missing *without* triggering an error, and calling propertyPath on the
+                // serialized property actually triggers the error already.
+                if (string.Equals(propertyPath, element.propertyPath, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// The regular propertyPath of a SerializedProperty hierarchy has the indices of arrays baked into it.
+        /// For example: folders.Array.data[9].children.Array.data[1]. When you're dealing with moving properties
+        /// from one parent to another across a complex hierarchy, working with paths like this is problematic because
+        /// the indices change in complex ways. For that purpose it is more convenient to work with order-independent
+        /// paths. For example, just using the property's reference ID instead of naming. Then you end up with a path
+        /// like "1373151034781990912/7504083557633490975" and you can heuristically figure out which serialized
+        /// property that represents. See: SerializedObjectExtensions.FindPropertyFromReferenceIdPath
+        /// </summary>
+        public static string GetReferenceIdPath(this SerializedProperty serializedProperty, string childrenPropertyName)
+        {
+            if (serializedProperty == null)
+                return null;
+            
+            return serializedProperty.GetReferenceIdPathRecursive(string.Empty, childrenPropertyName);
+        }
+        
+        private static string GetReferenceIdPathRecursive(
+            this SerializedProperty serializedProperty, string path, string childrenPropertyName)
+        {
+            SerializedProperty parentProperty = serializedProperty.GetParent();
+            
+            string id = serializedProperty.managedReferenceId.ToString();
+            
+            if (parentProperty.name == childrenPropertyName)
+            {
+                return parentProperty.GetParent()
+                           .GetReferenceIdPathRecursive(path, childrenPropertyName) + ReferenceIdSeparator + id;
+            }
+            
+            return id;
         }
     }
 }
