@@ -15,9 +15,6 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         [NonSerialized] private PaletteFolder folder;
         public PaletteFolder Folder => folder;
-        
-        [NonSerialized] private SerializedProperty childrenProperty;
-        public SerializedProperty ChildrenProperty => childrenProperty;
 
         public AssetPaletteFolderTreeViewItem(
             int id, int depth, string displayName, SerializedProperty property, PaletteFolder folder)
@@ -25,7 +22,6 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             this.property = property;
             this.folder = folder;
-            childrenProperty = property.FindPropertyRelative("children");
         }
     }
 }

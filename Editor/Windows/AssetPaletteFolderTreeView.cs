@@ -43,8 +43,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             AssetPaletteFolderTreeView treeView, SerializedProperty folderProperty, string oldName, string newName);
         public event RenamedFolderHandler RenamedFolderEvent;
         
-        public delegate void MovedFolderHandler(
-            AssetPaletteFolderTreeView treeView, SerializedProperty folderProperty, SerializedProperty targetFolderProperty, int toIndex);
+        public delegate void MovedFolderHandler(AssetPaletteFolderTreeView treeView,
+            SerializedProperty folderProperty, SerializedProperty targetFolderProperty, int toIndex);
         public event MovedFolderHandler MovedFolderEvent;
         
         public delegate void DeleteFolderRequestedHandler(
@@ -52,7 +52,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         public event DeleteFolderRequestedHandler DeleteFolderRequestedEvent;
         
         public delegate void CreateFolderRequestedHandler(
-            AssetPaletteFolderTreeView treeView, SerializedProperty folderListProperty);
+            AssetPaletteFolderTreeView treeView, SerializedProperty parentFolderProperty);
         public event CreateFolderRequestedHandler CreateFolderRequestedEvent;
         
         public delegate void DroppedAssetsIntoFolderHandler(
@@ -272,14 +272,18 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (items.Count > 1)
                 menu.AddItem(new GUIContent("Delete"), false, () => DeleteFolderRequestedEvent?.Invoke(this, item.Property));
             
-            menu.AddItem(new GUIContent("Create Folder"), false,
-                () => CreateFolderRequestedEvent?.Invoke(this, item.ChildrenProperty));
+            menu.AddItem(new GUIContent("Create Folder"), false, () => CreateNewFolder(item));
             
             menu.AddItem(new GUIContent("TEST"), false, () => TestFolderReferencePath(item));
             
             menu.ShowAsContext();
             
             Event.current.Use();
+        }
+
+        private void CreateNewFolder(AssetPaletteFolderTreeViewItem parentItem = null)
+        {
+            CreateFolderRequestedEvent?.Invoke(this, parentItem?.Property);
         }
 
         private void TestFolderReferencePath(AssetPaletteFolderTreeViewItem item)
@@ -296,8 +300,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             base.ContextClicked();
 
             GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Create Folder"), false,
-                () => CreateFolderRequestedEvent?.Invoke(this, foldersProperty));
+            menu.AddItem(new GUIContent("Create Folder"), false, () => CreateNewFolder());
             menu.ShowAsContext();
         }
         

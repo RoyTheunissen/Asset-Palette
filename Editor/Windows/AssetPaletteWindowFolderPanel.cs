@@ -267,7 +267,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             return dropdownMenu;
         }
 
-        private PaletteFolder CreateNewFolder(Type type, SerializedProperty folderListProperty, string name = null)
+        private PaletteFolder CreateNewFolder(Type type, SerializedProperty parentFolderProperty, string name = null)
         {
             if (string.IsNullOrEmpty(name))
                 name = GetUniqueFolderName(NewFolderName);
@@ -278,8 +278,15 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Add it to the current collection's list of folders.
             CurrentCollectionSerializedObject.Update();
 
+            // If we're adding it to an existing folder, make sure that folder is now expanded so we can see what
+            // we're doing. The Tree View will be updated shortly and it will then represent the current value.
+            if (parentFolderProperty != null)
+                parentFolderProperty.isExpanded = true;
+            
             // Add it to the list.
-            SerializedProperty newFolderProperty = SerializedPropertyExtensions.AddArrayElement(folderListProperty);
+            SerializedProperty collectionProperty = parentFolderProperty == null
+                ? FoldersSerializedProperty : parentFolderProperty.FindPropertyRelative("children");
+            SerializedProperty newFolderProperty = collectionProperty.AddArrayElement();
             newFolderProperty.managedReferenceValue = newFolder;
 
             ApplyModifiedProperties();
