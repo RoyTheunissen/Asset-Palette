@@ -83,8 +83,16 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
-                if (!didCacheSelectedFolderSerializedProperty || cachedSelectedFolderSerializedProperty == null
-                                    || cachedSelectedFolderSerializedProperty.GetValue<PaletteFolder>() == null)
+                // Sanity check: if the folder selection is no longer valid, reset the selected folder.
+                // This is something that can happen with undo...
+                if (didCacheSelectedFolderSerializedProperty && (cachedSelectedFolderSerializedProperty == null
+                                    || cachedSelectedFolderSerializedProperty.GetValue<PaletteFolder>() == null))
+                {
+                    ClearCachedSelectedFolderSerializedProperties();
+                    SelectedFolderReferenceIdPath = null;
+                }
+                
+                if (!didCacheSelectedFolderSerializedProperty)
                 {
                     EnsureFolderExists();
                     didCacheSelectedFolderSerializedProperty = true;
