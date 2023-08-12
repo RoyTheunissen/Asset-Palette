@@ -197,7 +197,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             ClearFoldersTreeView(true);
         }
 
-        private string GetUniqueFolderName(string desiredName, int previousAttempts = 0)
+        private string GetUniqueFolderName(
+            SerializedProperty parentFolderProperty, string desiredName, int previousAttempts = 0)
         {
             if (previousAttempts > MaxUniqueFolderNameAttempts)
             {
@@ -208,8 +209,12 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             bool alreadyTaken = false;
 
-            foreach (PaletteFolder folder in CurrentCollection.Folders)
+            SerializedProperty listProperty = parentFolderProperty == null
+                ? FoldersSerializedProperty
+                : parentFolderProperty.FindPropertyRelative("children");
+            for (int i = 0; i < listProperty.arraySize; i++)
             {
+                PaletteFolder folder = listProperty.GetArrayElementAtIndex(i).GetValue<PaletteFolder>();
                 if (folder.Name == desiredName)
                 {
                     alreadyTaken = true;
@@ -226,7 +231,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             else
                 desiredName = desiredName.SetNumberSuffix(number + 1);
 
-            return GetUniqueFolderName(desiredName, previousAttempts + 1);
+            return GetUniqueFolderName(parentFolderProperty, desiredName, previousAttempts + 1);
         }
         
         private void TryCreateNewFolderDropDown(Rect newFolderRect, SerializedProperty folderListProperty)
@@ -269,7 +274,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private PaletteFolder CreateNewFolder(Type type, SerializedProperty parentFolderProperty, string name = null)
         {
             if (string.IsNullOrEmpty(name))
-                name = GetUniqueFolderName(NewFolderName);
+                name = GetUniqueFolderName(parentFolderProperty, NewFolderName);
 
             PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
             newFolder.Initialize(name);
