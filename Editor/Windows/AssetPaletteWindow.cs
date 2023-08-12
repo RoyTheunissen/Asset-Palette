@@ -249,9 +249,12 @@ namespace RoyTheunissen.AssetPalette.Windows
             UpdateAndRepaint();
         }
 
-        public void OnPaletteAssetImported()
+        public void OnCurrentPaletteAssetImported()
         {
             StopAllRenames(false);
+
+            // Let's be really thorough and just ditch the entire cache when the palette is changed externally.
+            ClearCachedCollection();
             
             UpdateAndRepaint();
         }

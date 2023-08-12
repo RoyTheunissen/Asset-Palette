@@ -144,6 +144,13 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return cachedFolderTypes;
             }
         }
+        
+        private void ClearCachedCollection()
+        {
+            cachedCurrentCollection = null;
+            didCacheCurrentCollectionSerializedObject = false;
+            ClearCachedFoldersSerializedProperties();
+        }
 
         private void DrawHeader()
         {

@@ -21,7 +21,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (!importedAssets.Contains(assetPath))
                 return;
 
-            window.OnPaletteAssetImported();
+            window.OnCurrentPaletteAssetImported();
         }
     }
 }
