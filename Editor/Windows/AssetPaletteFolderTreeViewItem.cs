@@ -1,4 +1,5 @@
 using System;
+using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
@@ -9,11 +10,14 @@ namespace RoyTheunissen.AssetPalette.Windows
     /// </summary>
     public class AssetPaletteFolderTreeViewItem : TreeViewItem
     {
-        [NonSerialized] private SerializedProperty property;
+        private SerializedProperty property;
         public SerializedProperty Property => property;
 
         [NonSerialized] private PaletteFolder folder;
         public PaletteFolder Folder => folder;
+        
+        [NonSerialized] private SerializedProperty childrenProperty;
+        public SerializedProperty ChildrenProperty => childrenProperty;
 
         public AssetPaletteFolderTreeViewItem(
             int id, int depth, string displayName, SerializedProperty property, PaletteFolder folder)
@@ -21,6 +25,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             this.property = property;
             this.folder = folder;
+            childrenProperty = property.FindPropertyRelative("children");
         }
     }
 }

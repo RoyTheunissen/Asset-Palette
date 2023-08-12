@@ -51,6 +51,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 cachedCurrentCollectionSerializedObject = null;
                 didCacheCurrentCollectionSerializedObject = false;
                 ClearCachedFoldersSerializedProperties();
+
+                // Clear the selected folder.
+                SelectedFolderReferenceIdPath = null;
             }
         }
 
@@ -174,7 +177,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 HasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
             GUI.enabled = true;
             if (createNewFolder)
-                TryCreateNewFolderDropDown(newFolderRect);
+                TryCreateNewFolderDropDown(newFolderRect, FoldersSerializedProperty);
         }
 
         private void DrawEntryPanelHeader(Rect headerRect)
