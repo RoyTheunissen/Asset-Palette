@@ -187,6 +187,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             didCacheSelectedFolderSerializedProperty = false;
             didCacheSelectedFolderEntriesSerializedProperty = false;
+            
+            ClearEntrySelection();
         }
 
         private void ClearCachedFoldersSerializedProperties()
