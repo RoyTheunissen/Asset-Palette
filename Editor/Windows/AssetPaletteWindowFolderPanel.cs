@@ -14,6 +14,9 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const string NewFolderName = "New Folder";
         private const int MaxUniqueFolderNameAttempts = 100;
         
+        private const string RootFoldersPropertyName = "folders";
+        public const string ChildFoldersPropertyName = "children";
+        
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
 
@@ -63,7 +66,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 if (!didCacheFoldersSerializedProperty)
                 {
                     didCacheFoldersSerializedProperty = true;
-                    cachedFoldersSerializedProperty = CurrentCollectionSerializedObject.FindProperty("folders");
+                    cachedFoldersSerializedProperty = CurrentCollectionSerializedObject
+                        .FindProperty(RootFoldersPropertyName);
                     UpdateFoldersTreeView(true);
                 }
 
@@ -106,7 +110,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     // because those have indices baked into it and those get real screwy when you move things around.
                     cachedSelectedFolderSerializedProperty =
                         CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
-                            SelectedFolderReferenceIdPath, "folders", "children");
+                            SelectedFolderReferenceIdPath, RootFoldersPropertyName, ChildFoldersPropertyName);
                     
                     // Did not exist. Just select the first folder.
                     if (cachedSelectedFolderSerializedProperty == null)
@@ -120,7 +124,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
             set
             {
-                string referenceIdPath = value.GetReferenceIdPath("children");
+                string referenceIdPath = value.GetReferenceIdPath(ChildFoldersPropertyName);
                 if (string.Equals(SelectedFolderReferenceIdPath, referenceIdPath, StringComparison.Ordinal))
                     return;
 
@@ -229,7 +233,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             SerializedProperty listProperty = parentFolderProperty == null
                 ? FoldersSerializedProperty
-                : parentFolderProperty.FindPropertyRelative("children");
+                : parentFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             for (int i = 0; i < listProperty.arraySize; i++)
             {
                 PaletteFolder folder = listProperty.GetArrayElementAtIndex(i).GetValue<PaletteFolder>();
@@ -308,7 +312,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             // Add it to the list.
             SerializedProperty collectionProperty = parentFolderProperty == null
-                ? FoldersSerializedProperty : parentFolderProperty.FindPropertyRelative("children");
+                ? FoldersSerializedProperty : parentFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             SerializedProperty newFolderProperty = collectionProperty.AddArrayElement();
             newFolderProperty.managedReferenceValue = newFolder;
 
@@ -435,7 +439,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             SerializedProperty listProperty = folderProperty.GetParent();
             
             // Actually this was a root folder.
-            if (listProperty.name != "children")
+            if (listProperty.name != ChildFoldersPropertyName)
                 return null;
 
             return listProperty.GetParent();
@@ -446,9 +450,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             SerializedProperty targetFolderProperty, int toIndex)
         {
             PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
-
-            string targetFolderPropertyPath = targetFolderProperty?.propertyPath;
-            string targetFolderReferenceIdPath = targetFolderProperty.GetReferenceIdPath("children");
+            
+            string targetFolderReferenceIdPath = targetFolderProperty.GetReferenceIdPath(ChildFoldersPropertyName);
             
             SerializedProperty fromListProperty = folderProperty.GetParent();
             int folderToDragIndex = fromListProperty.GetIndexOfArrayElement(folderProperty);
@@ -458,7 +461,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             bool isMovedToDifferentParent = !originalParentProperty.PathEquals(targetFolderProperty);
             
             SerializedProperty toListProperty = targetFolderProperty == null
-                ? FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative("children");
+                ? FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
 
             // Remove the folder from the original list and add it back to the target list at the specified position.
             CurrentCollectionSerializedObject.Update();
@@ -473,9 +476,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Having removed the folder that we want to drag, that changed the order of all the properties. Figure out
             // the correct property for the folder that we wanted to drag to
             targetFolderProperty = CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
-                targetFolderReferenceIdPath, "folders", "children");
+                targetFolderReferenceIdPath, RootFoldersPropertyName, ChildFoldersPropertyName);
             toListProperty = targetFolderProperty == null
-                ? FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative("children");
+                ? FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             toListProperty.InsertArrayElementAtIndex(toIndex);
             
             SerializedProperty movedFolderProperty = toListProperty.GetArrayElementAtIndex(toIndex);

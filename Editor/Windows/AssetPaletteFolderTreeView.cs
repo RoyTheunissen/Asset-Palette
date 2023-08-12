@@ -101,7 +101,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 SetExpanded(item.id, item.Property.isExpanded);
 
                 // Keep going recursively until we've added all the children.
-                SerializedProperty children = folderProperty.FindPropertyRelative("children");
+                SerializedProperty children = folderProperty.FindPropertyRelative(
+                    AssetPaletteWindow.ChildFoldersPropertyName);
                 AddChildFolders(item, children);
             }
         }
