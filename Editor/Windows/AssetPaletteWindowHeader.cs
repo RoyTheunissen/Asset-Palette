@@ -43,17 +43,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 
                 EditorPrefs.SetString(CurrentCollectionGUIDEditorPref, value);
                 
-                // Need to re-cache the current collection now.
-                cachedCurrentCollection = null;
-                
-                // Need to re-cache the serialized objects, too.
-                cachedCurrentCollectionSerializedObject?.Dispose();
-                cachedCurrentCollectionSerializedObject = null;
-                didCacheCurrentCollectionSerializedObject = false;
-                ClearCachedFoldersSerializedProperties();
-
-                // Clear the selected folder.
-                SelectedFolderReferenceIdPath = null;
+                ClearCachedCollection();
             }
         }
 
@@ -147,9 +137,17 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void ClearCachedCollection()
         {
+            // Need to re-cache the current collection now.
             cachedCurrentCollection = null;
+                
+            // Need to re-cache the serialized objects, too.
+            cachedCurrentCollectionSerializedObject?.Dispose();
+            cachedCurrentCollectionSerializedObject = null;
             didCacheCurrentCollectionSerializedObject = false;
             ClearCachedFoldersSerializedProperties();
+
+            // Clear the selected folder.
+            SelectedFolderReferenceIdPath = null;
         }
 
         private void DrawHeader()
