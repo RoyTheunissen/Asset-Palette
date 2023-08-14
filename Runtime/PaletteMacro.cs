@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEngine;
@@ -76,13 +77,9 @@ namespace RoyTheunissen.AssetPalette.Runtime
 #endif // UNITY_EDITOR
         }
         
-        public override void SelectAsset()
+        public override void GetAssetsToSelect(ref List<Object> selection)
         {
-            base.SelectAsset();
-            
-#if UNITY_EDITOR
-            UnityEditor.Selection.activeObject = script;
-#endif // UNITY_EDITOR
+            selection.Add(script);
         }
 
         public static bool CanCallMethodForMacro(MethodInfo methodInfo)

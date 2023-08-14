@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using RoyTheunissen.AssetPalette;
 using RoyTheunissen.AssetPalette.CustomEditors;
 using RoyTheunissen.AssetPalette.Extensions;
@@ -532,9 +533,6 @@ namespace RoyTheunissen.AssetPalette.Windows
                     if (!wasAlreadySelected)
                         SelectEntry(entry, true);
 
-                    if (Event.current.alt)
-                        entry.SelectAsset();
-
                     // Allow assets to be opened by double clicking on them.
                     if (Event.current.clickCount == 2)
                         entry.Open();
@@ -599,25 +597,50 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             entriesSelected.Remove(entry);
             entriesIndividuallySelected.Remove(entry);
+            
+            List<Object> assetsToSelect = new List<Object>();
+            entry.GetAssetsToSelect(ref assetsToSelect);
+            
+            List<Object> selection = Selection.objects.ToList();
+            for (int i = assetsToSelect.Count - 1; i >= 0; i--)
+            {
+                selection.Remove(assetsToSelect[i]);
+            }
+            Selection.objects = selection.ToArray();
         }
 
-        private void SelectEntry(PaletteEntry entry, bool exclusively)
+        private void SelectEntryInternal(PaletteEntry entry, bool exclusively)
         {
             if (PaletteEntry.IsEntryBeingRenamed && PaletteEntry.EntryCurrentlyRenaming != entry)
                 StopEntryRename(true);
 
+            List<Object> assetsToSelect = new List<Object>();
+            entry.GetAssetsToSelect(ref assetsToSelect);
+            
             if (exclusively)
+            {
                 ClearEntrySelection();
+                
+                Selection.objects = assetsToSelect.ToArray();
+            }
+            else
+            {
+                List<Object> selection = Selection.objects.ToList();
+                selection.AddRange(assetsToSelect);
+                Selection.objects = selection.ToArray();
+            }
 
             entriesSelected.Add(entry);
+        }
+
+        private void SelectEntry(PaletteEntry entry, bool exclusively)
+        {
+            SelectEntryInternal(entry, exclusively);
             entriesIndividuallySelected.Add(entry);
         }
 
         private void SelectEntriesByRange(int from, int to, bool exclusively)
         {
-            if (PaletteEntry.IsEntryBeingRenamed)
-                StopEntryRename(true);
-
             if (exclusively)
             {
                 entriesSelected.Clear();
@@ -629,11 +652,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = @from; i != to; i += direction)
             {
                 if (!entriesSelected.Contains(GetEntry(i)))
-                    entriesSelected.Add(GetEntry(i));
+                    SelectEntryInternal(GetEntry(i), false);
             }
 
             if (!entriesSelected.Contains(GetEntry(to)))
-                entriesSelected.Add(GetEntry(to));
+                SelectEntryInternal(GetEntry(to), false);
         }
 
         private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
@@ -646,14 +669,19 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             foreach (PaletteEntry entry in entries)
             {
-                entriesSelected.Add(entry);
+                SelectEntryInternal(entry, false);
             }
         }
 
         private void ClearEntrySelection()
         {
+            bool didHaveEntriesSelected = entriesSelected.Count > 0;
+            
             entriesSelected.Clear();
             entriesIndividuallySelected.Clear();
+
+            if (didHaveEntriesSelected)
+                Selection.activeObject = null;
         }
 
         private void AddEntryForProjectWindowSelection()

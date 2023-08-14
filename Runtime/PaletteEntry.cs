@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -35,10 +36,8 @@ namespace RoyTheunissen.AssetPalette
         protected virtual PaletteEntrySortPriorities SortPriority => PaletteEntrySortPriorities.Default;
 
         public abstract void Open();
-        
-        public virtual void SelectAsset()
-        {
-        }
+
+        public abstract void GetAssetsToSelect(ref List<Object> selection);
 
         public void StartRename()
         {
