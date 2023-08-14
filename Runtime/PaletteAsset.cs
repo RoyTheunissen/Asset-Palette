@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -57,13 +58,9 @@ namespace RoyTheunissen.AssetPalette
 #endif // UNITY_EDITOR
         }
 
-        public override void SelectAsset()
+        public override void GetAssetsToSelect(ref List<Object> selection)
         {
-            base.SelectAsset();
-            
-#if UNITY_EDITOR
-            Selection.activeObject = asset;
-#endif // UNITY_EDITOR
+            selection.Add(asset);
         }
 
         public override void Refresh()
