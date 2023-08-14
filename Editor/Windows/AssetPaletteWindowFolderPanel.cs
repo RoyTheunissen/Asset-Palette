@@ -199,7 +199,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             // Make sure there is at least one folder.
             CurrentCollectionSerializedObject.Update();
-            CreateNewFolder<PaletteFolder>(FoldersSerializedProperty, InitialFolderName);
+            CreateNewFolder<PaletteFolder>(null, InitialFolderName);
             CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
         
@@ -296,6 +296,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private PaletteFolder CreateNewFolder(
             Type type, SerializedProperty parentFolderProperty = null, string name = null)
         {
+            bool nameWasExplicitlySpecified = !string.IsNullOrEmpty(name);
             if (string.IsNullOrEmpty(name))
                 name = GetUniqueFolderName(parentFolderProperty, NewFolderName);
 
@@ -322,7 +323,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             UpdateFoldersTreeView(false);
             
-            StartFolderRename(newFolder);
+            if (!nameWasExplicitlySpecified)
+                StartFolderRename(newFolder);
 
             return newFolder;
         }
@@ -498,9 +500,9 @@ namespace RoyTheunissen.AssetPalette.Windows
         }
         
         private void HandleTreeViewCreateFolderRequestedEvent(
-            AssetPaletteFolderTreeView treeView, SerializedProperty folderListProperty)
+            AssetPaletteFolderTreeView treeView, SerializedProperty parentFolderProperty)
         {
-            TryCreateNewFolderContext(folderListProperty);
+            TryCreateNewFolderContext(parentFolderProperty);
         }
         
         private void HandleTreeViewDroppedAssetsIntoFolderEvent(
