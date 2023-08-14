@@ -80,6 +80,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             get => EditorPrefs.GetString(SelectedFolderReferenceIdPathEditorPref);
             set => EditorPrefs.SetString(SelectedFolderReferenceIdPathEditorPref, value);
         }
+        
+        private int FolderCount => FoldersSerializedProperty.arraySize;
 
         [NonSerialized] private bool didCacheSelectedFolderSerializedProperty;
         [NonSerialized] private SerializedProperty cachedSelectedFolderSerializedProperty;
@@ -194,7 +196,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void EnsureFolderExists()
         {
-            if (CurrentCollection.Folders.Count > 0)
+            if (FolderCount > 0)
                 return;
             
             // Make sure there is at least one folder.
@@ -535,7 +537,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void RemoveFolder(SerializedProperty folderProperty)
         {
-            if (folderProperty == null || !HasCollection || CurrentCollection.Folders.Count <= 1)
+            if (folderProperty == null || !HasCollection || FolderCount <= 1)
                 return;
 
             SerializedProperty listProperty = folderProperty.GetParent();
