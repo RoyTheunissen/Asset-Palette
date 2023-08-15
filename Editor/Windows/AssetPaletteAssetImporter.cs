@@ -1,4 +1,3 @@
-using System.Linq;
 using UnityEditor;
 
 namespace RoyTheunissen.AssetPalette.Windows
@@ -10,22 +9,13 @@ namespace RoyTheunissen.AssetPalette.Windows
     /// </summary>
     public class AssetPaletteAssetImporter : AssetPostprocessor
     {
+        public delegate void AssetsImportedHandler(string[] importedAssetPaths);
+        public static event AssetsImportedHandler AssetsImportedEvent;
+        
         private static void OnPostprocessAllAssets(
             string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            // Make sure that the asset palette window is open at all.
-            if (!EditorWindow.HasOpenInstances<AssetPaletteWindow>())
-                return;
-            
-            AssetPaletteWindow window = EditorWindow.GetWindow<AssetPaletteWindow>();
-            if (window == null || window.CurrentCollection == null)
-                return;
-
-            string assetPath = AssetDatabase.GetAssetPath(window.CurrentCollection);
-            if (!importedAssets.Contains(assetPath))
-                return;
-
-            window.OnCurrentPaletteAssetImported();
+            AssetsImportedEvent?.Invoke(importedAssets);
         }
     }
 }

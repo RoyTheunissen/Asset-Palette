@@ -89,17 +89,39 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             Undo.undoRedoPerformed -= OnUndoRedoPerformed;
             Undo.undoRedoPerformed += OnUndoRedoPerformed;
+            
+            AssetPaletteAssetImporter.AssetsImportedEvent -= HandleAssetsImportedEvent;
+            AssetPaletteAssetImporter.AssetsImportedEvent += HandleAssetsImportedEvent;
         }
-        
+
         private void OnDisable()
         {
             Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+            
+            AssetPaletteAssetImporter.AssetsImportedEvent -= HandleAssetsImportedEvent;
         }
 
         private void OnUndoRedoPerformed()
         {
             // Repaint otherwise it may have done the undo but you won't see the result.
             EditorApplication.delayCall += UpdateAndRepaint;
+        }
+        
+        private void HandleAssetsImportedEvent(string[] importedAssetPaths)
+        {
+            if (CurrentCollection == null)
+                return;
+
+            // Now that we know that assets were imported, figure out if the current collection has been imported.
+            string currentCollectionPath = AssetDatabase.GetAssetPath(CurrentCollection);
+            for (int i = 0; i < importedAssetPaths.Length; i++)
+            {
+                if (importedAssetPaths[i] == currentCollectionPath)
+                {
+                    OnCurrentPaletteAssetImported();
+                    return;
+                }
+            }
         }
 
         private void UpdateAndRepaint()
