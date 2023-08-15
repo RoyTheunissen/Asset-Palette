@@ -13,6 +13,10 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static void OnPostprocessAllAssets(
             string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
+            // Make sure that the asset palette window is open at all.
+            if (!EditorWindow.HasOpenInstances<AssetPaletteWindow>())
+                return;
+            
             AssetPaletteWindow window = EditorWindow.GetWindow<AssetPaletteWindow>();
             if (window == null || window.CurrentCollection == null)
                 return;
