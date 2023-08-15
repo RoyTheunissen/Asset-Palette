@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -116,7 +117,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             // If a folder is dragged in, add its contents.
             if (AssetDatabase.IsValidFolder(path))
             {
-                CreateEntriesForFolderContents(draggedObject);
+                CreateEntriesForFolderContents(draggedObject, ref needsToAskForUserInputFirst);
                 return;
             }
 
@@ -134,6 +135,10 @@ namespace RoyTheunissen.AssetPalette.Windows
                     if (draggedObject == null)
                         return;
                 }
+                
+                //If this object is already on the list to be added, ignore it.
+                if (entriesToAddFromDraggedAssets.Any(entry => entry is PaletteAsset paletteAsset && paletteAsset.Asset == draggedObject))
+                    return;
                 
                 entriesToAddFromDraggedAssets.Add(new PaletteAsset(draggedObject));
             }
@@ -202,7 +207,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             Repaint();
         }
 
-        private void CreateEntriesForFolderContents(Object folder)
+        private void CreateEntriesForFolderContents(Object folder, ref bool needsToAskForUserInputFirst)
         {
             string path = AssetDatabase.GetAssetPath(folder);
 
@@ -223,10 +228,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = 0; i < assetsInDraggedFolder.Count; i++)
             {
                 Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetsInDraggedFolder[i]);
-                if (HasEntryForAsset(asset))
-                    continue;
-
-                entriesToAddFromDraggedAssets.Add(new PaletteAsset(asset));
+                
+                TryCreateEntriesForDraggedObject(asset, out needsToAskForUserInputFirst);
             }
         }
     }
