@@ -54,7 +54,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 headerRect, SortModeButtonWidth, out Rect remainder);
             GUI.enabled = HasCollection;
             bool showSortModeRect = GUI.Button(
-                sortModeButtonRect, SortMode.ToString().ToHumanReadable(), EditorStyles.toolbarDropDown);
+                sortModeButtonRect, entryPanel.SortMode.ToString().ToHumanReadable(), EditorStyles.toolbarDropDown);
             if (showSortModeRect)
                 DoSortModeDropDown(sortModeButtonRect);
 
@@ -91,20 +91,11 @@ namespace RoyTheunissen.AssetPalette.Windows
                 menu.AddItem(
                     label, false,
                     userData => EditorApplication.delayCall +=
-                        EditorApplication.delayCall += () => SetSortModeAndSortCurrentEntries((SortModes)value), value);
+                        EditorApplication.delayCall +=
+                            () => entryPanel.SetSortModeAndSortCurrentEntries((SortModes)value), value);
             }
 
             menu.DropDown(buttonRect);
-        }
-
-        private void SetSortModeAndSortCurrentEntries(SortModes sortMode)
-        {
-            SortMode = sortMode;
-            
-            // TODO: Maybe we should consider sorting the entries in ALL the folders at this time.. ?
-            CurrentCollectionSerializedObject.Update();
-            SortEntriesInSerializedObject();
-            CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private void DoCollectionDropDown(Rect collectionRect)
@@ -209,7 +200,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             GUIContent addEntryForCurrentSelectionLabel =
                 new GUIContent(prefix + AddEntryForCurrentSelectionText);
             if (HasProjectWindowSelection())
-                menu.AddItem(addEntryForCurrentSelectionLabel, false, AddEntryForProjectWindowSelection);
+                menu.AddItem(addEntryForCurrentSelectionLabel, false, entryPanel.AddEntryForProjectWindowSelection);
             else
                 menu.AddDisabledItem(addEntryForCurrentSelectionLabel, false);
         }

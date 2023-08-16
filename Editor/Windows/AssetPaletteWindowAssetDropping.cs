@@ -17,12 +17,17 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private List<PotentialMacro> potentialMacros = new List<PotentialMacro>();
         [NonSerialized] private bool isDraggingAssetIntoEntryPanel;
-        
+        public bool IsDraggingAssetIntoEntryPanel
+        {
+            get => isDraggingAssetIntoEntryPanel;
+            set => isDraggingAssetIntoEntryPanel = value;
+        }
+
         [NonSerialized] private readonly List<Object> draggedAssets = new List<Object>();
 
         private PaletteEntry GetEntryForAsset(Object asset)
         {
-            foreach (PaletteEntry entry in GetEntries())
+            foreach (PaletteEntry entry in entryPanel.GetEntries())
             {
                 if (entry is PaletteAsset paletteAsset && paletteAsset.Asset == asset)
                     return entry;
@@ -200,8 +205,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (entriesToAddFromDraggedAssets.Count == 0)
                 return;
             
-            ClearEntrySelection();
-            AddEntries(entriesToAddFromDraggedAssets);
+            entryPanel.ClearEntrySelection();
+            entryPanel.AddEntries(entriesToAddFromDraggedAssets);
             entriesToAddFromDraggedAssets.Clear();
 
             Repaint();

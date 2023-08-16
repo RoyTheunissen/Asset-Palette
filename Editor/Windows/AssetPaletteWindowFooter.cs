@@ -7,8 +7,8 @@ namespace RoyTheunissen.AssetPalette.Windows
     public partial class AssetPaletteWindow
     {
         private const string ZoomLevelControlName = "AssetPaletteEntriesZoomLevelControl";
-        
-        private float ZoomLevel
+
+        public float ZoomLevel
         {
             get
             {
@@ -21,7 +21,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private List<Object> entryAssetsWhosePathToShow = new List<Object>();
 
-        private bool IsZoomLevelFocused => GUI.GetNameOfFocusedControl() == ZoomLevelControlName;
+        public bool IsZoomLevelFocused => GUI.GetNameOfFocusedControl() == ZoomLevelControlName;
         
         private void DrawFooter()
         {
@@ -37,7 +37,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 EditorGUILayout.BeginHorizontal();
                 {
                     // Draw the asset path of the first asset that is selected. That's how the Project View does it.
-                    foreach (PaletteEntry paletteEntry in entriesSelected)
+                    foreach (PaletteEntry paletteEntry in entryPanel.EntriesSelected)
                     {
                         entryAssetsWhosePathToShow.Clear();
                         paletteEntry.GetAssetsToSelect(ref entryAssetsWhosePathToShow);

@@ -27,10 +27,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static string CurrentCollectionGUIDEditorPref => EditorPrefPrefix + "CurrentCollectionGUID";
         private static string ZoomLevelEditorPref => EditorPrefPrefix + "ZoomLevel";
         private static string SelectedFolderReferenceIdPathEditorPref => EditorPrefPrefix + "SelectedFolderReferenceIdPath";
-        private static string EntriesSortModeEditorPref => EditorPrefPrefix + "EntriesSortMode";
-        
-        public const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
-        
+
         private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";
 
 
@@ -55,20 +52,23 @@ namespace RoyTheunissen.AssetPalette.Windows
         public bool IsMouseOverFolderPanelResizeBorder => isMouseOverFolderPanelResizeBorder;
         
         [NonSerialized] private bool isMouseInEntriesPanel;
-        
-        [NonSerialized] private string renameText;
+        public bool IsMouseInEntriesPanel => isMouseInEntriesPanel;
 
-        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed || folderPanel.IsFolderBeingRenamed;
+        public bool IsRenaming => PaletteEntry.IsEntryBeingRenamed || folderPanel.IsFolderBeingRenamed;
 
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;
 
         private readonly AssetPaletteWindowFolderPanel folderPanel;
         public AssetPaletteWindowFolderPanel FolderPanel => folderPanel;
+        
+        private readonly AssetPaletteWindowEntryPanel entryPanel;
+        public AssetPaletteWindowEntryPanel EntryPanel => entryPanel;
 
         public AssetPaletteWindow()
         {
             folderPanel = new AssetPaletteWindowFolderPanel(this);
+            entryPanel = new AssetPaletteWindowEntryPanel(this);
         }
 
         [MenuItem ("Window/General/Asset Palette")]
@@ -161,7 +161,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                 EditorGUILayout.BeginVertical();
                 {
-                    DrawEntriesPanel();
+                    entryPanel.DrawEntriesPanel();
 
                     DrawFooter();
                     
@@ -188,9 +188,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Store this once so that specific entries can consider if they should be handling an asset drop, or 
             // if the entry panel as a whole should be handling it.
             isDraggingAssetIntoEntryPanel = (Event.current.type == EventType.DragUpdated ||
-                                             Event.current.type == EventType.DragPerform) && isMouseInEntriesPanel &&
-                                            DragAndDrop.objectReferences.Length > 0 &&
-                                            DragAndDrop.GetGenericData(EntryDragGenericDataType) == null;
+                            Event.current.type == EventType.DragPerform) && isMouseInEntriesPanel &&
+                            DragAndDrop.objectReferences.Length > 0 &&
+                            DragAndDrop.GetGenericData(AssetPaletteWindowEntryPanel.EntryDragGenericDataType) == null;
         }
 
         private void PerformKeyboardShortcuts()
@@ -217,9 +217,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return;
             }
 
-            if (Event.current.keyCode == KeyCode.F2 && entriesSelected.Count == 1)
+            if (Event.current.keyCode == KeyCode.F2 && entryPanel.EntriesSelected.Count == 1)
             {
-                StartEntryRename(entriesSelected[0]);
+                entryPanel.StartEntryRename(entryPanel.EntriesSelected[0]);
                 Event.current.Use();
                 return;
             }
@@ -227,9 +227,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Allow all currently visible entries to be selected if CTRL+A is pressed. 
             if (Event.current.control && Event.current.keyCode == KeyCode.A)
             {
-                SelectEntries(GetEntries(), true);
-                if (GetEntryCount() > 0)
-                    entriesIndividuallySelected.Add(GetEntry(GetEntryCount() - 1));
+                entryPanel.SelectEntries(entryPanel.GetEntries(), true);
+                if (entryPanel.GetEntryCount() > 0)
+                    entryPanel.EntriesIndividuallySelected.Add(entryPanel.GetEntry(entryPanel.GetEntryCount() - 1));
                 Repaint();
                 return;
             }
@@ -246,15 +246,15 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         public void RemoveSelectedEntries()
         {
-            RemoveEntries(entriesSelected);
+            entryPanel.RemoveEntries(entryPanel.EntriesSelected);
 
-            ClearEntrySelection();
+            entryPanel.ClearEntrySelection();
             Repaint();
         }
 
-        private void StopAllRenames(bool isCancel)
+        public void StopAllRenames(bool isCancel)
         {
-            StopEntryRename(isCancel);
+            entryPanel.StopEntryRename(isCancel);
             folderPanel.CancelFolderRename();
         }
         

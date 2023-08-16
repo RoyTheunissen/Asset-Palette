@@ -435,14 +435,14 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (isDraggedFromFolder)
             {
                 // First remove all of the selected entries from the current folder.
-                List<PaletteEntry> entriesToMove = new List<PaletteEntry>(window.EntriesSelected);
-                window.RemoveEntries(entriesToMove);
+                List<PaletteEntry> entriesToMove = new List<PaletteEntry>(window.EntryPanel.EntriesSelected);
+                window.EntryPanel.RemoveEntries(entriesToMove);
 
                 // Make the recipient folder the current folder.
                 window.SelectedFolderSerializedProperty = folderProperty;
 
                 // Now add all of the entries to the recipient folder.
-                window.AddEntries(entriesToMove);
+                window.EntryPanel.AddEntries(entriesToMove);
             }
             else
             {

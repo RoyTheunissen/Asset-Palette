@@ -11,7 +11,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private readonly string personalPaletteGuid = "Personal Palette Guid";
         private AssetPaletteCollection cachedPersonalPalette;
 
-        private AssetPaletteCollection PersonalPalette
+        public AssetPaletteCollection PersonalPalette
         {
             get
             {
@@ -198,13 +198,30 @@ namespace RoyTheunissen.AssetPalette.Windows
                 ClearCachedSelectedFolderSerializedProperties();
                 
                 // If you change the folder that's selected, we need to clear the selection.
-                ClearEntrySelection();
+                entryPanel.ClearEntrySelection();
                 
                 // Now is actually also a good time to make sure it's sorted correctly, because sorting modes configured
                 // while on another folder are meant to apply to newly selected folders too.
                 CurrentCollectionSerializedObject.Update();
-                SortEntriesInSerializedObject();
+                entryPanel.SortEntriesInSerializedObject();
                 CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+        
+        [NonSerialized] private bool didCacheSelectedFolderEntriesSerializedProperty;
+        [NonSerialized] private SerializedProperty cachedSelectedFolderEntriesSerializedProperty;
+
+        public SerializedProperty SelectedFolderEntriesSerializedProperty
+        {
+            get
+            {
+                if (!didCacheSelectedFolderEntriesSerializedProperty)
+                {
+                    didCacheSelectedFolderEntriesSerializedProperty = true;
+                    cachedSelectedFolderEntriesSerializedProperty =
+                        SelectedFolderSerializedProperty.FindPropertyRelative("entries");
+                }
+                return cachedSelectedFolderEntriesSerializedProperty;
             }
         }
         
@@ -228,7 +245,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             didCacheSelectedFolderSerializedProperty = false;
             didCacheSelectedFolderEntriesSerializedProperty = false;
             
-            ClearEntrySelection();
+            entryPanel.ClearEntrySelection();
         }
 
         private void ClearCachedFoldersSerializedProperties()
@@ -237,6 +254,22 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             didCacheFoldersSerializedProperty = false;
             folderPanel.ClearFoldersTreeView(true);
+        }
+        
+        public void ApplyModifiedProperties()
+        {
+            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            if (CurrentCollection == PersonalPalette)
+                SavePersonalPaletteCollection();
+        }
+
+        private void SavePersonalPaletteCollection()
+        {
+            if (cachedPersonalPalette == null)
+                return;
+
+            string personalPaletteJson = JsonUtility.ToJson(cachedPersonalPalette);
+            EditorPrefs.SetString(PersonalPaletteStorageKeyEditorPref, personalPaletteJson);
         }
     }
 }

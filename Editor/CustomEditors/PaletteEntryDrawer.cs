@@ -62,7 +62,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         public static Rect GetRenameRect(Rect position, string name)
         {
             GUIContent label = new GUIContent(name);
-            GUIStyle style = AssetPaletteWindow.GridEntryRenameTextStyle;
+            GUIStyle style = AssetPaletteWindowEntryPanel.GridEntryRenameTextStyle;
             float height = style.CalcHeight(label, position.width);
             return RectExtensions.GetSubRectFromBottom(position, height);
         }
@@ -191,7 +191,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             if (window == null)
                 return;
             
-            window.StartEntryRename(entry);
+            window.EntryPanel.StartEntryRename(entry);
         }
 
         private void DeleteSelectedEntries(object userData)
