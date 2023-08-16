@@ -106,7 +106,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private PaletteEntry entryBelowCursorOnMouseDown;
 
-        private bool ShouldDrawListView => Mathf.Approximately(window.ZoomLevel, 0.0f);
+        private bool ShouldDrawListView => Mathf.Approximately(window.Footer.ZoomLevel, 0.0f);
         
         [NonSerialized] private string renameText;
         
@@ -342,7 +342,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DrawGridEntries(float containerWidth, out bool didClickASpecificEntry)
         {
-            int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, window.ZoomLevel));
+            int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, window.Footer.ZoomLevel));
             int columnCount = Mathf.FloorToInt(containerWidth / (entrySize + EntrySpacing));
             int rowCount = Mathf.CeilToInt((float)GetEntryCount() / columnCount);
 
@@ -562,7 +562,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
             else if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOnEntry
                      && !window.FolderPanel.IsResizingFolderPanel && window.IsMouseInEntriesPanel
-                     && !window.IsZoomLevelFocused
+                     && !window.Footer.IsZoomLevelFocused
                      && entriesSelected.Contains(entryBelowCursorOnMouseDown))
             {
                 StartEntriesDrag();

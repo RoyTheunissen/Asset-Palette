@@ -4,8 +4,14 @@ using UnityEngine;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public partial class AssetPaletteWindow
+    public class AssetPaletteWindowFooter
     {
+        // Editor prefs
+        private static string ZoomLevelEditorPref => AssetPaletteWindow.EditorPrefPrefix + "ZoomLevel";
+        
+        // Measurements
+        public static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
+        
         private const string ZoomLevelControlName = "AssetPaletteEntriesZoomLevelControl";
 
         public float ZoomLevel
@@ -23,11 +29,18 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         public bool IsZoomLevelFocused => GUI.GetNameOfFocusedControl() == ZoomLevelControlName;
         
-        private void DrawFooter()
+        private AssetPaletteWindow window;
+
+        public AssetPaletteWindowFooter(AssetPaletteWindow window)
+        {
+            this.window = window;
+        }
+
+        public void DrawFooter()
         {
             Rect separatorRect = new Rect(
-                folderPanel.FolderPanelWidth,
-                position.height - FooterHeight, position.width - folderPanel.FolderPanelWidth, 1);
+                window.FolderPanel.FolderPanelWidth,
+                window.position.height - FooterHeight, window.position.width - window.FolderPanel.FolderPanelWidth, 1);
 
             EditorGUI.DrawRect(separatorRect, AssetPaletteWindowFolderPanel.DividerColor);
 
@@ -37,7 +50,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 EditorGUILayout.BeginHorizontal();
                 {
                     // Draw the asset path of the first asset that is selected. That's how the Project View does it.
-                    foreach (PaletteEntry paletteEntry in entryPanel.EntriesSelected)
+                    foreach (PaletteEntry paletteEntry in window.EntryPanel.EntriesSelected)
                     {
                         entryAssetsWhosePathToShow.Clear();
                         paletteEntry.GetAssetsToSelect(ref entryAssetsWhosePathToShow);
