@@ -13,18 +13,20 @@ using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.Seria
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public class AssetPaletteWindowEntryPanel
+    public sealed class AssetPaletteWindowEntryPanel
     {
         // Editor prefs
         private static string EntriesSortModeEditorPref => AssetPaletteWindow.EditorPrefPrefix + "EntriesSortMode";
         
-        public const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
-        
+        // Measurements
+        public static float EntryPanelHeightMin => 50;
         private const float Padding = 2;
         private const float EntrySpacing = 4;
         private const int EntrySizeMax = 128;
         private const float EntrySizeMin = EntrySizeMax * 0.45f;
         private const float ScrollBarWidth = 13;
+        
+        public const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
         
         [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
         public List<PaletteEntry> EntriesSelected => entriesSelected;

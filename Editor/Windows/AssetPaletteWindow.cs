@@ -34,10 +34,10 @@ namespace RoyTheunissen.AssetPalette.Windows
         // Measurements
         public static float EntriesPanelWidthMin => AssetPaletteWindowHeader.RefreshButtonWidth
                         + AssetPaletteWindowHeader.AddSpecialButtonWidth + AssetPaletteWindowHeader.SortModeButtonWidth;
-        private static float PrefabPanelHeightMin => 50;
         private static float WindowWidthMin => AssetPaletteWindowFolderPanel.FolderPanelWidthMin + EntriesPanelWidthMin;
         private static readonly float WindowHeightMin = AssetPaletteWindowFooter.FooterHeight
-                                                        + AssetPaletteWindowHeader.HeaderHeight + PrefabPanelHeightMin;
+                                                        + AssetPaletteWindowHeader.HeaderHeight
+                                                        + AssetPaletteWindowEntryPanel.EntryPanelHeightMin;
 
         [NonSerialized] private bool isMouseInHeader;
         [NonSerialized] private bool isMouseInFooter;
