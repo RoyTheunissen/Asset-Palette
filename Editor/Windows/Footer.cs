@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public sealed class AssetPaletteWindowFooter
+    public sealed class Footer
     {
         // Editor prefs
         private static string ZoomLevelEditorPref => AssetPaletteWindow.EditorPrefPrefix + "ZoomLevel";
@@ -31,7 +31,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private AssetPaletteWindow window;
 
-        public AssetPaletteWindowFooter(AssetPaletteWindow window)
+        public Footer(AssetPaletteWindow window)
         {
             this.window = window;
         }
