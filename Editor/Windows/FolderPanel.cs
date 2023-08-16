@@ -14,8 +14,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static string FolderPanelWidthEditorPref => AssetPaletteWindow.EditorPrefPrefix + "FolderPanelWidth";
         
         // Measurements
-        public static float FolderPanelWidthMin => AssetPaletteWindowHeader.CollectionButtonWidth
-                                                   + AssetPaletteWindowHeader.NewFolderButtonWidth;
+        public static float FolderPanelWidthMin => Header.CollectionButtonWidth
+                                                   + Header.NewFolderButtonWidth;
         
         // Miscellaneous
         private const string InitialFolderName = "Default";
@@ -38,7 +38,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private const int DividerRectThickness = 1;
         private Rect DividerRect => new Rect(
-            FolderPanelWidth - DividerRectThickness, AssetPaletteWindowHeader.HeaderHeight,
+            FolderPanelWidth - DividerRectThickness, Header.HeaderHeight,
             DividerRectThickness, window.position.height);
 
         public Rect DividerResizeRect

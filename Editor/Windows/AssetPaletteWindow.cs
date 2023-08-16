@@ -32,11 +32,11 @@ namespace RoyTheunissen.AssetPalette.Windows
 
 
         // Measurements
-        public static float EntriesPanelWidthMin => AssetPaletteWindowHeader.RefreshButtonWidth
-                        + AssetPaletteWindowHeader.AddSpecialButtonWidth + AssetPaletteWindowHeader.SortModeButtonWidth;
+        public static float EntriesPanelWidthMin => Windows.Header.RefreshButtonWidth
+                        + Windows.Header.AddSpecialButtonWidth + Windows.Header.SortModeButtonWidth;
         private static float WindowWidthMin => Windows.FolderPanel.FolderPanelWidthMin + EntriesPanelWidthMin;
         private static readonly float WindowHeightMin = Windows.Footer.FooterHeight
-                                                        + AssetPaletteWindowHeader.HeaderHeight
+                                                        + Windows.Header.HeaderHeight
                                                         + Windows.EntryPanel.EntryPanelHeightMin;
 
         [NonSerialized] private bool isMouseInHeader;
@@ -63,15 +63,15 @@ namespace RoyTheunissen.AssetPalette.Windows
         private readonly Footer footer;
         public Footer Footer => footer;
         
-        private AssetPaletteWindowHeader header;
-        public AssetPaletteWindowHeader Header => header;
+        private Header header;
+        public Header Header => header;
 
         public AssetPaletteWindow()
         {
             folderPanel = new FolderPanel(this);
             entryPanel = new EntryPanel(this);
             footer = new Footer(this);
-            header = new AssetPaletteWindowHeader(this);
+            header = new Header(this);
         }
 
         [MenuItem ("Window/General/Asset Palette")]
@@ -180,7 +180,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             // Need to do this here, because Event.current.mousePosition is relative to any scrollviews, so doing these
             // same checks within say the entries panel will yield different results.
-            isMouseInHeader = Event.current.mousePosition.y <= AssetPaletteWindowHeader.HeaderHeight;
+            isMouseInHeader = Event.current.mousePosition.y <= Header.HeaderHeight;
             isMouseInFooter = Event.current.mousePosition.y >= position.height - Footer.FooterHeight;
             isMouseInFolderPanel = !isMouseInHeader
                                    && Event.current.mousePosition.x < folderPanel.FolderPanelWidth;

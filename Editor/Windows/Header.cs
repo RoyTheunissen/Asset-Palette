@@ -9,7 +9,7 @@ using TypeExtensions = RoyTheunissen.AssetPalette.Extensions.TypeExtensions;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public sealed class AssetPaletteWindowHeader : IHasCustomMenu
+    public sealed class Header : IHasCustomMenu
     {
         // Measurements
         public static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
@@ -24,7 +24,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private AssetPaletteWindow window;
 
-        public AssetPaletteWindowHeader(AssetPaletteWindow window)
+        public Header(AssetPaletteWindow window)
         {
             this.window = window;
         }
