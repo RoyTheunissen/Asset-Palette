@@ -7,8 +7,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 {
     public partial class AssetPaletteWindow
     {
-        private const string AddEntryForCurrentSelectionText = "Add Shortcut For Project Window Selection";
-        private readonly string personalPaletteGuid = "Personal Palette Guid";
+        public const string PersonalPaletteGuid = "Personal Palette Guid";
         private AssetPaletteCollection cachedPersonalPalette;
 
         public AssetPaletteCollection PersonalPalette
@@ -29,7 +28,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private string CurrentCollectionGuid
+        public string CurrentCollectionGuid
         {
             get => EditorPrefs.GetString(CurrentCollectionGUIDEditorPref);
             set
@@ -51,7 +50,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 if (cachedCurrentCollection == null)
                 {
-                    if (CurrentCollectionGuid == personalPaletteGuid)
+                    if (CurrentCollectionGuid == PersonalPaletteGuid)
                     {
                         cachedCurrentCollection = PersonalPalette;
                     }
@@ -86,7 +85,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                 if (value == PersonalPalette)
                 {
-                    CurrentCollectionGuid = personalPaletteGuid;
+                    CurrentCollectionGuid = PersonalPaletteGuid;
                 }
                 else
                 {

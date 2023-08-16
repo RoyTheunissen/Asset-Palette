@@ -32,17 +32,12 @@ namespace RoyTheunissen.AssetPalette.Windows
 
 
         // Measurements
-        public static float EntriesPanelWidthMin => RefreshButtonWidth + AddSpecialButtonWidth + SortModeButtonWidth;
+        public static float EntriesPanelWidthMin => AssetPaletteWindowHeader.RefreshButtonWidth
+                        + AssetPaletteWindowHeader.AddSpecialButtonWidth + AssetPaletteWindowHeader.SortModeButtonWidth;
         private static float PrefabPanelHeightMin => 50;
         private static float WindowWidthMin => AssetPaletteWindowFolderPanel.FolderPanelWidthMin + EntriesPanelWidthMin;
-        public static float CollectionButtonWidth => 130;
-        public static int NewFolderButtonWidth => 76 + (AssetPaletteWindowFolderPanel.HasMultipleFolderTypes ? 9 : 0);
-        private static int SortModeButtonWidth => 140;
-        private static int AddSpecialButtonWidth => 90;
-        private static int RefreshButtonWidth => 60;
-        public static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static readonly float WindowHeightMin = AssetPaletteWindowFooter.FooterHeight
-                                                        + HeaderHeight + PrefabPanelHeightMin;
+                                                        + AssetPaletteWindowHeader.HeaderHeight + PrefabPanelHeightMin;
 
         [NonSerialized] private bool isMouseInHeader;
         [NonSerialized] private bool isMouseInFooter;
@@ -65,14 +60,18 @@ namespace RoyTheunissen.AssetPalette.Windows
         private readonly AssetPaletteWindowEntryPanel entryPanel;
         public AssetPaletteWindowEntryPanel EntryPanel => entryPanel;
         
-        private AssetPaletteWindowFooter footer;
+        private readonly AssetPaletteWindowFooter footer;
         public AssetPaletteWindowFooter Footer => footer;
+        
+        private AssetPaletteWindowHeader header;
+        public AssetPaletteWindowHeader Header => header;
 
         public AssetPaletteWindow()
         {
             folderPanel = new AssetPaletteWindowFolderPanel(this);
             entryPanel = new AssetPaletteWindowEntryPanel(this);
             footer = new AssetPaletteWindowFooter(this);
+            header = new AssetPaletteWindowHeader(this);
         }
 
         [MenuItem ("Window/General/Asset Palette")]
@@ -146,14 +145,14 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             // Fall back to the personal palette when no valid palette asset is available.
             if (string.IsNullOrEmpty(CurrentCollectionGuid) || CurrentCollection == null)
-                CurrentCollectionGuid = personalPaletteGuid;
+                CurrentCollectionGuid = PersonalPaletteGuid;
             PaletteDrawing.ActivePaletteWindow = this;
 
             UpdateMouseOverStates();
             
             PerformKeyboardShortcuts();
 
-            DrawHeader();
+            header.DrawHeader();
             
             EditorGUILayout.BeginHorizontal();
             {
@@ -181,7 +180,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             // Need to do this here, because Event.current.mousePosition is relative to any scrollviews, so doing these
             // same checks within say the entries panel will yield different results.
-            isMouseInHeader = Event.current.mousePosition.y <= HeaderHeight;
+            isMouseInHeader = Event.current.mousePosition.y <= AssetPaletteWindowHeader.HeaderHeight;
             isMouseInFooter = Event.current.mousePosition.y >= position.height - AssetPaletteWindowFooter.FooterHeight;
             isMouseInFolderPanel = !isMouseInHeader
                                    && Event.current.mousePosition.x < folderPanel.FolderPanelWidth;
@@ -292,6 +291,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             ClearCachedCollection();
             
             UpdateAndRepaint();
+        }
+
+        void IHasCustomMenu.AddItemsToMenu(GenericMenu menu)
+        {
+            header.AddItemsToMenu(menu);
         }
     }
 }

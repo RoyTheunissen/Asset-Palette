@@ -9,42 +9,60 @@ using TypeExtensions = RoyTheunissen.AssetPalette.Extensions.TypeExtensions;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public partial class AssetPaletteWindow
+    public sealed class AssetPaletteWindowHeader : IHasCustomMenu
     {
-        private void DrawHeader()
+        // Measurements
+        public static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
+        public static float CollectionButtonWidth => 130;
+        public static int NewFolderButtonWidth => 76 + (AssetPaletteWindowFolderPanel.HasMultipleFolderTypes ? 9 : 0);
+        public static int SortModeButtonWidth => 140;
+        public static int AddSpecialButtonWidth => 90;
+        public static int RefreshButtonWidth => 60;
+        
+        // Texts
+        private const string AddEntryForCurrentSelectionText = "Add Shortcut For Project Window Selection";
+        
+        private AssetPaletteWindow window;
+
+        public AssetPaletteWindowHeader(AssetPaletteWindow window)
         {
-            Rect headerRect = GUILayoutUtility.GetRect(position.width, HeaderHeight);
+            this.window = window;
+        }
+
+        public void DrawHeader()
+        {
+            Rect headerRect = GUILayoutUtility.GetRect(window.position.width, HeaderHeight);
             GUI.Box(headerRect, GUIContent.none, EditorStyles.toolbar);
 
-            AssetPaletteCollection currentCollection = CurrentCollection;
+            AssetPaletteCollection currentCollection = window.CurrentCollection;
             string name = currentCollection == null ? "[No Collection]" : currentCollection.name;
 
-            Rect folderPanelHeaderRect = RectExtensions.GetSubRectFromLeft(headerRect, folderPanel.FolderPanelWidth);
+            Rect folderPanelHeaderRect = headerRect.GetSubRectFromLeft(window.FolderPanel.FolderPanelWidth);
             DrawFolderPanelHeader(folderPanelHeaderRect, name);
 
             Rect entryPanelHeaderRect =
-                RectExtensions.GetSubRectFromRight(headerRect, position.width - folderPanel.FolderPanelWidth);
+                headerRect.GetSubRectFromRight(window.position.width - window.FolderPanel.FolderPanelWidth);
             DrawEntryPanelHeader(entryPanelHeaderRect);
         }
 
         private void DrawFolderPanelHeader(Rect rect, string name)
         {
             // Allow a new collection to be created or loaded.
-            Rect collectionRect = RectExtensions.GetSubRectFromLeft(rect, CollectionButtonWidth);
+            Rect collectionRect = rect.GetSubRectFromLeft(CollectionButtonWidth);
             bool createNewCollection = GUI.Button(collectionRect, name, EditorStyles.toolbarDropDown);
             if (createNewCollection)
                 DoCollectionDropDown(collectionRect);
 
             // Allow a new folder to be created. Supports derived types of PaletteFolder as an experimental feature.
-            Rect newFolderRect = RectExtensions.GetSubRectFromRight(rect, NewFolderButtonWidth);
-            GUI.enabled = HasCollection;
+            Rect newFolderRect = rect.GetSubRectFromRight(NewFolderButtonWidth);
+            GUI.enabled = window.HasCollection;
             bool createNewFolder = GUI.Button(
                 newFolderRect, "New Folder",
                 AssetPaletteWindowFolderPanel.HasMultipleFolderTypes
                     ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
             GUI.enabled = true;
             if (createNewFolder)
-                folderPanel.TryCreateNewFolderDropDown(newFolderRect);
+                window.FolderPanel.TryCreateNewFolderDropDown(newFolderRect);
         }
 
         private void DrawEntryPanelHeader(Rect headerRect)
@@ -52,9 +70,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Dropdown for changing the sort mode.
             Rect sortModeButtonRect = RectExtensions.GetSubRectFromRight(
                 headerRect, SortModeButtonWidth, out Rect remainder);
-            GUI.enabled = HasCollection;
+            GUI.enabled = window.HasCollection;
             bool showSortModeRect = GUI.Button(
-                sortModeButtonRect, entryPanel.SortMode.ToString().ToHumanReadable(), EditorStyles.toolbarDropDown);
+                sortModeButtonRect, window.EntryPanel.SortMode.ToString().ToHumanReadable(), EditorStyles.toolbarDropDown);
             if (showSortModeRect)
                 DoSortModeDropDown(sortModeButtonRect);
 
@@ -92,7 +110,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     label, false,
                     userData => EditorApplication.delayCall +=
                         EditorApplication.delayCall +=
-                            () => entryPanel.SetSortModeAndSortCurrentEntries((SortModes)value), value);
+                            () => window.EntryPanel.SetSortModeAndSortCurrentEntries((SortModes)value), value);
             }
 
             menu.DropDown(buttonRect);
@@ -106,8 +124,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Allow a new collection to be created.
             GenericMenu dropdownMenu = new GenericMenu();
 
-            dropdownMenu.AddItem(new GUIContent("Personal Palette"), string.Equals(CurrentCollectionGuid, personalPaletteGuid, StringComparison.Ordinal), 
-                LoadPersonalPaletteCollection,  personalPaletteGuid);
+            dropdownMenu.AddItem(new GUIContent("Personal Palette"), string.Equals(
+                    window.CurrentCollectionGuid, AssetPaletteWindow.PersonalPaletteGuid, StringComparison.Ordinal), 
+                LoadPersonalPaletteCollection, AssetPaletteWindow.PersonalPaletteGuid);
 
             dropdownMenu.AddSeparator("");
 
@@ -115,7 +134,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = 0; i < existingCollectionGuids.Length; i++)
             {
                 string collectionGuid = existingCollectionGuids[i];
-                bool isCurrentCollection = string.Equals(collectionGuid, CurrentCollectionGuid, StringComparison.Ordinal);
+                bool isCurrentCollection = string.Equals(
+                    collectionGuid, window.CurrentCollectionGuid, StringComparison.Ordinal);
                 string collectionName = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(collectionGuid));
                 dropdownMenu.AddItem(
                     new GUIContent(collectionName), isCurrentCollection, LoadExistingCollection, collectionGuid);
@@ -140,28 +160,28 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-            AssetPaletteCollection newCollection = CreateInstance<AssetPaletteCollection>();
+            AssetPaletteCollection newCollection = ScriptableObject.CreateInstance<AssetPaletteCollection>();
             AssetDatabase.CreateAsset(newCollection, path);
             AssetDatabase.SaveAssets();
             EditorGUIUtility.PingObject(newCollection);
 
-            CurrentCollection = newCollection;
+            window.CurrentCollection = newCollection;
 
-            Repaint();
+            window.Repaint();
         }
 
         private void LoadExistingCollection(object userdata)
         {
             string guid = (string)userdata;
-            CurrentCollectionGuid = guid;
+            window.CurrentCollectionGuid = guid;
 
-            Repaint();
+            window.Repaint();
         }
 
         private void LoadPersonalPaletteCollection(object userdata)
         {
-            CurrentCollectionGuid = personalPaletteGuid;
-            Repaint();
+            window.CurrentCollectionGuid = AssetPaletteWindow.PersonalPaletteGuid;
+            window.Repaint();
         }
 
         private bool HasProjectWindowSelection()
@@ -181,7 +201,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void DoEntryRefresh()
         {
-            foreach (PaletteEntry entry in folderPanel.SelectedFolder.Entries)
+            foreach (PaletteEntry entry in window.FolderPanel.SelectedFolder.Entries)
             {
                 entry.Refresh();
             }
@@ -200,7 +220,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             GUIContent addEntryForCurrentSelectionLabel =
                 new GUIContent(prefix + AddEntryForCurrentSelectionText);
             if (HasProjectWindowSelection())
-                menu.AddItem(addEntryForCurrentSelectionLabel, false, entryPanel.AddEntryForProjectWindowSelection);
+                menu.AddItem(addEntryForCurrentSelectionLabel, false, window.EntryPanel.AddEntryForProjectWindowSelection);
             else
                 menu.AddDisabledItem(addEntryForCurrentSelectionLabel, false);
         }
