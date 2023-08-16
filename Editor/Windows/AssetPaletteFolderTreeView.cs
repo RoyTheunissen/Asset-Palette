@@ -102,7 +102,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                 // Keep going recursively until we've added all the children.
                 SerializedProperty children = folderProperty.FindPropertyRelative(
-                    AssetPaletteWindow.ChildFoldersPropertyName);
+                    AssetPaletteWindowFolderPanel.ChildFoldersPropertyName);
                 AddChildFolders(item, children);
             }
         }

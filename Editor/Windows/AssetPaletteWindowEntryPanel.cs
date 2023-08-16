@@ -22,6 +22,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const float ScrollBarWidth = 13;
         
         [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
+        public List<PaletteEntry> EntriesSelected => entriesSelected;
+
         [NonSerialized] private readonly List<PaletteEntry> entriesIndividuallySelected = new List<PaletteEntry>();
 
         private Vector2 entriesPanelScrollPosition;
@@ -118,17 +120,17 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private int GetEntryCount()
         {
-            return SelectedFolder.Entries.Count;
+            return folderPanel.SelectedFolder.Entries.Count;
         }
         
         private List<PaletteEntry> GetEntries()
         {
-            return SelectedFolder.Entries;
+            return folderPanel.SelectedFolder.Entries;
         }
         
         private PaletteEntry GetEntry(int index)
         {
-            return SelectedFolder.Entries[index];
+            return folderPanel.SelectedFolder.Entries[index];
         }
         
         private void SortEntriesInSerializedObject()
@@ -181,7 +183,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             SelectEntry(entry, false);
         }
 
-        private void ApplyModifiedProperties()
+        public void ApplyModifiedProperties()
         {
             CurrentCollectionSerializedObject.ApplyModifiedProperties();
             if (CurrentCollection == PersonalPalette)
@@ -197,7 +199,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorPrefs.SetString(PersonalPaletteStorageKeyEditorPref, personalPaletteJson);
         }
 
-        private void AddEntries(List<PaletteEntry> entries, bool apply = true)
+        public void AddEntries(List<PaletteEntry> entries, bool apply = true)
         {
             if (apply)
                 CurrentCollectionSerializedObject.Update();
@@ -237,7 +239,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 RemoveEntryAt(index);
         }
 
-        private void RemoveEntries(List<PaletteEntry> entries)
+        public void RemoveEntries(List<PaletteEntry> entries)
         {
             for (int i = 0; i < entries.Count; i++)
             {
@@ -265,7 +267,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 entriesPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
 
             // Draw a dark background for the entries panel.
-            Rect entriesPanelRect = new Rect(0, 0, position.width - FolderPanelWidth, 90000000);
+            Rect entriesPanelRect = new Rect(0, 0, position.width - folderPanel.FolderPanelWidth, 90000000);
             EditorGUI.DrawRect(entriesPanelRect, new Color(0, 0, 0, 0.1f));
 
             // If the current state is invalid, draw a message instead.
@@ -277,7 +279,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return;
             }
             
-            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - FolderPanelWidth - ScrollBarWidth;
+            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth)
+                                   - folderPanel.FolderPanelWidth - ScrollBarWidth;
 
             GUILayout.Space(Padding);
 
@@ -419,6 +422,17 @@ namespace RoyTheunissen.AssetPalette.Windows
                 RemoveEntryAt(index);
             }
         }
+        
+        private string GetRenameControlId(SerializedProperty serializedProperty)
+        {
+            return serializedProperty.propertyPath;
+        }
+
+        private string GetRenameControlId(PaletteEntry entry)
+        {
+            SerializedProperty serializedProperty = GetSerializedPropertyForEntry(entry);
+            return GetRenameControlId(serializedProperty);
+        }
 
         private void DrawRenameEntry(SerializedProperty entryProperty, Rect labelRect)
         {
@@ -549,7 +563,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 Repaint();
             }
             else if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOnEntry &&
-                     !isResizingFolderPanel && isMouseInEntriesPanel && !IsZoomLevelFocused &&
+                     !folderPanel.IsResizingFolderPanel && isMouseInEntriesPanel && !IsZoomLevelFocused &&
                      entriesSelected.Contains(entryBelowCursorOnMouseDown))
             {
                 StartEntriesDrag();
@@ -574,7 +588,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Mark the drag as being an asset palette entry drag, so we know not to accept it again ourselves.
             // Also pass along the name of the directory so we can handle stuff like dragging assets out into
             // another folder (but ignore the folder it was originally dragged from).
-            DragAndDrop.SetGenericData(EntryDragGenericDataType, SelectedFolder.Name);
+            DragAndDrop.SetGenericData(EntryDragGenericDataType, folderPanel.SelectedFolder.Name);
             string dragName = selectedAssets.Count == 1 ? selectedAssets[0].ToString() : "<multiple>";
             DragAndDrop.StartDrag(dragName);
         }
@@ -695,7 +709,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             Repaint();
         }
 
-        private SerializedProperty GetSerializedPropertyForEntry(PaletteEntry entry)
+        public SerializedProperty GetSerializedPropertyForEntry(PaletteEntry entry)
         {
             int index = IndexOfEntry(entry);
 
@@ -722,7 +736,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (isValidRename && !isCancel)
             {
                 CurrentCollectionSerializedObject.Update();
-                int index = SelectedFolder.Entries.IndexOf(PaletteEntry.EntryCurrentlyRenaming);
+                int index = folderPanel.SelectedFolder.Entries.IndexOf(PaletteEntry.EntryCurrentlyRenaming);
                 SerializedProperty entryBeingRenamedProperty =
                     SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
                 SerializedProperty customNameProperty = entryBeingRenamedProperty.FindPropertyRelative("customName");

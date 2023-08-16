@@ -26,10 +26,10 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void DrawFooter()
         {
             Rect separatorRect = new Rect(
-                FolderPanelWidth,
-                position.height - FooterHeight, position.width - FolderPanelWidth, 1);
+                folderPanel.FolderPanelWidth,
+                position.height - FooterHeight, position.width - folderPanel.FolderPanelWidth, 1);
 
-            EditorGUI.DrawRect(separatorRect, DividerColor);
+            EditorGUI.DrawRect(separatorRect, AssetPaletteWindowFolderPanel.DividerColor);
 
             EditorGUILayout.BeginVertical(GUILayout.Height(FooterHeight));
             {

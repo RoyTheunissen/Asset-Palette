@@ -22,10 +22,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return sections[sections.Length - 2];
             }
         }
-        
-        private static string EditorPrefPrefix => $"RoyTheunissen/PrefabPalette/{ProjectName}/";
+
+        public static string EditorPrefPrefix => $"RoyTheunissen/PrefabPalette/{ProjectName}/";
         private static string CurrentCollectionGUIDEditorPref => EditorPrefPrefix + "CurrentCollectionGUID";
-        private static string FolderPanelWidthEditorPref => EditorPrefPrefix + "FolderPanelWidth";
         private static string ZoomLevelEditorPref => EditorPrefPrefix + "ZoomLevel";
         private static string SelectedFolderReferenceIdPathEditorPref => EditorPrefPrefix + "SelectedFolderReferenceIdPath";
         private static string EntriesSortModeEditorPref => EditorPrefPrefix + "EntriesSortMode";
@@ -35,33 +34,42 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";
 
 
-        private static float FolderPanelWidthMin => CollectionButtonWidth + NewFolderButtonWidth;
-        private static float EntriesPanelWidthMin => RefreshButtonWidth + AddSpecialButtonWidth + SortModeButtonWidth;
+        public static float EntriesPanelWidthMin => RefreshButtonWidth + AddSpecialButtonWidth + SortModeButtonWidth;
         private static float PrefabPanelHeightMin => 50;
-        private static float WindowWidthMin => FolderPanelWidthMin + EntriesPanelWidthMin;
-        private static float CollectionButtonWidth => 130;
-        private static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
-        private static int NewFolderButtonWidth => 76 + (HasMultipleFolderTypes ? 9 : 0);
+        private static float WindowWidthMin => AssetPaletteWindowFolderPanel.FolderPanelWidthMin + EntriesPanelWidthMin;
+        public static float CollectionButtonWidth => 130;
+        public static int NewFolderButtonWidth => 76 + (AssetPaletteWindowFolderPanel.HasMultipleFolderTypes ? 9 : 0);
         private static int SortModeButtonWidth => 140;
         private static int AddSpecialButtonWidth => 90;
         private static int RefreshButtonWidth => 60;
-        
-        private static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
+
+        public static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         private static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
         private static readonly float WindowHeightMin = FooterHeight + HeaderHeight + PrefabPanelHeightMin;
 
         [NonSerialized] private bool isMouseInHeader;
         [NonSerialized] private bool isMouseInFooter;
         [NonSerialized] private bool isMouseInFolderPanel;
+        
         [NonSerialized] private bool isMouseOverFolderPanelResizeBorder;
+        public bool IsMouseOverFolderPanelResizeBorder => isMouseOverFolderPanelResizeBorder;
+        
         [NonSerialized] private bool isMouseInEntriesPanel;
         
         [NonSerialized] private string renameText;
 
-        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed || IsFolderBeingRenamed;
+        private bool IsRenaming => PaletteEntry.IsEntryBeingRenamed || folderPanel.IsFolderBeingRenamed;
 
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;
+
+        private readonly AssetPaletteWindowFolderPanel folderPanel;
+        public AssetPaletteWindowFolderPanel FolderPanel => folderPanel;
+
+        public AssetPaletteWindow()
+        {
+            folderPanel = new AssetPaletteWindowFolderPanel(this);
+        }
 
         [MenuItem ("Window/General/Asset Palette")]
         private static void OpenViaMenu()
@@ -124,9 +132,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void UpdateAndRepaint()
+        public void UpdateAndRepaint()
         {
-            UpdateFoldersTreeView(false);
+            folderPanel.UpdateFoldersTreeView(false);
             Repaint();
         }
 
@@ -147,7 +155,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 EditorGUILayout.BeginVertical();
                 {
-                    DrawFolderPanel();
+                    folderPanel.DrawFolderPanel();
                 }
                 EditorGUILayout.EndVertical();
 
@@ -171,8 +179,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             // same checks within say the entries panel will yield different results.
             isMouseInHeader = Event.current.mousePosition.y <= HeaderHeight;
             isMouseInFooter = Event.current.mousePosition.y >= position.height - FooterHeight;
-            isMouseInFolderPanel = !isMouseInHeader && Event.current.mousePosition.x < FolderPanelWidth;
-            isMouseOverFolderPanelResizeBorder = DividerResizeRect.Contains(Event.current.mousePosition);
+            isMouseInFolderPanel = !isMouseInHeader
+                                   && Event.current.mousePosition.x < folderPanel.FolderPanelWidth;
+            isMouseOverFolderPanelResizeBorder = folderPanel.DividerResizeRect.Contains(Event.current.mousePosition);
 
             isMouseInEntriesPanel = !isMouseInHeader && !isMouseInFooter && !isMouseInFolderPanel;
             
@@ -186,7 +195,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void PerformKeyboardShortcuts()
         {
-            if (Event.current.type != EventType.KeyDown || IsFolderBeingRenamed)
+            if (Event.current.type != EventType.KeyDown || folderPanel.IsFolderBeingRenamed)
                 return;
 
             if (IsRenaming)
@@ -230,8 +239,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 if (isMouseInEntriesPanel)
                     RemoveSelectedEntries();
-                else if (isMouseInFolderPanel && !IsDraggingFolder)
-                    RemoveSelectedFolder();
+                else if (isMouseInFolderPanel && !folderPanel.IsDraggingFolder)
+                    folderPanel.RemoveSelectedFolder();
             }
         }
 
@@ -246,7 +255,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void StopAllRenames(bool isCancel)
         {
             StopEntryRename(isCancel);
-            CancelFolderRename();
+            folderPanel.CancelFolderRename();
         }
         
         private void OnLostFocus()

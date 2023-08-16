@@ -49,7 +49,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             HandleAssetDropping(DragAndDrop.objectReferences);
         }
 
-        private void HandleAssetDropping(Object[] objectsToProcess)
+        public void HandleAssetDropping(Object[] objectsToProcess)
         {
             // For processing you sometimes just want to know everything that was dragged.
             draggedAssets.Clear();

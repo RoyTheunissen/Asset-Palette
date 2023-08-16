@@ -11,145 +11,6 @@ namespace RoyTheunissen.AssetPalette.Windows
 {
     public partial class AssetPaletteWindow
     {
-        private const string AddEntryForCurrentSelectionText = "Add Shortcut For Project Window Selection";
-
-        private readonly string personalPaletteGuid = "Personal Palette Guid";
-        private AssetPaletteCollection cachedPersonalPalette;
-        private AssetPaletteCollection PersonalPalette
-        {
-            get
-            {
-                if (cachedPersonalPalette == null)
-                {
-                    cachedPersonalPalette = CreateInstance<AssetPaletteCollection>();
-                    cachedPersonalPalette.name = "Personal Palette";
-                    
-                    string storedJson = EditorPrefs.GetString(PersonalPaletteStorageKeyEditorPref, "");
-                    if (!string.IsNullOrEmpty(storedJson))
-                        JsonUtility.FromJsonOverwrite(storedJson, cachedPersonalPalette);
-                }
-
-                return cachedPersonalPalette;
-            }
-        }
-        
-        private string CurrentCollectionGuid
-        {
-            get => EditorPrefs.GetString(CurrentCollectionGUIDEditorPref);
-            set
-            {
-                if (CurrentCollectionGuid == value)
-                    return;
-                
-                EditorPrefs.SetString(CurrentCollectionGUIDEditorPref, value);
-                
-                ClearCachedCollection();
-            }
-        }
-
-        [NonSerialized] private AssetPaletteCollection cachedCurrentCollection;
-
-        public AssetPaletteCollection CurrentCollection
-        {
-            get
-            {
-                if (cachedCurrentCollection == null)
-                {
-                    if (CurrentCollectionGuid == personalPaletteGuid)
-                    {
-                        cachedCurrentCollection = PersonalPalette;
-                    }
-                    else
-                    {
-                        string guid = CurrentCollectionGuid;
-                    
-                        if (string.IsNullOrEmpty(guid))
-                            return null;
-
-                        string path = AssetDatabase.GUIDToAssetPath(guid);
-                        if (string.IsNullOrEmpty(path))
-                            return null;
-
-                        cachedCurrentCollection = AssetDatabase.LoadAssetAtPath<AssetPaletteCollection>(path);
-                        
-                    }
-                }
-
-                return cachedCurrentCollection;
-            }
-            set
-            {
-                if (value == CurrentCollection)
-                    return;
-                
-                if (value == null)
-                {
-                    CurrentCollectionGuid = null;
-                    return;
-                }
-
-                
-                if (value == PersonalPalette)
-                {
-                    CurrentCollectionGuid = personalPaletteGuid;
-                }
-                else
-                {
-                    CurrentCollectionGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(value));
-                }
-            }
-        }
-
-        private bool HasCollection => CurrentCollection != null;
-        
-        [NonSerialized] private SerializedObject cachedCurrentCollectionSerializedObject;
-        [NonSerialized] private bool didCacheCurrentCollectionSerializedObject;
-        private SerializedObject CurrentCollectionSerializedObject
-        {
-            get
-            {
-                if (!didCacheCurrentCollectionSerializedObject || cachedCurrentCollectionSerializedObject == null
-                                                    || cachedCurrentCollectionSerializedObject.targetObject == null)
-                {
-                    didCacheCurrentCollectionSerializedObject = true;
-                    cachedCurrentCollectionSerializedObject = new SerializedObject(CurrentCollection);
-                    
-                    ClearCachedFoldersSerializedProperties();
-                }
-                return cachedCurrentCollectionSerializedObject;
-            }
-        }
-
-        [NonSerialized] private static Type[] cachedFolderTypes;
-        [NonSerialized] private static bool didCacheFolderTypes;
-        private static Type[] FolderTypes
-        {
-            get
-            {
-                if (!didCacheFolderTypes)
-                {
-                    didCacheFolderTypes = true;
-                    cachedFolderTypes = TypeExtensions.GetAllAssignableClasses(typeof(PaletteFolder), false, true);
-                }
-                return cachedFolderTypes;
-            }
-        }
-        
-        private void ClearCachedCollection()
-        {
-            // Need to re-cache the current collection now.
-            cachedCurrentCollection = null;
-                
-            // Need to re-cache the serialized objects, too.
-            cachedCurrentCollectionSerializedObject?.Dispose();
-            cachedCurrentCollectionSerializedObject = null;
-            didCacheCurrentCollectionSerializedObject = false;
-            ClearCachedFoldersSerializedProperties();
-
-            // Clear the selected folder.
-            SelectedFolderReferenceIdPath = null;
-        }
-
         private void DrawHeader()
         {
             Rect headerRect = GUILayoutUtility.GetRect(position.width, HeaderHeight);
@@ -158,11 +19,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             AssetPaletteCollection currentCollection = CurrentCollection;
             string name = currentCollection == null ? "[No Collection]" : currentCollection.name;
 
-            Rect folderPanelHeaderRect = RectExtensions.GetSubRectFromLeft(headerRect, FolderPanelWidth);
+            Rect folderPanelHeaderRect = RectExtensions.GetSubRectFromLeft(headerRect, folderPanel.FolderPanelWidth);
             DrawFolderPanelHeader(folderPanelHeaderRect, name);
 
             Rect entryPanelHeaderRect =
-                RectExtensions.GetSubRectFromRight(headerRect, position.width - FolderPanelWidth);
+                RectExtensions.GetSubRectFromRight(headerRect, position.width - folderPanel.FolderPanelWidth);
             DrawEntryPanelHeader(entryPanelHeaderRect);
         }
 
@@ -179,10 +40,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             GUI.enabled = HasCollection;
             bool createNewFolder = GUI.Button(
                 newFolderRect, "New Folder",
-                HasMultipleFolderTypes ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
+                AssetPaletteWindowFolderPanel.HasMultipleFolderTypes
+                    ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
             GUI.enabled = true;
             if (createNewFolder)
-                TryCreateNewFolderDropDown(newFolderRect);
+                folderPanel.TryCreateNewFolderDropDown(newFolderRect);
         }
 
         private void DrawEntryPanelHeader(Rect headerRect)
@@ -328,7 +190,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void DoEntryRefresh()
         {
-            foreach (PaletteEntry entry in SelectedFolder.Entries)
+            foreach (PaletteEntry entry in folderPanel.SelectedFolder.Entries)
             {
                 entry.Refresh();
             }
