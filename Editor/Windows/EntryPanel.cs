@@ -13,7 +13,7 @@ using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.Seria
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public sealed class AssetPaletteWindowEntryPanel
+    public sealed class EntryPanel
     {
         // Editor prefs
         private static string EntriesSortModeEditorPref => AssetPaletteWindow.EditorPrefPrefix + "EntriesSortMode";
@@ -114,7 +114,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private AssetPaletteWindow window;
 
-        public AssetPaletteWindowEntryPanel(AssetPaletteWindow window)
+        public EntryPanel(AssetPaletteWindow window)
         {
             this.window = window;
         }

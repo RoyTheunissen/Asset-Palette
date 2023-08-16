@@ -62,7 +62,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
         public static Rect GetRenameRect(Rect position, string name)
         {
             GUIContent label = new GUIContent(name);
-            GUIStyle style = AssetPaletteWindowEntryPanel.GridEntryRenameTextStyle;
+            GUIStyle style = EntryPanel.GridEntryRenameTextStyle;
             float height = style.CalcHeight(label, position.width);
             return RectExtensions.GetSubRectFromBottom(position, height);
         }

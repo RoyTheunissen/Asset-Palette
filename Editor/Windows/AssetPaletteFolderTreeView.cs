@@ -34,7 +34,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private readonly List<AssetPaletteFolderTreeViewItem> items = new List<AssetPaletteFolderTreeViewItem>();
         
         private string FolderDraggedFromName => (string)DragAndDrop.GetGenericData(
-            AssetPaletteWindowEntryPanel.EntryDragGenericDataType);
+            EntryPanel.EntryDragGenericDataType);
 
         public delegate void SelectedFolderHandler(AssetPaletteFolderTreeView treeView, SerializedProperty folderProperty);
         public event SelectedFolderHandler SelectedFolderEvent;

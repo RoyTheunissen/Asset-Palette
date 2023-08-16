@@ -37,7 +37,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static float WindowWidthMin => AssetPaletteWindowFolderPanel.FolderPanelWidthMin + EntriesPanelWidthMin;
         private static readonly float WindowHeightMin = AssetPaletteWindowFooter.FooterHeight
                                                         + AssetPaletteWindowHeader.HeaderHeight
-                                                        + AssetPaletteWindowEntryPanel.EntryPanelHeightMin;
+                                                        + Windows.EntryPanel.EntryPanelHeightMin;
 
         [NonSerialized] private bool isMouseInHeader;
         [NonSerialized] private bool isMouseInFooter;
@@ -57,8 +57,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         private readonly AssetPaletteWindowFolderPanel folderPanel;
         public AssetPaletteWindowFolderPanel FolderPanel => folderPanel;
         
-        private readonly AssetPaletteWindowEntryPanel entryPanel;
-        public AssetPaletteWindowEntryPanel EntryPanel => entryPanel;
+        private readonly EntryPanel entryPanel;
+        public EntryPanel EntryPanel => entryPanel;
         
         private readonly AssetPaletteWindowFooter footer;
         public AssetPaletteWindowFooter Footer => footer;
@@ -69,7 +69,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         public AssetPaletteWindow()
         {
             folderPanel = new AssetPaletteWindowFolderPanel(this);
-            entryPanel = new AssetPaletteWindowEntryPanel(this);
+            entryPanel = new EntryPanel(this);
             footer = new AssetPaletteWindowFooter(this);
             header = new AssetPaletteWindowHeader(this);
         }
@@ -193,7 +193,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             isDraggingAssetIntoEntryPanel = (Event.current.type == EventType.DragUpdated ||
                             Event.current.type == EventType.DragPerform) && isMouseInEntriesPanel &&
                             DragAndDrop.objectReferences.Length > 0 &&
-                            DragAndDrop.GetGenericData(AssetPaletteWindowEntryPanel.EntryDragGenericDataType) == null;
+                            DragAndDrop.GetGenericData(EntryPanel.EntryDragGenericDataType) == null;
         }
 
         private void PerformKeyboardShortcuts()
