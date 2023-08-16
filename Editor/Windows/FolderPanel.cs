@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public class AssetPaletteWindowFolderPanel
+    public class FolderPanel
     {
         // Editor preferences
         private static string FolderPanelWidthEditorPref => AssetPaletteWindow.EditorPrefPrefix + "FolderPanelWidth";
@@ -92,7 +92,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private AssetPaletteWindow window;
 
-        public AssetPaletteWindowFolderPanel(AssetPaletteWindow window)
+        public FolderPanel(AssetPaletteWindow window)
         {
             this.window = window;
         }

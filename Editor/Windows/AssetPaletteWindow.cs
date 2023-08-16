@@ -34,7 +34,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         // Measurements
         public static float EntriesPanelWidthMin => AssetPaletteWindowHeader.RefreshButtonWidth
                         + AssetPaletteWindowHeader.AddSpecialButtonWidth + AssetPaletteWindowHeader.SortModeButtonWidth;
-        private static float WindowWidthMin => AssetPaletteWindowFolderPanel.FolderPanelWidthMin + EntriesPanelWidthMin;
+        private static float WindowWidthMin => Windows.FolderPanel.FolderPanelWidthMin + EntriesPanelWidthMin;
         private static readonly float WindowHeightMin = AssetPaletteWindowFooter.FooterHeight
                                                         + AssetPaletteWindowHeader.HeaderHeight
                                                         + Windows.EntryPanel.EntryPanelHeightMin;
@@ -54,8 +54,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static Texture2D lightModeIcon;
         private static Texture2D darkModeIcon;
 
-        private readonly AssetPaletteWindowFolderPanel folderPanel;
-        public AssetPaletteWindowFolderPanel FolderPanel => folderPanel;
+        private readonly FolderPanel folderPanel;
+        public FolderPanel FolderPanel => folderPanel;
         
         private readonly EntryPanel entryPanel;
         public EntryPanel EntryPanel => entryPanel;
@@ -68,7 +68,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         public AssetPaletteWindow()
         {
-            folderPanel = new AssetPaletteWindowFolderPanel(this);
+            folderPanel = new FolderPanel(this);
             entryPanel = new EntryPanel(this);
             footer = new AssetPaletteWindowFooter(this);
             header = new AssetPaletteWindowHeader(this);

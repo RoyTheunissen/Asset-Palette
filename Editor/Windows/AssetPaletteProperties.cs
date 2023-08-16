@@ -127,7 +127,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 {
                     didCacheFoldersSerializedProperty = true;
                     cachedFoldersSerializedProperty = CurrentCollectionSerializedObject
-                        .FindProperty(AssetPaletteWindowFolderPanel.RootFoldersPropertyName);
+                        .FindProperty(FolderPanel.RootFoldersPropertyName);
                     folderPanel.UpdateFoldersTreeView(true);
                 }
 
@@ -172,8 +172,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                     cachedSelectedFolderSerializedProperty =
                         CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
                             SelectedFolderReferenceIdPath,
-                            AssetPaletteWindowFolderPanel.RootFoldersPropertyName,
-                            AssetPaletteWindowFolderPanel.ChildFoldersPropertyName);
+                            FolderPanel.RootFoldersPropertyName,
+                            FolderPanel.ChildFoldersPropertyName);
                     
                     // Did not exist. Just select the first folder.
                     if (cachedSelectedFolderSerializedProperty == null)
@@ -188,7 +188,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             set
             {
                 string referenceIdPath = value.GetReferenceIdPath(
-                    AssetPaletteWindowFolderPanel.ChildFoldersPropertyName);
+                    FolderPanel.ChildFoldersPropertyName);
                 if (string.Equals(SelectedFolderReferenceIdPath, referenceIdPath, StringComparison.Ordinal))
                     return;
 

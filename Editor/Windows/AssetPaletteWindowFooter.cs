@@ -42,7 +42,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 window.FolderPanel.FolderPanelWidth,
                 window.position.height - FooterHeight, window.position.width - window.FolderPanel.FolderPanelWidth, 1);
 
-            EditorGUI.DrawRect(separatorRect, AssetPaletteWindowFolderPanel.DividerColor);
+            EditorGUI.DrawRect(separatorRect, FolderPanel.DividerColor);
 
             EditorGUILayout.BeginVertical(GUILayout.Height(FooterHeight));
             {

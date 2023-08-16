@@ -14,7 +14,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         // Measurements
         public static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         public static float CollectionButtonWidth => 130;
-        public static int NewFolderButtonWidth => 76 + (AssetPaletteWindowFolderPanel.HasMultipleFolderTypes ? 9 : 0);
+        public static int NewFolderButtonWidth => 76 + (FolderPanel.HasMultipleFolderTypes ? 9 : 0);
         public static int SortModeButtonWidth => 140;
         public static int AddSpecialButtonWidth => 90;
         public static int RefreshButtonWidth => 60;
@@ -58,7 +58,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             GUI.enabled = window.HasCollection;
             bool createNewFolder = GUI.Button(
                 newFolderRect, "New Folder",
-                AssetPaletteWindowFolderPanel.HasMultipleFolderTypes
+                FolderPanel.HasMultipleFolderTypes
                     ? EditorStyles.toolbarDropDown : EditorStyles.toolbarButton);
             GUI.enabled = true;
             if (createNewFolder)
