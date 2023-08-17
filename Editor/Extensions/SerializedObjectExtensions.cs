@@ -8,7 +8,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
     public static partial class SerializedObjectExtensions
     {
         public static SerializedProperty FindPropertyFromId(
-            this SerializedObject serializedObject, int id, string rootCollectionPath)
+            this SerializedObject serializedObject, string guid, string rootCollectionPath)
         {
             SerializedProperty rootCollectionProperty = serializedObject.FindProperty(rootCollectionPath);
             if (rootCollectionProperty == null)
@@ -19,7 +19,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
             {
                 SerializedProperty childProperty = rootCollectionProperty.GetArrayElementAtIndex(i);
 
-                targetFolder = FindFolderByIdRecursively(childProperty, id);
+                targetFolder = FindFolderByIdRecursively(childProperty, guid);
                 if (targetFolder != null)
                     break;
             }
@@ -28,16 +28,19 @@ namespace RoyTheunissen.AssetPalette.Extensions
         }
 
         private static SerializedProperty FindFolderByIdRecursively(
-            SerializedProperty paletteFolderProperty, int targetID)
+            SerializedProperty paletteFolderProperty, string targetGuid)
         {
-            if (paletteFolderProperty.FindPropertyRelative(AssetPaletteWindow.IdPropertyName).intValue == targetID)
+            if (string.Equals(paletteFolderProperty.FindPropertyRelative(AssetPaletteWindow.GuidPropertyName).stringValue,
+                    targetGuid, StringComparison.Ordinal))
+            {
                 return paletteFolderProperty;
+            }
 
             SerializedProperty childrenProperty = paletteFolderProperty.FindPropertyRelative(AssetPaletteWindow.ChildFoldersPropertyName);
             for (int i = 0; i < childrenProperty.arraySize; i++)
             {
                 SerializedProperty result = FindFolderByIdRecursively(
-                    childrenProperty.GetArrayElementAtIndex(i), targetID);
+                    childrenProperty.GetArrayElementAtIndex(i), targetGuid);
                 if (result != null)
                     return result;
             }

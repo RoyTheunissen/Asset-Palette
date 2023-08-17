@@ -16,7 +16,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private const string RootFoldersPropertyName = "folders";
         internal const string ChildFoldersPropertyName = "children";
-        internal const string IdPropertyName = "id";
+        internal const string GuidPropertyName = "guid";
         
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
@@ -82,10 +82,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             set => EditorPrefs.SetString(SelectedFolderReferenceIdPathEditorPref, value);
         }
         
-        private int SelectedFolderId
+        private string SelectedFolderId
         {
-            get => EditorPrefs.GetInt(SelectedFolderIdEditorPref);
-            set => EditorPrefs.SetInt(SelectedFolderIdEditorPref, value);
+            get => EditorPrefs.GetString(SelectedFolderIdEditorPref);
+            set => EditorPrefs.SetString(SelectedFolderIdEditorPref, value);
         }
         
         private int FolderCount => FoldersSerializedProperty.arraySize;
@@ -135,7 +135,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     return;
 
                 SelectedFolderReferenceIdPath = referenceIdPath;
-                SelectedFolderId = value.FindPropertyRelative("id").intValue;
+                SelectedFolderId = value.FindPropertyRelative(GuidPropertyName).stringValue;
                 
                 ClearCachedSelectedFolderSerializedProperties();
                 
@@ -170,34 +170,32 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.DroppedAssetsIntoFolderEvent += HandleTreeViewDroppedAssetsIntoFolderEvent;
             }
 
-            EnsureFoldersIds();
+            EnsureFoldersGuids();
         }
 
-        private void EnsureFoldersIds()
+        private void EnsureFoldersGuids()
         {
-            int id = 1;
             for (int startIndex = 0; startIndex < FoldersSerializedProperty.arraySize; startIndex++)
             {
                 SerializedProperty folderProperty = FoldersSerializedProperty.GetArrayElementAtIndex(startIndex);
-                EnsureFolderIDRecursively(folderProperty, ref id);
+                EnsureFolderIDRecursively(folderProperty);
             }
             
             ApplyModifiedProperties();
         }
 
-        private void EnsureFolderIDRecursively(SerializedProperty folderProperty, ref int id)
+        private void EnsureFolderIDRecursively(SerializedProperty folderProperty)
         {
-            if (folderProperty.FindPropertyRelative(IdPropertyName).intValue != -1)
+            if (!string.IsNullOrEmpty(folderProperty.FindPropertyRelative(GuidPropertyName).stringValue))
                 return;
 
-            folderProperty.FindPropertyRelative(IdPropertyName).intValue = id;
-            id++;
+            folderProperty.FindPropertyRelative(GuidPropertyName).stringValue = Guid.NewGuid().ToString();
 
             SerializedProperty childrenProperty = folderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             for (int i = 0; i < childrenProperty.arraySize; i++)
             {
                 SerializedProperty childrenFolder = childrenProperty.GetArrayElementAtIndex(i);
-                EnsureFolderIDRecursively(childrenFolder, ref id);
+                EnsureFolderIDRecursively(childrenFolder);
             }
         }
 
@@ -353,7 +351,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 name = GetUniqueFolderName(parentFolderProperty, NewFolderName);
 
             PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
-            newFolder.Initialize(name, id);
+            newFolder.Initialize(name, Guid.NewGuid().ToString());
             
             newFolderProperty.managedReferenceValue = newFolder;
 
