@@ -82,10 +82,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             set => EditorPrefs.SetString(SelectedFolderReferenceIdPathEditorPref, value);
         }
         
-        private string SelectedFolderId
+        private string SelectedFolderGuid
         {
-            get => EditorPrefs.GetString(SelectedFolderIdEditorPref);
-            set => EditorPrefs.SetString(SelectedFolderIdEditorPref, value);
+            get => EditorPrefs.GetString(SelectedFolderGuidEditorPref);
+            set => EditorPrefs.SetString(SelectedFolderGuidEditorPref, value);
         }
         
         private int FolderCount => FoldersSerializedProperty.arraySize;
@@ -116,7 +116,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     didCacheSelectedFolderSerializedProperty = true;
                     
                     cachedSelectedFolderSerializedProperty = CurrentCollectionSerializedObject
-                        .FindPropertyFromId(SelectedFolderId, RootFoldersPropertyName);
+                        .FindPropertyFromId(SelectedFolderGuid, RootFoldersPropertyName);
                     
                     // Did not exist. Just select the first folder.
                     if (cachedSelectedFolderSerializedProperty == null)
@@ -135,7 +135,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     return;
 
                 SelectedFolderReferenceIdPath = referenceIdPath;
-                SelectedFolderId = value.FindPropertyRelative(GuidPropertyName).stringValue;
+                SelectedFolderGuid = value.FindPropertyRelative(GuidPropertyName).stringValue;
                 
                 ClearCachedSelectedFolderSerializedProperties();
                 
