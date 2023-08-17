@@ -1,10 +1,50 @@
+using System;
 using System.Collections.Generic;
+using RoyTheunissen.AssetPalette.Windows;
 using UnityEditor;
 
 namespace RoyTheunissen.AssetPalette.Extensions
 {
     public static partial class SerializedObjectExtensions
     {
+        public static SerializedProperty FindPropertyFromId(
+            this SerializedObject serializedObject, int id, string rootCollectionPath)
+        {
+            SerializedProperty rootCollectionProperty = serializedObject.FindProperty(rootCollectionPath);
+            if (rootCollectionProperty == null)
+                return null;
+
+            SerializedProperty targetFolder = null;
+            for (int i = 0; i < rootCollectionProperty.arraySize; i++)
+            {
+                SerializedProperty childProperty = rootCollectionProperty.GetArrayElementAtIndex(i);
+
+                targetFolder = FindFolderByIdRecursively(childProperty, id);
+                if (targetFolder != null)
+                    break;
+            }
+
+            return targetFolder;
+        }
+
+        private static SerializedProperty FindFolderByIdRecursively(
+            SerializedProperty paletteFolderProperty, int targetID)
+        {
+            if (paletteFolderProperty.FindPropertyRelative(AssetPaletteWindow.IdPropertyName).intValue == targetID)
+                return paletteFolderProperty;
+
+            SerializedProperty childrenProperty = paletteFolderProperty.FindPropertyRelative(AssetPaletteWindow.ChildFoldersPropertyName);
+            for (int i = 0; i < childrenProperty.arraySize; i++)
+            {
+                SerializedProperty result = FindFolderByIdRecursively(
+                    childrenProperty.GetArrayElementAtIndex(i), targetID);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Gets the corresponding serialized property from a "reference id path".
         /// See: SerializedPropertyExtensions.GetReferenceIdPath

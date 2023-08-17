@@ -15,7 +15,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         private const int MaxUniqueFolderNameAttempts = 100;
         
         private const string RootFoldersPropertyName = "folders";
-        public const string ChildFoldersPropertyName = "children";
+        internal const string ChildFoldersPropertyName = "children";
+        internal const string IdPropertyName = "id";
         
         private const float DividerBrightness = 0.13f;
         private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
@@ -75,10 +76,22 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
+        private string SelectedFolderPropertyPath
+        {
+            get => EditorPrefs.GetString(SelectedFolderPropertyPathEditorPref);
+            set => EditorPrefs.SetString(SelectedFolderPropertyPathEditorPref, value);
+        }
+        
         private string SelectedFolderReferenceIdPath
         {
             get => EditorPrefs.GetString(SelectedFolderReferenceIdPathEditorPref);
             set => EditorPrefs.SetString(SelectedFolderReferenceIdPathEditorPref, value);
+        }
+        
+        private int SelectedFolderId
+        {
+            get => EditorPrefs.GetInt(SelectedFolderIdEditorPref);
+            set => EditorPrefs.SetInt(SelectedFolderIdEditorPref, value);
         }
         
         private int FolderCount => FoldersSerializedProperty.arraySize;
@@ -108,11 +121,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                     EnsureFolderExists();
                     didCacheSelectedFolderSerializedProperty = true;
                     
-                    // First try to find the selected folder by reference id path. Don't use a regular property path
-                    // because those have indices baked into it and those get real screwy when you move things around.
-                    cachedSelectedFolderSerializedProperty =
-                        CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
-                            SelectedFolderReferenceIdPath, RootFoldersPropertyName, ChildFoldersPropertyName);
+                    cachedSelectedFolderSerializedProperty = CurrentCollectionSerializedObject
+                        .FindPropertyFromId(SelectedFolderId, RootFoldersPropertyName);
                     
                     // Did not exist. Just select the first folder.
                     if (cachedSelectedFolderSerializedProperty == null)
@@ -131,6 +141,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                     return;
 
                 SelectedFolderReferenceIdPath = referenceIdPath;
+                SelectedFolderPropertyPath = value.propertyPath;
+                SelectedFolderId = value.FindPropertyRelative("id").intValue;
                 
                 ClearCachedSelectedFolderSerializedProperties();
                 
@@ -163,6 +175,36 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.DeleteFolderRequestedEvent += HandleTreeViewDeleteFolderRequestedEvent;
                 foldersTreeView.CreateFolderRequestedEvent += HandleTreeViewCreateFolderRequestedEvent;
                 foldersTreeView.DroppedAssetsIntoFolderEvent += HandleTreeViewDroppedAssetsIntoFolderEvent;
+            }
+
+            EnsureFoldersIds();
+        }
+
+        private void EnsureFoldersIds()
+        {
+            int id = 1;
+            for (int startIndex = 0; startIndex < FoldersSerializedProperty.arraySize; startIndex++)
+            {
+                SerializedProperty folderProperty = FoldersSerializedProperty.GetArrayElementAtIndex(startIndex);
+                EnsureFolderIDRecursively(folderProperty, ref id);
+            }
+            
+            ApplyModifiedProperties();
+        }
+
+        private void EnsureFolderIDRecursively(SerializedProperty folderProperty, ref int id)
+        {
+            if (folderProperty.FindPropertyRelative(IdPropertyName).intValue != -1)
+                return;
+
+            folderProperty.FindPropertyRelative(IdPropertyName).intValue = id;
+            id++;
+
+            SerializedProperty childrenProperty = folderProperty.FindPropertyRelative(ChildFoldersPropertyName);
+            for (int i = 0; i < childrenProperty.arraySize; i++)
+            {
+                SerializedProperty childrenFolder = childrenProperty.GetArrayElementAtIndex(i);
+                EnsureFolderIDRecursively(childrenFolder, ref id);
             }
         }
 
@@ -239,7 +281,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = 0; i < listProperty.arraySize; i++)
             {
                 PaletteFolder folder = listProperty.GetArrayElementAtIndex(i).GetValue<PaletteFolder>();
-                if (folder.Name == desiredName)
+                if (folder != null && folder.Name == desiredName)
                 {
                     alreadyTaken = true;
                     break;
@@ -298,13 +340,6 @@ namespace RoyTheunissen.AssetPalette.Windows
         private PaletteFolder CreateNewFolder(
             Type type, SerializedProperty parentFolderProperty = null, string name = null)
         {
-            bool nameWasExplicitlySpecified = !string.IsNullOrEmpty(name);
-            if (string.IsNullOrEmpty(name))
-                name = GetUniqueFolderName(parentFolderProperty, NewFolderName);
-
-            PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
-            newFolder.Initialize(name);
-
             // Add it to the current collection's list of folders.
             CurrentCollectionSerializedObject.Update();
 
@@ -316,7 +351,17 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Add it to the list.
             SerializedProperty collectionProperty = parentFolderProperty == null
                 ? FoldersSerializedProperty : parentFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
+
+            int id = collectionProperty.arraySize;
             SerializedProperty newFolderProperty = collectionProperty.AddArrayElement();
+            
+            bool nameWasExplicitlySpecified = !string.IsNullOrEmpty(name);
+            if (string.IsNullOrEmpty(name))
+                name = GetUniqueFolderName(parentFolderProperty, NewFolderName);
+
+            PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
+            newFolder.Initialize(name, id);
+            
             newFolderProperty.managedReferenceValue = newFolder;
 
             ApplyModifiedProperties();
