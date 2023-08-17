@@ -75,12 +75,6 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return cachedFoldersSerializedProperty;
             }
         }
-
-        private string SelectedFolderPropertyPath
-        {
-            get => EditorPrefs.GetString(SelectedFolderPropertyPathEditorPref);
-            set => EditorPrefs.SetString(SelectedFolderPropertyPathEditorPref, value);
-        }
         
         private string SelectedFolderReferenceIdPath
         {
@@ -141,7 +135,6 @@ namespace RoyTheunissen.AssetPalette.Windows
                     return;
 
                 SelectedFolderReferenceIdPath = referenceIdPath;
-                SelectedFolderPropertyPath = value.propertyPath;
                 SelectedFolderId = value.FindPropertyRelative("id").intValue;
                 
                 ClearCachedSelectedFolderSerializedProperties();

@@ -27,7 +27,6 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static string CurrentCollectionGUIDEditorPref => EditorPrefPrefix + "CurrentCollectionGUID";
         private static string FolderPanelWidthEditorPref => EditorPrefPrefix + "FolderPanelWidth";
         private static string ZoomLevelEditorPref => EditorPrefPrefix + "ZoomLevel";
-        private static string SelectedFolderPropertyPathEditorPref => EditorPrefPrefix + "SelectedFolderPropertyPath";
         private static string SelectedFolderReferenceIdPathEditorPref => EditorPrefPrefix + "SelectedFolderReferenceIdPath";
         private static string SelectedFolderIdEditorPref => EditorPrefPrefix + "SelectedFolderId";
         private static string EntriesSortModeEditorPref => EditorPrefPrefix + "EntriesSortMode";
