@@ -8,30 +8,40 @@ using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public partial class AssetPaletteWindow
+    public sealed class FolderPanel
     {
+        // Editor preferences
+        private static string FolderPanelWidthEditorPref => AssetPaletteWindow.EditorPrefPrefix + "FolderPanelWidth";
+        
+        // Measurements
+        public static float FolderPanelWidthMin => Header.CollectionButtonWidth
+                                                   + Header.NewFolderButtonWidth;
+        
+        // Miscellaneous
         private const string InitialFolderName = "Default";
         private const string NewFolderName = "New Folder";
         private const int MaxUniqueFolderNameAttempts = 100;
-        
-        private const string RootFoldersPropertyName = "folders";
+
+        public const string RootFoldersPropertyName = "folders";
         public const string ChildFoldersPropertyName = "children";
         
         private const float DividerBrightness = 0.13f;
-        private static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
+        public static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
 
-        private bool IsDraggingFolder => foldersTreeView != null && foldersTreeView.IsDragging;
+        public bool IsDraggingFolder => foldersTreeView != null && foldersTreeView.IsDragging;
 
         [NonSerialized] private bool isResizingFolderPanel;
-        
-        [SerializeField] private TreeViewState foldersTreeViewState;
+        public bool IsResizingFolderPanel => isResizingFolderPanel;
+
+        private TreeViewState foldersTreeViewState;
         [NonSerialized] private AssetPaletteFolderTreeView foldersTreeView;
 
         private const int DividerRectThickness = 1;
         private Rect DividerRect => new Rect(
-            FolderPanelWidth - DividerRectThickness, HeaderHeight, DividerRectThickness, position.height);
+            FolderPanelWidth - DividerRectThickness, Header.HeaderHeight,
+            DividerRectThickness, window.position.height);
 
-        private Rect DividerResizeRect
+        public Rect DividerResizeRect
         {
             get
             {
@@ -46,7 +56,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private float FolderPanelWidth
+        public float FolderPanelWidth
         {
             get
             {
@@ -57,97 +67,35 @@ namespace RoyTheunissen.AssetPalette.Windows
             set => EditorPrefs.SetFloat(FolderPanelWidthEditorPref, value);
         }
 
-        [NonSerialized] private bool didCacheFoldersSerializedProperty;
-        [NonSerialized] private SerializedProperty cachedFoldersSerializedProperty;
-        private SerializedProperty FoldersSerializedProperty
+        public PaletteFolder SelectedFolder => window.SelectedFolderSerializedProperty.GetValue<PaletteFolder>();
+
+        public bool IsFolderBeingRenamed => foldersTreeView != null && foldersTreeView.IsRenaming;
+        
+        private int FolderCount => window.FoldersSerializedProperty.arraySize;
+        
+        [NonSerialized] private static Type[] cachedFolderTypes;
+        [NonSerialized] private static bool didCacheFolderTypes;
+        private static Type[] FolderTypes
         {
             get
             {
-                if (!didCacheFoldersSerializedProperty)
+                if (!didCacheFolderTypes)
                 {
-                    didCacheFoldersSerializedProperty = true;
-                    cachedFoldersSerializedProperty = CurrentCollectionSerializedObject
-                        .FindProperty(RootFoldersPropertyName);
-                    UpdateFoldersTreeView(true);
+                    didCacheFolderTypes = true;
+                    cachedFolderTypes = TypeExtensions.GetAllAssignableClasses(typeof(PaletteFolder), false, true);
                 }
-
-                return cachedFoldersSerializedProperty;
+                return cachedFolderTypes;
             }
         }
 
-        private string SelectedFolderReferenceIdPath
-        {
-            get => EditorPrefs.GetString(SelectedFolderReferenceIdPathEditorPref);
-            set => EditorPrefs.SetString(SelectedFolderReferenceIdPathEditorPref, value);
-        }
+        public static bool HasMultipleFolderTypes => FolderTypes.Length > 1;
         
-        private int FolderCount => FoldersSerializedProperty.arraySize;
+        private AssetPaletteWindow window;
 
-        [NonSerialized] private bool didCacheSelectedFolderSerializedProperty;
-        [NonSerialized] private SerializedProperty cachedSelectedFolderSerializedProperty;
-        [NonSerialized] private SerializedProperty cachedSelectedFolderSerializedPropertyParent;
-        [NonSerialized] private string cachedSelectedFolderSerializedPropertyPath;
-        private SerializedProperty SelectedFolderSerializedProperty
+        public FolderPanel(AssetPaletteWindow window)
         {
-            get
-            {
-                // Sanity check: if the folder selection is no longer valid, reset the selected folder.
-                // This is something that can happen with undo...
-                if (didCacheSelectedFolderSerializedProperty && (cachedSelectedFolderSerializedProperty == null
-                                    || !cachedSelectedFolderSerializedProperty.ExistsInParentArray(
-                                        cachedSelectedFolderSerializedPropertyParent,
-                                        cachedSelectedFolderSerializedPropertyPath)
-                                    || cachedSelectedFolderSerializedProperty.GetValue<PaletteFolder>() == null))
-                {
-                    ClearCachedSelectedFolderSerializedProperties();
-                    SelectedFolderReferenceIdPath = null;
-                }
-                
-                if (!didCacheSelectedFolderSerializedProperty)
-                {
-                    EnsureFolderExists();
-                    didCacheSelectedFolderSerializedProperty = true;
-                    
-                    // First try to find the selected folder by reference id path. Don't use a regular property path
-                    // because those have indices baked into it and those get real screwy when you move things around.
-                    cachedSelectedFolderSerializedProperty =
-                        CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
-                            SelectedFolderReferenceIdPath, RootFoldersPropertyName, ChildFoldersPropertyName);
-                    
-                    // Did not exist. Just select the first folder.
-                    if (cachedSelectedFolderSerializedProperty == null)
-                        cachedSelectedFolderSerializedProperty = FoldersSerializedProperty.GetArrayElementAtIndex(0);
-
-                    cachedSelectedFolderSerializedPropertyParent = cachedSelectedFolderSerializedProperty.GetParent();
-                    cachedSelectedFolderSerializedPropertyPath = cachedSelectedFolderSerializedProperty.propertyPath;
-                }
-
-                return cachedSelectedFolderSerializedProperty;
-            }
-            set
-            {
-                string referenceIdPath = value.GetReferenceIdPath(ChildFoldersPropertyName);
-                if (string.Equals(SelectedFolderReferenceIdPath, referenceIdPath, StringComparison.Ordinal))
-                    return;
-
-                SelectedFolderReferenceIdPath = referenceIdPath;
-                
-                ClearCachedSelectedFolderSerializedProperties();
-                
-                // If you change the folder that's selected, we need to clear the selection.
-                ClearEntrySelection();
-                
-                // Now is actually also a good time to make sure it's sorted correctly, because sorting modes configured
-                // while on another folder are meant to apply to newly selected folders too.
-                CurrentCollectionSerializedObject.Update();
-                SortEntriesInSerializedObject();
-                CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
-            }
+            this.window = window;
         }
-        
-        private PaletteFolder SelectedFolder => SelectedFolderSerializedProperty.GetValue<PaletteFolder>();
-
-        private bool IsFolderBeingRenamed => foldersTreeView != null && foldersTreeView.IsRenaming;
 
         private void InitializeFoldersTreeView()
         {
@@ -156,7 +104,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (foldersTreeView == null)
             {
                 foldersTreeView = new AssetPaletteFolderTreeView(
-                    foldersTreeViewState, FoldersSerializedProperty, SelectedFolder);
+                    foldersTreeViewState, window.FoldersSerializedProperty, SelectedFolder);
                 foldersTreeView.SelectedFolderEvent += HandleTreeViewSelectedFolderEvent;
                 foldersTreeView.RenamedFolderEvent += HandleTreeViewRenamedFolderEvent;
                 foldersTreeView.MovedFolderEvent += HandleTreeViewMovedFolderEvent;
@@ -166,13 +114,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void UpdateFoldersTreeView(bool clearState)
+        public void UpdateFoldersTreeView(bool clearState)
         {
             ClearFoldersTreeView(clearState);
             InitializeFoldersTreeView();
         }
 
-        private void ClearFoldersTreeView(bool clearState)
+        public void ClearFoldersTreeView(bool clearState)
         {
             if (clearState)
                 foldersTreeViewState = null;
@@ -191,34 +139,18 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void HandleTreeViewSelectedFolderEvent(
             AssetPaletteFolderTreeView treeView, SerializedProperty folderProperty)
         {
-            SelectedFolderSerializedProperty = folderProperty;
+            window.SelectedFolderSerializedProperty = folderProperty;
         }
 
-        private void EnsureFolderExists()
+        public void EnsureFolderExists()
         {
             if (FolderCount > 0)
                 return;
             
             // Make sure there is at least one folder.
-            CurrentCollectionSerializedObject.Update();
+            window.CurrentCollectionSerializedObject.Update();
             CreateNewFolder<PaletteFolder>(null, InitialFolderName);
-            CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
-        }
-        
-        private void ClearCachedSelectedFolderSerializedProperties()
-        {
-            didCacheSelectedFolderSerializedProperty = false;
-            didCacheSelectedFolderEntriesSerializedProperty = false;
-            
-            ClearEntrySelection();
-        }
-
-        private void ClearCachedFoldersSerializedProperties()
-        {
-            ClearCachedSelectedFolderSerializedProperties();
-            
-            didCacheFoldersSerializedProperty = false;
-            ClearFoldersTreeView(true);
+            window.CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private string GetUniqueFolderName(
@@ -234,7 +166,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             bool alreadyTaken = false;
 
             SerializedProperty listProperty = parentFolderProperty == null
-                ? FoldersSerializedProperty
+                ? window.FoldersSerializedProperty
                 : parentFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             for (int i = 0; i < listProperty.arraySize; i++)
             {
@@ -257,8 +189,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             return GetUniqueFolderName(parentFolderProperty, desiredName, previousAttempts + 1);
         }
-        
-        private void TryCreateNewFolderDropDown(Rect buttonRect)
+
+        public void TryCreateNewFolderDropDown(Rect buttonRect)
         {
             if (!HasMultipleFolderTypes)
             {
@@ -306,7 +238,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             newFolder.Initialize(name);
 
             // Add it to the current collection's list of folders.
-            CurrentCollectionSerializedObject.Update();
+            window.CurrentCollectionSerializedObject.Update();
 
             // If we're adding it to an existing folder, make sure that folder is now expanded so we can see what
             // we're doing. The Tree View will be updated shortly and it will then represent the current value.
@@ -315,13 +247,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             // Add it to the list.
             SerializedProperty collectionProperty = parentFolderProperty == null
-                ? FoldersSerializedProperty : parentFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
+                ? window.FoldersSerializedProperty : parentFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             SerializedProperty newFolderProperty = collectionProperty.AddArrayElement();
             newFolderProperty.managedReferenceValue = newFolder;
 
-            ApplyModifiedProperties();
+            window.ApplyModifiedProperties();
 
-            SelectedFolderSerializedProperty = newFolderProperty;
+            window.SelectedFolderSerializedProperty = newFolderProperty;
 
             UpdateFoldersTreeView(false);
             
@@ -337,21 +269,21 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             return (FolderType)CreateNewFolder(typeof(FolderType), parentFolderProperty, name);
         }
-        
-        private void DrawFolderPanel()
+
+        public void DrawFolderPanel()
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(FolderPanelWidth));
 
             // Cancel out if there's no collection available.
-            if (HasCollection)
+            if (window.HasCollection)
             {
                 EnsureFolderExists();
 
-                if (HasCollection)
+                if (window.HasCollection)
                 {
-                    CurrentCollectionSerializedObject.Update();
+                    window.CurrentCollectionSerializedObject.Update();
                     DrawFolders();
-                    CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+                    window.CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
                 }
             }
             
@@ -379,7 +311,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorGUIUtility.AddCursorRect(DividerResizeRect, MouseCursor.ResizeHorizontal);
 
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 &&
-                isMouseOverFolderPanelResizeBorder)
+                window.IsMouseOverFolderPanelResizeBorder)
             {
                 isResizingFolderPanel = true;
             }
@@ -388,8 +320,9 @@ namespace RoyTheunissen.AssetPalette.Windows
                 (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag))
             {
                 FolderPanelWidth = Mathf.Clamp(
-                    Event.current.mousePosition.x, FolderPanelWidthMin, position.width - EntriesPanelWidthMin);
-                Repaint();
+                    Event.current.mousePosition.x, FolderPanelWidthMin,
+                    window.position.width - AssetPaletteWindow.EntriesPanelWidthMin);
+                window.Repaint();
             }
 
             if (Event.current.type == EventType.MouseUp)
@@ -397,7 +330,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 isResizingFolderPanel = false;
                 
                 // NOTE: Need to repaint now so that the resize rect becomes the normal size again.
-                Repaint();
+                window.Repaint();
             }
         }
 
@@ -406,36 +339,25 @@ namespace RoyTheunissen.AssetPalette.Windows
             foldersTreeView.BeginRename(folder);
         }
 
-        private string GetRenameControlId(SerializedProperty serializedProperty)
-        {
-            return serializedProperty.propertyPath;
-        }
-
-        private string GetRenameControlId(PaletteEntry entry)
-        {
-            SerializedProperty serializedProperty = GetSerializedPropertyForEntry(entry);
-            return GetRenameControlId(serializedProperty);
-        }
-
         private void HandleTreeViewRenamedFolderEvent(
             AssetPaletteFolderTreeView treeView, SerializedProperty folderProperty, string oldName, string newName)
         {
             PerformFolderRename(folderProperty, newName);
         }
-        
-        private void CancelFolderRename()
+
+        public void CancelFolderRename()
         {
             foldersTreeView?.EndRename();
         }
 
         private void PerformFolderRename(SerializedProperty folderProperty, string newName)
         {
-            CurrentCollectionSerializedObject.Update();
+            window.CurrentCollectionSerializedObject.Update();
             SerializedProperty folderBeingRenamedProperty = folderProperty;
             SerializedProperty nameProperty = folderBeingRenamedProperty.FindPropertyRelative("name");
             nameProperty.stringValue = newName;
-            ApplyModifiedProperties();
-            Repaint();
+            window.ApplyModifiedProperties();
+            window.Repaint();
         }
 
         private SerializedProperty GetParentFolderProperty(SerializedProperty folderProperty)
@@ -465,10 +387,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             bool isMovedToDifferentParent = !originalParentProperty.PathEquals(targetFolderProperty);
             
             SerializedProperty toListProperty = targetFolderProperty == null
-                ? FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
+                ? window.FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
 
             // Remove the folder from the original list and add it back to the target list at the specified position.
-            CurrentCollectionSerializedObject.Update();
+            window.CurrentCollectionSerializedObject.Update();
             
             fromListProperty.DeleteArrayElementAtIndex(folderToDragIndex);
 
@@ -479,20 +401,20 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             // Having removed the folder that we want to drag, that changed the order of all the properties. Figure out
             // the correct property for the folder that we wanted to drag to
-            targetFolderProperty = CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
+            targetFolderProperty = window.CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
                 targetFolderReferenceIdPath, RootFoldersPropertyName, ChildFoldersPropertyName);
             toListProperty = targetFolderProperty == null
-                ? FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
+                ? window.FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             toListProperty.InsertArrayElementAtIndex(toIndex);
             
             SerializedProperty movedFolderProperty = toListProperty.GetArrayElementAtIndex(toIndex);
             movedFolderProperty.managedReferenceValue = folder;
 
-            ApplyModifiedProperties();
+            window.ApplyModifiedProperties();
 
-            SelectedFolderSerializedProperty = movedFolderProperty;
+            window.SelectedFolderSerializedProperty = movedFolderProperty;
 
-            UpdateAndRepaint();
+            window.UpdateAndRepaint();
         }
         
         private void HandleTreeViewDeleteFolderRequestedEvent(
@@ -514,63 +436,63 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (isDraggedFromFolder)
             {
                 // First remove all of the selected entries from the current folder.
-                List<PaletteEntry> entriesToMove = new List<PaletteEntry>(entriesSelected);
-                RemoveEntries(entriesToMove);
+                List<PaletteEntry> entriesToMove = new List<PaletteEntry>(window.EntryPanel.EntriesSelected);
+                window.EntryPanel.RemoveEntries(entriesToMove);
 
                 // Make the recipient folder the current folder.
-                SelectedFolderSerializedProperty = folderProperty;
+                window.SelectedFolderSerializedProperty = folderProperty;
 
                 // Now add all of the entries to the recipient folder.
-                AddEntries(entriesToMove);
+                window.EntryPanel.AddEntries(entriesToMove);
             }
             else
             {
                 // Make the recipient folder the current folder.
-                SelectedFolderSerializedProperty = folderProperty;
+                window.SelectedFolderSerializedProperty = folderProperty;
 
                 // Just act as if these assets were dropped into the entries panel.
-                HandleAssetDropping(assets);
+                window.HandleAssetDropping(assets);
             }
             
-            UpdateAndRepaint();
+            window.UpdateAndRepaint();
         }
         
         private void RemoveFolder(SerializedProperty folderProperty)
         {
-            if (folderProperty == null || !HasCollection || FolderCount <= 1)
+            if (folderProperty == null || !window.HasCollection || FolderCount <= 1)
                 return;
 
             SerializedProperty listProperty = folderProperty.GetParent();
             int folderIndex = listProperty.GetIndexOfArrayElement(folderProperty);
             
-            CurrentCollectionSerializedObject.Update();
+            window.CurrentCollectionSerializedObject.Update();
             listProperty.DeleteArrayElementAtIndex(folderIndex);
-            ApplyModifiedProperties();
+            window.ApplyModifiedProperties();
 
             // If we deleted the last child of a folder, select that folder instead.
             if (listProperty.arraySize == 0)
             {
-                SelectedFolderSerializedProperty = listProperty.GetParent();
+                window.SelectedFolderSerializedProperty = listProperty.GetParent();
             }
             else if (folderIndex >= listProperty.arraySize)
             {
                 // If we deleted the last folder, select what is now the new last folder.
-                SelectedFolderSerializedProperty = listProperty.GetArrayElementAtIndex(listProperty.arraySize - 1);
+                window.SelectedFolderSerializedProperty = listProperty.GetArrayElementAtIndex(listProperty.arraySize - 1);
             }
             else
             {
                 // Otherwise select the folder that took the place of the folder we deleted.
-                SelectedFolderSerializedProperty = listProperty.GetArrayElementAtIndex(folderIndex);
+                window.SelectedFolderSerializedProperty = listProperty.GetArrayElementAtIndex(folderIndex);
             }
             
             UpdateFoldersTreeView(false);
 
-            Repaint();
+            window.Repaint();
         }
 
-        private void RemoveSelectedFolder()
+        public void RemoveSelectedFolder()
         {
-            RemoveFolder(SelectedFolderSerializedProperty);
+            RemoveFolder(window.SelectedFolderSerializedProperty);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private readonly List<AssetPaletteFolderTreeViewItem> items = new List<AssetPaletteFolderTreeViewItem>();
         
         private string FolderDraggedFromName => (string)DragAndDrop.GetGenericData(
-            AssetPaletteWindow.EntryDragGenericDataType);
+            EntryPanel.EntryDragGenericDataType);
 
         public delegate void SelectedFolderHandler(AssetPaletteFolderTreeView treeView, SerializedProperty folderProperty);
         public event SelectedFolderHandler SelectedFolderEvent;
@@ -102,7 +102,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                 // Keep going recursively until we've added all the children.
                 SerializedProperty children = folderProperty.FindPropertyRelative(
-                    AssetPaletteWindow.ChildFoldersPropertyName);
+                    FolderPanel.ChildFoldersPropertyName);
                 AddChildFolders(item, children);
             }
         }

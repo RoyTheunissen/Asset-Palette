@@ -4,11 +4,17 @@ using UnityEngine;
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public partial class AssetPaletteWindow
+    public sealed class Footer
     {
-        private const string ZoomLevelControlName = "AssetPaletteEntriesZoomLevelControl";
+        // Editor prefs
+        private static string ZoomLevelEditorPref => AssetPaletteWindow.EditorPrefPrefix + "ZoomLevel";
         
-        private float ZoomLevel
+        // Measurements
+        public static float FooterHeight => EditorGUIUtility.singleLineHeight + 6;
+        
+        private const string ZoomLevelControlName = "AssetPaletteEntriesZoomLevelControl";
+
+        public float ZoomLevel
         {
             get
             {
@@ -21,15 +27,22 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private List<Object> entryAssetsWhosePathToShow = new List<Object>();
 
-        private bool IsZoomLevelFocused => GUI.GetNameOfFocusedControl() == ZoomLevelControlName;
+        public bool IsZoomLevelFocused => GUI.GetNameOfFocusedControl() == ZoomLevelControlName;
         
-        private void DrawFooter()
+        private AssetPaletteWindow window;
+
+        public Footer(AssetPaletteWindow window)
+        {
+            this.window = window;
+        }
+
+        public void DrawFooter()
         {
             Rect separatorRect = new Rect(
-                FolderPanelWidth,
-                position.height - FooterHeight, position.width - FolderPanelWidth, 1);
+                window.FolderPanel.FolderPanelWidth,
+                window.position.height - FooterHeight, window.position.width - window.FolderPanel.FolderPanelWidth, 1);
 
-            EditorGUI.DrawRect(separatorRect, DividerColor);
+            EditorGUI.DrawRect(separatorRect, FolderPanel.DividerColor);
 
             EditorGUILayout.BeginVertical(GUILayout.Height(FooterHeight));
             {
@@ -37,7 +50,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 EditorGUILayout.BeginHorizontal();
                 {
                     // Draw the asset path of the first asset that is selected. That's how the Project View does it.
-                    foreach (PaletteEntry paletteEntry in entriesSelected)
+                    foreach (PaletteEntry paletteEntry in window.EntryPanel.EntriesSelected)
                     {
                         entryAssetsWhosePathToShow.Clear();
                         paletteEntry.GetAssetsToSelect(ref entryAssetsWhosePathToShow);

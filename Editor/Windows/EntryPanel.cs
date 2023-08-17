@@ -13,20 +13,30 @@ using SerializedPropertyExtensions = RoyTheunissen.AssetPalette.Extensions.Seria
 
 namespace RoyTheunissen.AssetPalette.Windows
 {
-    public partial class AssetPaletteWindow
+    public sealed class EntryPanel
     {
+        // Editor prefs
+        private static string EntriesSortModeEditorPref => AssetPaletteWindow.EditorPrefPrefix + "EntriesSortMode";
+        
+        // Measurements
+        public static float EntryPanelHeightMin => 50;
         private const float Padding = 2;
         private const float EntrySpacing = 4;
         private const int EntrySizeMax = 128;
         private const float EntrySizeMin = EntrySizeMax * 0.45f;
         private const float ScrollBarWidth = 13;
         
+        public const string EntryDragGenericDataType = "AssetPaletteEntryDrag";
+        
         [NonSerialized] private readonly List<PaletteEntry> entriesSelected = new List<PaletteEntry>();
+        public List<PaletteEntry> EntriesSelected => entriesSelected;
+
         [NonSerialized] private readonly List<PaletteEntry> entriesIndividuallySelected = new List<PaletteEntry>();
+        public List<PaletteEntry> EntriesIndividuallySelected => entriesIndividuallySelected;
 
         private Vector2 entriesPanelScrollPosition;
-        
-        private SortModes SortMode
+
+        public SortModes SortMode
         {
             get
             {
@@ -37,22 +47,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             set => EditorPrefs.SetInt(EntriesSortModeEditorPref, (int)value);
         }
 
-        [NonSerialized] private bool didCacheSelectedFolderEntriesSerializedProperty;
-        [NonSerialized] private SerializedProperty cachedSelectedFolderEntriesSerializedProperty;
-        private SerializedProperty SelectedFolderEntriesSerializedProperty
-        {
-            get
-            {
-                if (!didCacheSelectedFolderEntriesSerializedProperty)
-                {
-                    didCacheSelectedFolderEntriesSerializedProperty = true;
-                    cachedSelectedFolderEntriesSerializedProperty =
-                        SelectedFolderSerializedProperty.FindPropertyRelative("entries");
-                }
-                return cachedSelectedFolderEntriesSerializedProperty;
-            }
-        }
-        
         [NonSerialized] private GUIStyle cachedMessageTextStyle;
         [NonSerialized] private bool didCacheMessageTextStyle;
         private GUIStyle MessageTextStyle
@@ -114,24 +108,43 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         [NonSerialized] private PaletteEntry entryBelowCursorOnMouseDown;
 
-        private bool ShouldDrawListView => ZoomLevel == 0;
+        private bool ShouldDrawListView => Mathf.Approximately(window.Footer.ZoomLevel, 0.0f);
         
-        private int GetEntryCount()
+        [NonSerialized] private string renameText;
+        
+        private AssetPaletteWindow window;
+
+        public EntryPanel(AssetPaletteWindow window)
         {
-            return SelectedFolder.Entries.Count;
+            this.window = window;
         }
-        
-        private List<PaletteEntry> GetEntries()
+
+        public int GetEntryCount()
         {
-            return SelectedFolder.Entries;
+            return window.FolderPanel.SelectedFolder.Entries.Count;
         }
-        
-        private PaletteEntry GetEntry(int index)
+
+        public List<PaletteEntry> GetEntries()
         {
-            return SelectedFolder.Entries[index];
+            return window.FolderPanel.SelectedFolder.Entries;
         }
-        
-        private void SortEntriesInSerializedObject()
+
+        public PaletteEntry GetEntry(int index)
+        {
+            return window.FolderPanel.SelectedFolder.Entries[index];
+        }
+
+        public void SetSortModeAndSortCurrentEntries(SortModes sortMode)
+        {
+            SortMode = sortMode;
+            
+            // TODO: Maybe we should consider sorting the entries in ALL the folders at this time.. ?
+            window.CurrentCollectionSerializedObject.Update();
+            SortEntriesInSerializedObject();
+            window.CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        public void SortEntriesInSerializedObject()
         {
             if (SortMode == SortModes.Unsorted)
                 return;
@@ -139,9 +152,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Create a list of all the Palette Entries currently in the serialized object. Doing it this way means
             // that you can sort the list while adding new entries, without the sorting operation being a separate Undo
             List<PaletteEntry> entries = new List<PaletteEntry>();
-            for (int i = 0; i < SelectedFolderEntriesSerializedProperty.arraySize; i++)
+            for (int i = 0; i < window.SelectedFolderEntriesSerializedProperty.arraySize; i++)
             {
-                SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(i);
+                SerializedProperty entryProperty = window
+                    .SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(i);
                 PaletteEntry entry = entryProperty.GetValue<PaletteEntry>();
                 entries.Add(entry);
             }
@@ -155,7 +169,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             // position as that sorted list.
             for (int i = 0; i < entries.Count; i++)
             {
-                SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(i);
+                SerializedProperty entryProperty = window
+                    .SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(i);
                 entryProperty.managedReferenceValue = entries[i];
             }
         }
@@ -163,44 +178,28 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void AddEntry(PaletteEntry entry, bool apply)
         {
             if (apply)
-                CurrentCollectionSerializedObject.Update();
+                window.CurrentCollectionSerializedObject.Update();
 
             SerializedProperty newEntryProperty =
-                SerializedPropertyExtensions.AddArrayElement(SelectedFolderEntriesSerializedProperty);
+                SerializedPropertyExtensions.AddArrayElement(window.SelectedFolderEntriesSerializedProperty);
             newEntryProperty.managedReferenceValue = entry;
             
             if (apply)
             {
                 // Applying it before the sorting because otherwise the sorting will be unable to find the items
-                ApplyModifiedProperties();
+                window.ApplyModifiedProperties();
 
                 SortEntriesInSerializedObject();
-                ApplyModifiedProperties();
+                window.ApplyModifiedProperties();
             }
             
             SelectEntry(entry, false);
         }
 
-        private void ApplyModifiedProperties()
-        {
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
-            if (CurrentCollection == PersonalPalette)
-               SavePersonalPaletteCollection();
-        }
-
-        private void SavePersonalPaletteCollection()
-        {
-            if (cachedPersonalPalette == null)
-                return;
-
-            string personalPaletteJson = JsonUtility.ToJson(cachedPersonalPalette);
-            EditorPrefs.SetString(PersonalPaletteStorageKeyEditorPref, personalPaletteJson);
-        }
-
-        private void AddEntries(List<PaletteEntry> entries, bool apply = true)
+        public void AddEntries(List<PaletteEntry> entries, bool apply = true)
         {
             if (apply)
-                CurrentCollectionSerializedObject.Update();
+                window.CurrentCollectionSerializedObject.Update();
 
             for (int i = 0; i < entries.Count; i++)
             {
@@ -210,18 +209,18 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (apply)
             {
                 // Applying it before the sorting because otherwise the sorting will be unable to find the items
-                ApplyModifiedProperties();
+                window.ApplyModifiedProperties();
 
                 SortEntriesInSerializedObject();
-                ApplyModifiedProperties();
+                window.ApplyModifiedProperties();
             }
         }
 
         private int IndexOfEntry(PaletteEntry entry)
         {
-            for (int i = 0; i < SelectedFolderEntriesSerializedProperty.arraySize; i++)
+            for (int i = 0; i < window.SelectedFolderEntriesSerializedProperty.arraySize; i++)
             {
-                PaletteEntry entryAtIndex = SelectedFolderEntriesSerializedProperty
+                PaletteEntry entryAtIndex = window.SelectedFolderEntriesSerializedProperty
                     .GetArrayElementAtIndex(i).GetValue<PaletteEntry>();
                 if (entryAtIndex == entry)
                     return i;
@@ -237,7 +236,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 RemoveEntryAt(index);
         }
 
-        private void RemoveEntries(List<PaletteEntry> entries)
+        public void RemoveEntries(List<PaletteEntry> entries)
         {
             for (int i = 0; i < entries.Count; i++)
             {
@@ -247,16 +246,16 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void RemoveEntryAt(int index)
         {
-            CurrentCollectionSerializedObject.Update();
-            SelectedFolderEntriesSerializedProperty.DeleteArrayElementAtIndex(index);
+            window.CurrentCollectionSerializedObject.Update();
+            window.SelectedFolderEntriesSerializedProperty.DeleteArrayElementAtIndex(index);
             
             // NOTE: *Need* to apply this after every individual change because otherwise GetValue<> will not return
             // correct values, and we need to do it that way to have 2020 support because Unity 2020 has a setter for
             // managedReferenceValue but not a getter >_>
-            ApplyModifiedProperties();
+            window.ApplyModifiedProperties();
         }
 
-        private void DrawEntriesPanel()
+        public void DrawEntriesPanel()
         {
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
                 entryBelowCursorOnMouseDown = null;
@@ -265,7 +264,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 entriesPanelScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
 
             // Draw a dark background for the entries panel.
-            Rect entriesPanelRect = new Rect(0, 0, position.width - FolderPanelWidth, 90000000);
+            Rect entriesPanelRect = new Rect(
+                0, 0, window.position.width - window.FolderPanel.FolderPanelWidth, 90000000);
             EditorGUI.DrawRect(entriesPanelRect, new Color(0, 0, 0, 0.1f));
 
             // If the current state is invalid, draw a message instead.
@@ -277,7 +277,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return;
             }
             
-            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth) - FolderPanelWidth - ScrollBarWidth;
+            float containerWidth = Mathf.Floor(EditorGUIUtility.currentViewWidth)
+                                   - window.FolderPanel.FolderPanelWidth - ScrollBarWidth;
 
             GUILayout.Space(Padding);
 
@@ -293,10 +294,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && !didClickASpecificEntry &&
                 !Event.current.shift)
             {
-                StopAllRenames(false);
+                window.StopAllRenames(false);
 
                 ClearEntrySelection();
-                Repaint();
+                window.Repaint();
             }
 
             EditorGUILayout.EndScrollView();
@@ -328,7 +329,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             HandleEntrySelection(index, rect, entry, ref didClickASpecificEntry);
 
             Rect entryContentsRect = rect;
-            SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+            SerializedProperty entryProperty = window
+                .SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
 
             PaletteDrawing.DrawListEntry(entryContentsRect, entryProperty, entry, entriesSelected.Contains(entry));
 
@@ -342,7 +344,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void DrawGridEntries(float containerWidth, out bool didClickASpecificEntry)
         {
-            int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, ZoomLevel));
+            int entrySize = Mathf.RoundToInt(Mathf.Lerp(EntrySizeMin, EntrySizeMax, window.Footer.ZoomLevel));
             int columnCount = Mathf.FloorToInt(containerWidth / (entrySize + EntrySpacing));
             int rowCount = Mathf.CeilToInt((float)GetEntryCount() / columnCount);
 
@@ -400,7 +402,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             // Actually draw the entry itself.
             Rect entryContentsRect = rect;
-            SerializedProperty entryProperty = SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+            SerializedProperty entryProperty = window
+                .SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
 
             PaletteDrawing.DrawGridEntry(entryContentsRect, entryProperty, entry);
             
@@ -419,6 +422,17 @@ namespace RoyTheunissen.AssetPalette.Windows
                 RemoveEntryAt(index);
             }
         }
+        
+        private string GetRenameControlId(SerializedProperty serializedProperty)
+        {
+            return serializedProperty.propertyPath;
+        }
+
+        private string GetRenameControlId(PaletteEntry entry)
+        {
+            SerializedProperty serializedProperty = GetSerializedPropertyForEntry(entry);
+            return GetRenameControlId(serializedProperty);
+        }
 
         private void DrawRenameEntry(SerializedProperty entryProperty, Rect labelRect)
         {
@@ -430,13 +444,13 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void HandleEntrySelection(int index, Rect rect, PaletteEntry entry, ref bool didClickASpecificEntry)
         {
-            if (IsRenaming)
+            if (window.IsRenaming)
                 return;
             
             // Allow this entry to be selected by clicking it.
-            bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && isMouseInEntriesPanel;
+            bool isMouseOnEntry = rect.Contains(Event.current.mousePosition) && window.IsMouseInEntriesPanel;
             bool wasAlreadySelected = entriesSelected.Contains(entry);
-            if (isDraggingAssetIntoEntryPanel && isMouseOnEntry &&
+            if (window.IsDraggingAssetIntoEntryPanel && isMouseOnEntry &&
                 entry.CanAcceptDraggedAssets(DragAndDrop.objectReferences))
             {
                 DragAndDrop.AcceptDrag();
@@ -444,14 +458,14 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                 if (Event.current.type == EventType.DragPerform)
                 {
-                    CurrentCollectionSerializedObject.Update();
+                    window.CurrentCollectionSerializedObject.Update();
                     SerializedProperty serializedProperty = GetSerializedPropertyForEntry(entry);
                     entry.AcceptDraggedAssets(DragAndDrop.objectReferences, serializedProperty);
-                    ApplyModifiedProperties();
+                    window.ApplyModifiedProperties();
                 }
 
                 // Make sure nothing else handles this, like the entry panel itself.
-                isDraggingAssetIntoEntryPanel = false;
+                window.IsDraggingAssetIntoEntryPanel = false;
             }
             else if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && isMouseOnEntry)
             {
@@ -539,18 +553,19 @@ namespace RoyTheunissen.AssetPalette.Windows
                 }
 
                 didClickASpecificEntry = true;
-                Repaint();
+                window.Repaint();
             }
             else if (Event.current.type == EventType.MouseUp && Event.current.button == 0 && isMouseOnEntry
                      && !Event.current.control && !Event.current.shift)
             {
                 // Regular click to select only this entry.
                 SelectEntry(entry, true);
-                Repaint();
+                window.Repaint();
             }
-            else if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOnEntry &&
-                     !isResizingFolderPanel && isMouseInEntriesPanel && !IsZoomLevelFocused &&
-                     entriesSelected.Contains(entryBelowCursorOnMouseDown))
+            else if (Event.current.type == EventType.MouseDrag && Event.current.button == 0 && isMouseOnEntry
+                     && !window.FolderPanel.IsResizingFolderPanel && window.IsMouseInEntriesPanel
+                     && !window.Footer.IsZoomLevelFocused
+                     && entriesSelected.Contains(entryBelowCursorOnMouseDown))
             {
                 StartEntriesDrag();
             }
@@ -574,7 +589,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Mark the drag as being an asset palette entry drag, so we know not to accept it again ourselves.
             // Also pass along the name of the directory so we can handle stuff like dragging assets out into
             // another folder (but ignore the folder it was originally dragged from).
-            DragAndDrop.SetGenericData(EntryDragGenericDataType, SelectedFolder.Name);
+            DragAndDrop.SetGenericData(EntryDragGenericDataType, window.FolderPanel.SelectedFolder.Name);
             string dragName = selectedAssets.Count == 1 ? selectedAssets[0].ToString() : "<multiple>";
             DragAndDrop.StartDrag(dragName);
         }
@@ -659,7 +674,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 SelectEntryInternal(GetEntry(to), false);
         }
 
-        private void SelectEntries(List<PaletteEntry> entries, bool exclusively)
+        public void SelectEntries(List<PaletteEntry> entries, bool exclusively)
         {
             if (PaletteEntry.IsEntryBeingRenamed)
                 StopEntryRename(true);
@@ -673,7 +688,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
 
-        private void ClearEntrySelection()
+        public void ClearEntrySelection()
         {
             bool didHaveEntriesSelected = entriesSelected.Count > 0;
             
@@ -684,7 +699,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 Selection.activeObject = null;
         }
 
-        private void AddEntryForProjectWindowSelection()
+        public void AddEntryForProjectWindowSelection()
         {
             PaletteSelectionShortcut paletteSelectionShortcut = new PaletteSelectionShortcut(Selection.objects);
             AddEntry(paletteSelectionShortcut, true);
@@ -692,17 +707,17 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (Selection.objects.Length > PaletteSelectionShortcut.ItemNamesToDisplayMax)
                 StartEntryRename(paletteSelectionShortcut);
             
-            Repaint();
+            window.Repaint();
         }
 
-        private SerializedProperty GetSerializedPropertyForEntry(PaletteEntry entry)
+        public SerializedProperty GetSerializedPropertyForEntry(PaletteEntry entry)
         {
             int index = IndexOfEntry(entry);
 
             if (index == -1)
                 return null;
             
-            return SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+            return window.SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
         }
         
         public void StartEntryRename(PaletteEntry entry)
@@ -713,7 +728,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             EditorGUI.FocusTextInControl(GetRenameControlId(entry));
         }
 
-        private void StopEntryRename(bool isCancel)
+        public void StopEntryRename(bool isCancel)
         {
             if (!PaletteEntry.IsEntryBeingRenamed)
                 return;
@@ -721,23 +736,23 @@ namespace RoyTheunissen.AssetPalette.Windows
             bool isValidRename = PaletteEntry.EntryCurrentlyRenaming.Name != renameText;
             if (isValidRename && !isCancel)
             {
-                CurrentCollectionSerializedObject.Update();
-                int index = SelectedFolder.Entries.IndexOf(PaletteEntry.EntryCurrentlyRenaming);
+                window.CurrentCollectionSerializedObject.Update();
+                int index = window.FolderPanel.SelectedFolder.Entries.IndexOf(PaletteEntry.EntryCurrentlyRenaming);
                 SerializedProperty entryBeingRenamedProperty =
-                    SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
+                    window.SelectedFolderEntriesSerializedProperty.GetArrayElementAtIndex(index);
                 SerializedProperty customNameProperty = entryBeingRenamedProperty.FindPropertyRelative("customName");
                 customNameProperty.stringValue = renameText;
-                ApplyModifiedProperties();
+                window.ApplyModifiedProperties();
                 
                 // Also sort the collection. Make sure to do this AFTER we apply the rename, otherwise the sort will
                 // be based on the old name! Don't worry, doing this in a separate Apply doesn't cause a separate Undo
-                CurrentCollectionSerializedObject.Update();
+                window.CurrentCollectionSerializedObject.Update();
                 SortEntriesInSerializedObject();
-                ApplyModifiedProperties();
+                window.ApplyModifiedProperties();
             }
 
             PaletteEntry.CancelRename();
-            Repaint();
+            window.Repaint();
         }
     }
 }
