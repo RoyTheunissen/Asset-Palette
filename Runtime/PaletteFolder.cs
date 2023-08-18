@@ -26,7 +26,7 @@ namespace RoyTheunissen.AssetPalette
 
         public override string ToString()
         {
-            return $"[{guid}] {GetType().Name}({Name})";;
+            return $"{GetType().Name}({Name}, {guid})";
         }
     }
 }
