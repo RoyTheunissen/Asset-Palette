@@ -160,7 +160,8 @@ namespace RoyTheunissen.AssetPalette.Windows
                     folderPanel.EnsureFolderExists();
                     didCacheSelectedFolderSerializedProperty = true;
 
-
+// First try to find the selected folder by reference guid path. Don't use a regular property path
+// because those have indices baked into it and those get real screwy when you move things around.
                     cachedSelectedFolderSerializedProperty = CurrentCollectionSerializedObject
                         .FindPropertyFromGuidPath(FolderPanel.SelectedFolderGuidPath, FolderPanel.RootFoldersPropertyName,
                             FolderPanel.ChildFoldersPropertyName);
