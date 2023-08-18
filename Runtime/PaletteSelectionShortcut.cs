@@ -24,7 +24,7 @@ namespace RoyTheunissen.AssetPalette.Runtime
             {
 #if UNITY_EDITOR
                 //Migration from old system to new guid system
-                if(guidBasedReferences == null || selection != null && guidBasedReferences.Length != selection.Length)
+                if(guidBasedReferences == null || guidBasedReferences.Length == 0 && selection.Length > 0)
                 {
                     guidBasedReferences = new GuidBasedReference<Object>[selection.Length];
 
