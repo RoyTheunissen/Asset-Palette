@@ -495,11 +495,17 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
             else
             {
+                List<Object> assetsLeftToHandle = new List<Object>(assets);
+                foreach (Object draggedAsset in assets)
+                {
+                    
+                }
+                
                 // Make the recipient folder the current folder.
                 window.SelectedFolderSerializedProperty = folderProperty;
 
                 // Just act as if these assets were dropped into the entries panel.
-                window.HandleAssetDropping(assets);
+                window.HandleAssetDropping(assetsLeftToHandle.ToArray());
             }
             
             window.UpdateAndRepaint();
