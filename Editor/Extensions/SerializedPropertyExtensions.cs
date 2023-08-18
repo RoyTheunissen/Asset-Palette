@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using RoyTheunissen.AssetPalette.Windows;
 using UnityEditor;
 
 namespace RoyTheunissen.AssetPalette.Extensions
@@ -12,7 +13,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
     /// </summary>
     public static partial class SerializedPropertyExtensions
     {
-        public const string ReferenceIdSeparator = "/";
+        public const string GuidPathSeparator = "/";
         
         /// <summary>
         /// Courtesy of douduck08. Cheers.
@@ -264,38 +265,56 @@ namespace RoyTheunissen.AssetPalette.Extensions
 
             return false;
         }
+        
+        public static string GetIdForPath(this SerializedProperty serializedProperty)
+        {
+            if (serializedProperty == null)
+                return null;
+
+            if (serializedProperty.propertyType == SerializedPropertyType.Integer)
+                return serializedProperty.intValue.ToString();
+            
+            if (serializedProperty.propertyType == SerializedPropertyType.String)
+                return serializedProperty.stringValue;
+            
+            throw new NotImplementedException($"Tried to use property '{serializedProperty.propertyPath}' for an " +
+                    $"ID path but we don't yet support properties of type '{serializedProperty.propertyType}' " +
+                    $"being used as an ID. Try integer or string instead or add support " +
+                    $"for {serializedProperty.propertyType}.");
+        }
 
         /// <summary>
         /// The regular propertyPath of a SerializedProperty hierarchy has the indices of arrays baked into it.
         /// For example: folders.Array.data[9].children.Array.data[1]. When you're dealing with moving properties
         /// from one parent to another across a complex hierarchy, working with paths like this is problematic because
         /// the indices change in complex ways. For that purpose it is more convenient to work with order-independent
-        /// paths. For example, just using the property's reference ID instead of naming. Then you end up with a path
-        /// like "1373151034781990912/7504083557633490975" and you can heuristically figure out which serialized
-        /// property that represents. See: SerializedObjectExtensions.FindPropertyFromReferenceIdPath
+        /// paths. For example, just using a unique integer instead of names. Then you end up with a path
+        /// like "1/5" and you can heuristically figure out which serialized
+        /// property that represents. See: SerializedObjectExtensions.FindPropertyFromIdPath
         /// </summary>
-        public static string GetReferenceIdPath(this SerializedProperty serializedProperty, string childrenPropertyName)
+        public static string GetIdPath(
+            this SerializedProperty serializedProperty, string idPropertyName, string childrenPropertyName)
         {
             if (serializedProperty == null)
                 return null;
             
-            return serializedProperty.GetReferenceIdPathRecursive(string.Empty, childrenPropertyName);
+            return serializedProperty.GetIdPathRecursive(idPropertyName, childrenPropertyName);
         }
         
-        private static string GetReferenceIdPathRecursive(
-            this SerializedProperty serializedProperty, string path, string childrenPropertyName)
+        private static string GetIdPathRecursive(
+            this SerializedProperty serializedProperty, string idPropertyName, string childrenPropertyName)
         {
             SerializedProperty parentProperty = serializedProperty.GetParent();
             
-            string id = serializedProperty.managedReferenceId.ToString();
+            string guid = serializedProperty.FindPropertyRelative(idPropertyName).GetIdForPath();
             
-            if (parentProperty.name == childrenPropertyName)
+            if (string.Equals(parentProperty.name, childrenPropertyName, StringComparison.Ordinal))
             {
                 return parentProperty.GetParent()
-                           .GetReferenceIdPathRecursive(path, childrenPropertyName) + ReferenceIdSeparator + id;
+                           .GetIdPathRecursive(idPropertyName, childrenPropertyName) + GuidPathSeparator + guid;
             }
             
-            return id;
+            return guid;
         }
     }
 }

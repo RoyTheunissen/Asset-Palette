@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
@@ -17,8 +18,21 @@ namespace RoyTheunissen.AssetPalette.Runtime
     [Serializable]
     public class PaletteMacro : PaletteEntry
     {
+        [SerializeField] private GuidBasedReference<TextAsset> scriptReference;
+        
+        // Keeping this for backwards compability.
         [SerializeField] private TextAsset script;
-        public TextAsset Script => script;
+        
+        public TextAsset Script
+        {
+            get
+            {
+                // Backwards compatibility with old palettes that had direct references.
+                scriptReference.InitializeFromExistingDirectReference(ref scriptReference, ref script);
+                
+                return scriptReference.Asset;
+            }
+        }
 
         [SerializeField] private string methodName;
         
@@ -28,20 +42,20 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         protected override string DefaultName => methodName.ToHumanReadable();
 
-        public override bool IsValid => script != null && !string.IsNullOrEmpty(methodName);
+        public override bool IsValid => Script != null && !string.IsNullOrEmpty(methodName);
 
         protected override PaletteEntrySortPriorities SortPriority => PaletteEntrySortPriorities.Macros;
 
         public PaletteMacro(TextAsset script, string methodName)
         {
-            this.script = script;
+            scriptReference = new GuidBasedReference<TextAsset>(script);
             this.methodName = methodName;
         }
 
         public override void Open()
         {
 #if UNITY_EDITOR
-            MonoScript monoScript = (MonoScript)script;
+            MonoScript monoScript = (MonoScript)Script;
 
             if (monoScript == null)
             {
@@ -79,7 +93,7 @@ namespace RoyTheunissen.AssetPalette.Runtime
         
         public override void GetAssetsToSelect(ref List<Object> selection)
         {
-            selection.Add(script);
+            selection.Add(Script);
         }
 
         public static bool CanCallMethodForMacro(MethodInfo methodInfo)

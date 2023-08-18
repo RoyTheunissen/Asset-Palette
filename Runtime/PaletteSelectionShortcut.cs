@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.Runtime
@@ -13,8 +14,21 @@ namespace RoyTheunissen.AssetPalette.Runtime
     {
         public const int ItemNamesToDisplayMax = 3;
         
+        [SerializeField] private GuidBasedReferenceList<Object> selectionReferences;
+        
+        // Keeping this for backwards compatibility.
         [SerializeField] private Object[] selection;
-        public Object[] Selection => selection;
+        
+        public Object[] Selection
+        {
+            get
+            {
+                // Backwards compatibility with old palettes that had direct references.
+                selectionReferences.InitializeFromExistingDirectReferences(ref selectionReferences, ref selection);
+                
+                return selectionReferences.Array;
+            }
+        }
 
         [NonSerialized] private bool didCacheName;
         [NonSerialized] private string cachedName;
@@ -93,7 +107,7 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         public PaletteSelectionShortcut(Object[] selection)
         {
-            this.selection = selection;
+            selectionReferences = new GuidBasedReferenceList<Object>(selection);
         }
     }
 }

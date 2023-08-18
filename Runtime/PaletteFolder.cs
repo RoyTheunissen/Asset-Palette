@@ -16,14 +16,17 @@ namespace RoyTheunissen.AssetPalette
         [SerializeReference] private List<PaletteEntry> entries = new List<PaletteEntry>();
         public List<PaletteEntry> Entries => entries;
 
-        public void Initialize(string name)
+        [SerializeField] private int selectionId;
+        
+        public void Initialize(string name, int selectionId)
         {
             this.name = name;
+            this.selectionId = selectionId;
         }
 
         public override string ToString()
         {
-            return $"{GetType().Name}({Name})";
+            return $"{GetType().Name}({Name}, {selectionId})";
         }
     }
 }

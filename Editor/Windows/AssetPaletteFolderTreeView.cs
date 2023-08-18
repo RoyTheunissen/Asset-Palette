@@ -205,6 +205,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             AssetPaletteFolderTreeViewItem draggedItem = (AssetPaletteFolderTreeViewItem)DragAndDrop
                 .GetGenericData(FolderDragGenericDataType);
 
+            if (draggedItem == null)
+            {
+                Debug.LogWarning($"Dragged something into the Folder Panel that is neither a folder nor an asset. " +
+                                 $"Currently unsupported, probably an edge case!");
+                return;
+            }
+
             // If you dragged a folder outside, it should just be at the bottom of the root.
             if (args.insertAtIndex == -1)
             {

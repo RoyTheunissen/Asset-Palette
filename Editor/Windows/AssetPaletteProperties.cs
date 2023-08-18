@@ -18,6 +18,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 {
                     cachedPersonalPalette = CreateInstance<AssetPaletteCollection>();
                     cachedPersonalPalette.name = "Personal Palette";
+                    cachedPersonalPalette.hideFlags = HideFlags.DontSave;
 
                     string storedJson = EditorPrefs.GetString(PersonalPaletteStorageKeyEditorPref, "");
                     if (!string.IsNullOrEmpty(storedJson))
@@ -119,7 +120,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private bool didCacheFoldersSerializedProperty;
         [NonSerialized] private SerializedProperty cachedFoldersSerializedProperty;
 
-        public SerializedProperty FoldersSerializedProperty
+        internal SerializedProperty FoldersSerializedProperty
         {
             get
             {
@@ -133,12 +134,6 @@ namespace RoyTheunissen.AssetPalette.Windows
 
                 return cachedFoldersSerializedProperty;
             }
-        }
-
-        private string SelectedFolderReferenceIdPath
-        {
-            get => EditorPrefs.GetString(SelectedFolderReferenceIdPathEditorPref);
-            set => EditorPrefs.SetString(SelectedFolderReferenceIdPathEditorPref, value);
         }
 
         [NonSerialized] private bool didCacheSelectedFolderSerializedProperty;
@@ -159,21 +154,18 @@ namespace RoyTheunissen.AssetPalette.Windows
                                     || cachedSelectedFolderSerializedProperty.GetValue<PaletteFolder>() == null))
                 {
                     ClearCachedSelectedFolderSerializedProperties();
-                    SelectedFolderReferenceIdPath = null;
                 }
                 
                 if (!didCacheSelectedFolderSerializedProperty)
                 {
                     folderPanel.EnsureFolderExists();
                     didCacheSelectedFolderSerializedProperty = true;
-                    
-                    // First try to find the selected folder by reference id path. Don't use a regular property path
+
+                    // First try to find the selected folder by reference guid path. Don't use a regular property path
                     // because those have indices baked into it and those get real screwy when you move things around.
-                    cachedSelectedFolderSerializedProperty =
-                        CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
-                            SelectedFolderReferenceIdPath,
-                            FolderPanel.RootFoldersPropertyName,
-                            FolderPanel.ChildFoldersPropertyName);
+                    cachedSelectedFolderSerializedProperty = CurrentCollectionSerializedObject
+                        .FindPropertyFromIdPath(FolderPanel.SelectedFolderGuidPath, FolderPanel.SelectionIdPropertyName,
+                            FolderPanel.ChildFoldersPropertyName, FolderPanel.RootFoldersPropertyName);
                     
                     // Did not exist. Just select the first folder.
                     if (cachedSelectedFolderSerializedProperty == null)
@@ -187,12 +179,12 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
             set
             {
-                string referenceIdPath = value.GetReferenceIdPath(
-                    FolderPanel.ChildFoldersPropertyName);
-                if (string.Equals(SelectedFolderReferenceIdPath, referenceIdPath, StringComparison.Ordinal))
+                string valueGuidPath = value.GetIdPath(
+                    FolderPanel.SelectionIdPropertyName, FolderPanel.ChildFoldersPropertyName);
+                if(string.Equals(valueGuidPath, FolderPanel.SelectedFolderGuidPath, StringComparison.Ordinal))
                     return;
-
-                SelectedFolderReferenceIdPath = referenceIdPath;
+                
+                FolderPanel.SelectedFolderGuidPath = valueGuidPath;
                 
                 ClearCachedSelectedFolderSerializedProperties();
                 
@@ -203,7 +195,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 // while on another folder are meant to apply to newly selected folders too.
                 CurrentCollectionSerializedObject.Update();
                 entryPanel.SortEntriesInSerializedObject();
-                CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+                ApplyModifiedProperties(false);
             }
         }
         
@@ -236,7 +228,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             ClearCachedFoldersSerializedProperties();
 
             // Clear the selected folder.
-            SelectedFolderReferenceIdPath = null;
         }
         
         private void ClearCachedSelectedFolderSerializedProperties()
@@ -255,9 +246,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             folderPanel.ClearFoldersTreeView(true);
         }
         
-        public void ApplyModifiedProperties()
+        public void ApplyModifiedProperties(bool withUndo = true)
         {
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            if(withUndo)
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            else
+                CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+            
             if (CurrentCollection == PersonalPalette)
                 SavePersonalPaletteCollection();
         }
