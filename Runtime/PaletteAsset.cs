@@ -13,12 +13,29 @@ namespace RoyTheunissen.AssetPalette
     /// Represents an asset that is added to the palette.
     /// </summary>
     [Serializable]
-    public class PaletteAsset : PaletteEntry
+    public class PaletteAsset : PaletteEntry, ISerializationCallbackReceiver
     {
         private const int TextureSize = 128;
+
+        [SerializeField] private GuidBasedReference<Object> guidBasedReference;
         
+        //Keeping this for backwards compatibility.
         [SerializeField] private Object asset;
-        public Object Asset => asset;
+        public Object Asset
+        {
+            get
+            {
+#if UNITY_EDITOR
+                //Migration from old system to new guid system
+                if(guidBasedReference == null || !guidBasedReference.HasGuid && asset != null)
+                {
+                    guidBasedReference = new GuidBasedReference<Object>(asset);
+                    asset = null;
+                }
+#endif
+                return guidBasedReference.Asset;
+            }
+        }
 
         public override bool IsValid => Asset != null;
 
@@ -48,7 +65,7 @@ namespace RoyTheunissen.AssetPalette
 
         public PaletteAsset(Object asset)
         {
-            this.asset = asset;
+            guidBasedReference = new GuidBasedReference<Object>(asset);
         }
 
         public override void Open()
@@ -60,7 +77,7 @@ namespace RoyTheunissen.AssetPalette
 
         public override void GetAssetsToSelect(ref List<Object> selection)
         {
-            selection.Add(asset);
+            selection.Add(Asset);
         }
 
         public override void Refresh()
@@ -71,6 +88,15 @@ namespace RoyTheunissen.AssetPalette
             didCachePreviewTexture = false;
             cachedPreviewTexture = null;
 #endif // UNITY_EDITOR
+        }
+
+        public void OnBeforeSerialize()
+        {
+            
+        }
+
+        public void OnAfterDeserialize()
+        {
         }
     }
 }

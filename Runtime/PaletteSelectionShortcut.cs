@@ -13,8 +13,39 @@ namespace RoyTheunissen.AssetPalette.Runtime
     {
         public const int ItemNamesToDisplayMax = 3;
         
+        [SerializeField]
+        private GuidBasedReference<Object>[] guidBasedReferences;
+        
+        //Keeping this for backwards compatibility.
         [SerializeField] private Object[] selection;
-        public Object[] Selection => selection;
+        public Object[] Selection
+        {
+            get
+            {
+#if UNITY_EDITOR
+                //Migration from old system to new guid system
+                if(guidBasedReferences == null || selection != null && guidBasedReferences.Length != selection.Length)
+                {
+                    guidBasedReferences = new GuidBasedReference<Object>[selection.Length];
+
+                    for (int i = 0; i < selection.Length; i++)
+                    {
+                        guidBasedReferences[i] = new GuidBasedReference<Object>(this.selection[i]);
+                    }
+
+                    selection = null;
+                }
+#endif
+
+                Object[] returnSelection = new Object[guidBasedReferences.Length];
+                for (int i = 0; i < guidBasedReferences.Length; i++)
+                {
+                    returnSelection[i] = guidBasedReferences[i].Asset;
+                }
+
+                return returnSelection;
+            }
+        }
 
         [NonSerialized] private bool didCacheName;
         [NonSerialized] private string cachedName;
@@ -93,7 +124,11 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         public PaletteSelectionShortcut(Object[] selection)
         {
-            this.selection = selection;
+            guidBasedReferences = new GuidBasedReference<Object>[selection.Length];
+            for (int i = 0; i < selection.Length; i++)
+            {
+                guidBasedReferences[i] = new GuidBasedReference<Object>(selection[i]);
+            }
         }
     }
 }

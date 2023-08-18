@@ -193,7 +193,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 // while on another folder are meant to apply to newly selected folders too.
                 CurrentCollectionSerializedObject.Update();
                 entryPanel.SortEntriesInSerializedObject();
-                ApplyModifiedProperties();
+                ApplyModifiedProperties(false);
             }
         }
         
@@ -244,9 +244,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             folderPanel.ClearFoldersTreeView(true);
         }
         
-        public void ApplyModifiedProperties()
+        public void ApplyModifiedProperties(bool withUndo = true)
         {
-            CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            if(withUndo)
+                CurrentCollectionSerializedObject.ApplyModifiedProperties();
+            else
+                CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+            
             if (CurrentCollection == PersonalPalette)
                 SavePersonalPaletteCollection();
         }
