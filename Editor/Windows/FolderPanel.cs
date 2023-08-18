@@ -12,6 +12,7 @@ namespace RoyTheunissen.AssetPalette.Windows
     {
         // Editor preferences
         private static string FolderPanelWidthEditorPref => AssetPaletteWindow.EditorPrefPrefix + "FolderPanelWidth";
+        private static string SelectedFolderGuidPathEditorPref => AssetPaletteWindow.EditorPrefPrefix + "SelectedFolderGuidPath";
         
         // Measurements
         public static float FolderPanelWidthMin => Header.CollectionButtonWidth
@@ -24,6 +25,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         public const string RootFoldersPropertyName = "folders";
         public const string ChildFoldersPropertyName = "children";
+        internal const string GuidPropertyName = "guid";
         
         private const float DividerBrightness = 0.13f;
         public static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
@@ -65,6 +67,12 @@ namespace RoyTheunissen.AssetPalette.Windows
                 return Mathf.Max(EditorPrefs.GetFloat(FolderPanelWidthEditorPref), FolderPanelWidthMin);
             }
             set => EditorPrefs.SetFloat(FolderPanelWidthEditorPref, value);
+        }
+
+        internal string SelectedFolderGuidPath
+        {
+            get => EditorPrefs.GetString(SelectedFolderGuidPathEditorPref);
+            set => EditorPrefs.SetString(SelectedFolderGuidPathEditorPref, value);
         }
 
         public PaletteFolder SelectedFolder => window.SelectedFolderSerializedProperty.GetValue<PaletteFolder>();
@@ -112,6 +120,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.CreateFolderRequestedEvent += HandleTreeViewCreateFolderRequestedEvent;
                 foldersTreeView.DroppedAssetsIntoFolderEvent += HandleTreeViewDroppedAssetsIntoFolderEvent;
             }
+            EnsureFoldersGuids();
         }
 
         public void UpdateFoldersTreeView(bool clearState)
@@ -152,6 +161,32 @@ namespace RoyTheunissen.AssetPalette.Windows
             CreateNewFolder<PaletteFolder>(null, InitialFolderName);
             window.CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
+        
+        private void EnsureFoldersGuids()
+        {
+            for (int startIndex = 0; startIndex < window.FoldersSerializedProperty.arraySize; startIndex++)
+            {
+                SerializedProperty folderProperty = window.FoldersSerializedProperty.GetArrayElementAtIndex(startIndex);
+                EnsureFolderIDRecursively(folderProperty);
+            }
+
+            window.ApplyModifiedProperties();
+        }
+
+        private void EnsureFolderIDRecursively(SerializedProperty folderProperty)
+        {
+            if (!string.IsNullOrEmpty(folderProperty.FindPropertyRelative(GuidPropertyName).stringValue))
+                return;
+
+            folderProperty.FindPropertyRelative(GuidPropertyName).stringValue = Guid.NewGuid().ToString();
+
+            SerializedProperty childrenProperty = folderProperty.FindPropertyRelative(ChildFoldersPropertyName);
+            for (int i = 0; i < childrenProperty.arraySize; i++)
+            {
+                SerializedProperty childrenFolder = childrenProperty.GetArrayElementAtIndex(i);
+                EnsureFolderIDRecursively(childrenFolder);
+            }
+        }
 
         private string GetUniqueFolderName(
             SerializedProperty parentFolderProperty, string desiredName, int previousAttempts = 0)
@@ -171,7 +206,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             for (int i = 0; i < listProperty.arraySize; i++)
             {
                 PaletteFolder folder = listProperty.GetArrayElementAtIndex(i).GetValue<PaletteFolder>();
-                if (folder.Name == desiredName)
+                if (folder != null && string.Equals(folder.Name, desiredName, StringComparison.Ordinal))
                 {
                     alreadyTaken = true;
                     break;
@@ -377,7 +412,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
             
-            string targetFolderReferenceIdPath = targetFolderProperty.GetReferenceIdPath(ChildFoldersPropertyName);
+            string targetFolderReferenceIdPath = targetFolderProperty.GetGuidPath(ChildFoldersPropertyName);
             
             SerializedProperty fromListProperty = folderProperty.GetParent();
             int folderToDragIndex = fromListProperty.GetIndexOfArrayElement(folderProperty);
@@ -401,7 +436,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             // Having removed the folder that we want to drag, that changed the order of all the properties. Figure out
             // the correct property for the folder that we wanted to drag to
-            targetFolderProperty = window.CurrentCollectionSerializedObject.FindPropertyFromReferenceIdPath(
+            targetFolderProperty = window.CurrentCollectionSerializedObject.FindPropertyFromGuidPath(
                 targetFolderReferenceIdPath, RootFoldersPropertyName, ChildFoldersPropertyName);
             toListProperty = targetFolderProperty == null
                 ? window.FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);

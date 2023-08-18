@@ -26,7 +26,6 @@ namespace RoyTheunissen.AssetPalette.Windows
         // Editor prefs
         public static string EditorPrefPrefix => $"RoyTheunissen/PrefabPalette/{ProjectName}/";
         private static string CurrentCollectionGUIDEditorPref => EditorPrefPrefix + "CurrentCollectionGUID";
-        private static string SelectedFolderReferenceIdPathEditorPref => EditorPrefPrefix + "SelectedFolderReferenceIdPath";
 
         private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";
 

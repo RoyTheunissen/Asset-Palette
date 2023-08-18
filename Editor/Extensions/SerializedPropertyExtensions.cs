@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using RoyTheunissen.AssetPalette.Windows;
 using UnityEditor;
 
 namespace RoyTheunissen.AssetPalette.Extensions
@@ -12,7 +13,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
     /// </summary>
     public static partial class SerializedPropertyExtensions
     {
-        public const string ReferenceIdSeparator = "/";
+        public const string GuidPathSeparator = "/";
         
         /// <summary>
         /// Courtesy of douduck08. Cheers.
@@ -274,28 +275,28 @@ namespace RoyTheunissen.AssetPalette.Extensions
         /// like "1373151034781990912/7504083557633490975" and you can heuristically figure out which serialized
         /// property that represents. See: SerializedObjectExtensions.FindPropertyFromReferenceIdPath
         /// </summary>
-        public static string GetReferenceIdPath(this SerializedProperty serializedProperty, string childrenPropertyName)
+        public static string GetGuidPath(this SerializedProperty serializedProperty, string childrenPropertyName)
         {
             if (serializedProperty == null)
                 return null;
             
-            return serializedProperty.GetReferenceIdPathRecursive(string.Empty, childrenPropertyName);
+            return serializedProperty.GetGuidPathRecursive(string.Empty, childrenPropertyName);
         }
         
-        private static string GetReferenceIdPathRecursive(
+        private static string GetGuidPathRecursive(
             this SerializedProperty serializedProperty, string path, string childrenPropertyName)
         {
             SerializedProperty parentProperty = serializedProperty.GetParent();
             
-            string id = serializedProperty.managedReferenceId.ToString();
+            string guid = serializedProperty.FindPropertyRelative(FolderPanel.GuidPropertyName).stringValue;
             
-            if (parentProperty.name == childrenPropertyName)
+            if (string.Equals(parentProperty.name, childrenPropertyName, StringComparison.Ordinal))
             {
                 return parentProperty.GetParent()
-                           .GetReferenceIdPathRecursive(path, childrenPropertyName) + ReferenceIdSeparator + id;
+                           .GetGuidPathRecursive(path, childrenPropertyName) + GuidPathSeparator + guid;
             }
             
-            return id;
+            return guid;
         }
     }
 }

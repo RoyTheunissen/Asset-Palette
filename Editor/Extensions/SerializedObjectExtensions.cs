@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RoyTheunissen.AssetPalette.Windows;
 using UnityEditor;
 
 namespace RoyTheunissen.AssetPalette.Extensions
@@ -9,7 +10,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
         /// Gets the corresponding serialized property from a "reference id path".
         /// See: SerializedPropertyExtensions.GetReferenceIdPath
         /// </summary>
-        public static SerializedProperty FindPropertyFromReferenceIdPath(
+        public static SerializedProperty FindPropertyFromGuidPath(
             this SerializedObject serializedObject, string path,
             string rootCollectionName, string childPropertyName = null)
         {
@@ -21,9 +22,9 @@ namespace RoyTheunissen.AssetPalette.Extensions
 
             SerializedProperty rootCollectionProperty = serializedObject.FindProperty(rootCollectionName);
 
-            List<string> sections = new List<string>(path.Split(SerializedPropertyExtensions.ReferenceIdSeparator));
+            List<string> sections = new List<string>(path.Split(SerializedPropertyExtensions.GuidPathSeparator));
 
-            SerializedProperty propertyOfFirstSection = GetArrayElementWithReferenceId(
+            SerializedProperty propertyOfFirstSection = GetArrayElementWithGuid(
                 rootCollectionProperty, sections[0]);
 
             if (propertyOfFirstSection == null)
@@ -35,33 +36,32 @@ namespace RoyTheunissen.AssetPalette.Extensions
 
             // There were other sections in the path, so recurse deeper.
             sections.RemoveAt(0);
-            string remainingPath = string.Join(SerializedPropertyExtensions.ReferenceIdSeparator, sections);
+            string remainingPath = string.Join(SerializedPropertyExtensions.GuidPathSeparator, sections);
             
-            return GetPropertyFromReferenceIdPathRecursive(
-                propertyOfFirstSection, remainingPath, childPropertyName);
+            return GetPropertyFromGuidPathRecursive(propertyOfFirstSection, remainingPath, childPropertyName);
         }
         
-        private static SerializedProperty GetArrayElementWithReferenceId(
+        private static SerializedProperty GetArrayElementWithGuid(
             SerializedProperty collectionProperty, string id)
         {
             for (int i = 0; i < collectionProperty.arraySize; i++)
             {
                 SerializedProperty childProperty = collectionProperty.GetArrayElementAtIndex(i);
-                if (string.Equals(childProperty.managedReferenceId.ToString(), id))
+                if (string.Equals(childProperty.FindPropertyRelative(FolderPanel.GuidPropertyName).stringValue, id))
                     return childProperty;
             }
             
             return null;
         }
         
-        private static SerializedProperty GetPropertyFromReferenceIdPathRecursive(
+        private static SerializedProperty GetPropertyFromGuidPathRecursive(
             SerializedProperty serializedProperty, string path, string childPropertyName)
         {
             SerializedProperty collectionProperty = serializedProperty.FindPropertyRelative(childPropertyName);
 
-            List<string> sections = new List<string>(path.Split(SerializedPropertyExtensions.ReferenceIdSeparator));
+            List<string> sections = new List<string>(path.Split(SerializedPropertyExtensions.GuidPathSeparator));
 
-            SerializedProperty propertyOfFirstSection = GetArrayElementWithReferenceId(
+            SerializedProperty propertyOfFirstSection = GetArrayElementWithGuid(
                 collectionProperty, sections[0]);
 
             if (propertyOfFirstSection == null)
@@ -73,9 +73,9 @@ namespace RoyTheunissen.AssetPalette.Extensions
 
             // There were other sections in the path, so recurse deeper.
             sections.RemoveAt(0);
-            string remainingPath = string.Join(SerializedPropertyExtensions.ReferenceIdSeparator, sections);
+            string remainingPath = string.Join(SerializedPropertyExtensions.GuidPathSeparator, sections);
             
-            return GetPropertyFromReferenceIdPathRecursive(
+            return GetPropertyFromGuidPathRecursive(
                 propertyOfFirstSection, remainingPath, childPropertyName);
         }
     }
