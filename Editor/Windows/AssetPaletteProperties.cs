@@ -18,6 +18,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 {
                     cachedPersonalPalette = CreateInstance<AssetPaletteCollection>();
                     cachedPersonalPalette.name = "Personal Palette";
+                    cachedPersonalPalette.hideFlags = HideFlags.DontSave;
 
                     string storedJson = EditorPrefs.GetString(PersonalPaletteStorageKeyEditorPref, "");
                     if (!string.IsNullOrEmpty(storedJson))
