@@ -11,5 +11,7 @@ namespace RoyTheunissen.AssetPalette
     {
         [SerializeReference] private List<PaletteFolder> folders = new List<PaletteFolder>();
         public List<PaletteFolder> Folders => folders;
+        
+        [SerializeReference] private int lastSelectionId;
     }
 }
