@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.Runtime
@@ -13,37 +14,19 @@ namespace RoyTheunissen.AssetPalette.Runtime
     {
         public const int ItemNamesToDisplayMax = 3;
         
-        [SerializeField]
-        private GuidBasedReference<Object>[] guidBasedReferences;
+        [SerializeField] private GuidBasedReferenceList<Object> selectionReferences;
         
-        //Keeping this for backwards compatibility.
+        // Keeping this for backwards compatibility.
         [SerializeField] private Object[] selection;
+        
         public Object[] Selection
         {
             get
             {
-#if UNITY_EDITOR
-                //Migration from old system to new guid system
-                if(guidBasedReferences == null || guidBasedReferences.Length == 0 && selection.Length > 0)
-                {
-                    guidBasedReferences = new GuidBasedReference<Object>[selection.Length];
-
-                    for (int i = 0; i < selection.Length; i++)
-                    {
-                        guidBasedReferences[i] = new GuidBasedReference<Object>(this.selection[i]);
-                    }
-
-                    selection = null;
-                }
-#endif
-
-                Object[] returnSelection = new Object[guidBasedReferences.Length];
-                for (int i = 0; i < guidBasedReferences.Length; i++)
-                {
-                    returnSelection[i] = guidBasedReferences[i].Asset;
-                }
-
-                return returnSelection;
+                // Backwards compatibility with old palettes that had direct references.
+                selectionReferences.InitializeFromExistingDirectReferences(ref selectionReferences, ref selection);
+                
+                return selectionReferences.Array;
             }
         }
 
@@ -124,11 +107,7 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         public PaletteSelectionShortcut(Object[] selection)
         {
-            guidBasedReferences = new GuidBasedReference<Object>[selection.Length];
-            for (int i = 0; i < selection.Length; i++)
-            {
-                guidBasedReferences[i] = new GuidBasedReference<Object>(selection[i]);
-            }
+            selectionReferences = new GuidBasedReferenceList<Object>(selection);
         }
     }
 }

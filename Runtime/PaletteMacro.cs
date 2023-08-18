@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
@@ -17,22 +18,19 @@ namespace RoyTheunissen.AssetPalette.Runtime
     [Serializable]
     public class PaletteMacro : PaletteEntry
     {
-        [SerializeField] private GuidBasedReference<TextAsset> guidBasedReference;
-        //Keeping this for backwards compability
+        [SerializeField] private GuidBasedReference<TextAsset> scriptReference;
+        
+        // Keeping this for backwards compability.
         [SerializeField] private TextAsset script;
+        
         public TextAsset Script
         {
             get
             {
-#if UNITY_EDITOR
-                //Migration from old system to new guid system
-                if(guidBasedReference == null || !guidBasedReference.HasGuid && script != null)
-                {
-                    guidBasedReference = new GuidBasedReference<TextAsset>(script);
-                    script = null;
-                }
-#endif
-                return guidBasedReference.Asset;
+                // Backwards compatibility with old palettes that had direct references.
+                scriptReference.InitializeFromExistingDirectReference(ref scriptReference, ref script);
+                
+                return scriptReference.Asset;
             }
         }
 
@@ -50,7 +48,7 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         public PaletteMacro(TextAsset script, string methodName)
         {
-            guidBasedReference = new GuidBasedReference<TextAsset>(script);
+            scriptReference = new GuidBasedReference<TextAsset>(script);
             this.methodName = methodName;
         }
 

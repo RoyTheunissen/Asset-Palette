@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
@@ -16,24 +17,20 @@ namespace RoyTheunissen.AssetPalette
     public class PaletteAsset : PaletteEntry
     {
         private const int TextureSize = 128;
-
-        [SerializeField] private GuidBasedReference<Object> guidBasedReference;
         
-        //Keeping this for backwards compatibility.
+        [SerializeField] private GuidBasedReference<Object> assetReference;
+        
+        // Keeping this for backwards compatibility.
         [SerializeField] private Object asset;
+        
         public Object Asset
         {
             get
             {
-#if UNITY_EDITOR
-                //Migration from old system to new guid system
-                if(guidBasedReference == null || !guidBasedReference.HasGuid && asset != null)
-                {
-                    guidBasedReference = new GuidBasedReference<Object>(asset);
-                    asset = null;
-                }
-#endif
-                return guidBasedReference.Asset;
+                // Backwards compatibility with old palettes that had direct references.
+                assetReference.InitializeFromExistingDirectReference(ref assetReference, ref asset);
+                
+                return assetReference.Asset;
             }
         }
 
@@ -65,7 +62,7 @@ namespace RoyTheunissen.AssetPalette
 
         public PaletteAsset(Object asset)
         {
-            guidBasedReference = new GuidBasedReference<Object>(asset);
+            assetReference = new GuidBasedReference<Object>(asset);
         }
 
         public override void Open()
