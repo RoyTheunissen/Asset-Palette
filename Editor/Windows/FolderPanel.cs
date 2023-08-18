@@ -504,7 +504,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private void RemoveFolder(SerializedProperty folderProperty)
         {
-            if (folderProperty == null || !window.HasCollection || FolderCount <= 1)
+            if (!CanRemoveFolder(folderProperty))
                 return;
 
             SerializedProperty listProperty = folderProperty.GetParent();
@@ -533,6 +533,18 @@ namespace RoyTheunissen.AssetPalette.Windows
             UpdateFoldersTreeView(false);
 
             window.Repaint();
+        }
+
+        private bool CanRemoveFolder(SerializedProperty folderProperty)
+        {
+            if (folderProperty == null || !window.HasCollection)
+                return false;
+            
+            SerializedProperty parentProperty = folderProperty.GetParent();
+            if (string.Equals(parentProperty.name, RootFoldersPropertyName, StringComparison.Ordinal) && FolderCount == 1)
+                return false;
+            
+            return true;
         }
 
         public void RemoveSelectedFolder()
