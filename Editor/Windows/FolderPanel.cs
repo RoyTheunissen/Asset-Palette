@@ -412,7 +412,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
             
-            string targetFolderReferenceIdPath = targetFolderProperty.GetGuidPath(ChildFoldersPropertyName);
+            string targetFolderGuidPath = targetFolderProperty.GetGuidPath(ChildFoldersPropertyName);
             
             SerializedProperty fromListProperty = folderProperty.GetParent();
             int folderToDragIndex = fromListProperty.GetIndexOfArrayElement(folderProperty);
@@ -437,7 +437,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Having removed the folder that we want to drag, that changed the order of all the properties. Figure out
             // the correct property for the folder that we wanted to drag to
             targetFolderProperty = window.CurrentCollectionSerializedObject.FindPropertyFromGuidPath(
-                targetFolderReferenceIdPath, RootFoldersPropertyName, ChildFoldersPropertyName);
+                targetFolderGuidPath, RootFoldersPropertyName, ChildFoldersPropertyName);
             toListProperty = targetFolderProperty == null
                 ? window.FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             toListProperty.InsertArrayElementAtIndex(toIndex);

@@ -13,7 +13,7 @@ namespace RoyTheunissen.AssetPalette
     /// Represents an asset that is added to the palette.
     /// </summary>
     [Serializable]
-    public class PaletteAsset : PaletteEntry, ISerializationCallbackReceiver
+    public class PaletteAsset : PaletteEntry
     {
         private const int TextureSize = 128;
 
@@ -90,13 +90,5 @@ namespace RoyTheunissen.AssetPalette
 #endif // UNITY_EDITOR
         }
 
-        public void OnBeforeSerialize()
-        {
-            
-        }
-
-        public void OnAfterDeserialize()
-        {
-        }
     }
 }
