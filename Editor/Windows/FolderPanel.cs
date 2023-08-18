@@ -421,7 +421,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
             
-            string targetFolderGuidPath = targetFolderProperty.GetIdPath(ChildFoldersPropertyName, SelectionIdPropertyName);
+            string targetFolderGuidPath = targetFolderProperty.GetIdPath(
+                SelectionIdPropertyName, ChildFoldersPropertyName);
             
             SerializedProperty fromListProperty = folderProperty.GetParent();
             int folderToDragIndex = fromListProperty.GetIndexOfArrayElement(folderProperty);
