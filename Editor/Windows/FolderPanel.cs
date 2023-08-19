@@ -302,6 +302,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             window.ApplyModifiedProperties();
 
             window.SelectedFolderSerializedProperty = newFolderProperty;
+            
+            // Extra Apply, seems to be necessary to make sure the PaletteFolder reference exists. 
+            window.ApplyModifiedProperties();
 
             UpdateFoldersTreeView(false);
             
