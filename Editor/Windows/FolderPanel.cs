@@ -74,9 +74,6 @@ namespace RoyTheunissen.AssetPalette.Windows
             get => EditorPrefs.GetString(SelectedFolderGuidPathEditorPref);
             set => EditorPrefs.SetString(SelectedFolderGuidPathEditorPref, value);
         }
-        
-        public string SelectedFolderPath => window
-            .SelectedFolderSerializedProperty.GetIdPath("name", "children");
 
         public PaletteFolder SelectedFolder => window.SelectedFolderSerializedProperty.GetValue<PaletteFolder>();
 
@@ -121,6 +118,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.MovedFolderEvent += HandleTreeViewMovedFolderEvent;
                 foldersTreeView.DeleteFolderRequestedEvent += HandleTreeViewDeleteFolderRequestedEvent;
                 foldersTreeView.CreateFolderRequestedEvent += HandleTreeViewCreateFolderRequestedEvent;
+                foldersTreeView.EntryMoveRequestedEvent += HandleEntryMoveRequestedEvent;
                 foldersTreeView.DroppedAssetsIntoFolderEvent += HandleTreeViewDroppedAssetsIntoFolderEvent;
             }
             EnsureFolderSelectionIds();
@@ -143,6 +141,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.MovedFolderEvent -= HandleTreeViewMovedFolderEvent;
                 foldersTreeView.DeleteFolderRequestedEvent -= HandleTreeViewDeleteFolderRequestedEvent;
                 foldersTreeView.CreateFolderRequestedEvent -= HandleTreeViewCreateFolderRequestedEvent;
+                foldersTreeView.EntryMoveRequestedEvent -= HandleEntryMoveRequestedEvent;
                 foldersTreeView.DroppedAssetsIntoFolderEvent -= HandleTreeViewDroppedAssetsIntoFolderEvent;
                 foldersTreeView = null;
             }
@@ -477,37 +476,38 @@ namespace RoyTheunissen.AssetPalette.Windows
             TryCreateNewFolderContext(parentFolderProperty);
         }
         
-        private void HandleTreeViewDroppedAssetsIntoFolderEvent(
-            AssetPaletteFolderTreeView treeView, Object[] assets,
-            SerializedProperty folderProperty, bool isDraggedFromFolder)
+        private void HandleEntryMoveRequestedEvent(
+            AssetPaletteFolderTreeView treeView, SerializedProperty[] entryProperties,
+            SerializedProperty folderFromProperty, SerializedProperty folderToProperty)
         {
-            if (isDraggedFromFolder)
+            List<PaletteEntry> entriesToMove = new List<PaletteEntry>();
+            for (int i = 0; i < entryProperties.Length; i++)
             {
-                // First remove all of the selected entries from the current folder.
-                List<PaletteEntry> entriesToMove = new List<PaletteEntry>(window.EntryPanel.EntriesSelected);
-                window.EntryPanel.RemoveEntries(entriesToMove);
-
-                // Make the recipient folder the current folder.
-                window.SelectedFolderSerializedProperty = folderProperty;
-
-                // Now add all of the entries to the recipient folder.
-                window.EntryPanel.AddEntries(entriesToMove);
-            }
-            else
-            {
-                List<Object> assetsLeftToHandle = new List<Object>(assets);
-                foreach (Object draggedAsset in assets)
-                {
-                    
-                }
-                
-                // Make the recipient folder the current folder.
-                window.SelectedFolderSerializedProperty = folderProperty;
-
-                // Just act as if these assets were dropped into the entries panel.
-                window.HandleAssetDropping(assetsLeftToHandle.ToArray());
+                PaletteEntry entry = entryProperties[i].GetValue<PaletteEntry>();
+                entriesToMove.Add(entry);
             }
             
+            // First remove all of the selected entries from the current folder.
+            window.EntryPanel.RemoveEntries(entriesToMove);
+
+            // Make the recipient folder the current folder.
+            window.SelectedFolderSerializedProperty = folderToProperty;
+
+            // Now add all of the entries to the recipient folder.
+            window.EntryPanel.AddEntries(entriesToMove);
+            
+            window.UpdateAndRepaint();
+        }
+        
+        private void HandleTreeViewDroppedAssetsIntoFolderEvent(
+            AssetPaletteFolderTreeView treeView, Object[] assets, SerializedProperty folderProperty)
+        {
+            // Make the recipient folder the current folder.
+            window.SelectedFolderSerializedProperty = folderProperty;
+
+            // Just act as if these assets were dropped into the entries panel.
+            window.HandleAssetDropping(assets);
+
             window.UpdateAndRepaint();
         }
         
