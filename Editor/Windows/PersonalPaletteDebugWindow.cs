@@ -13,6 +13,8 @@ namespace RoyTheunissen.AssetPalette
 
         private void OnEnable()
         {
+            titleContent = new GUIContent("Personal Palette Debug Window");
+            
             AssetPaletteWindow.SavedPersonalPaletteJsonEvent -= HandleSavedPersonalPaletteJsonEvent;
             AssetPaletteWindow.SavedPersonalPaletteJsonEvent += HandleSavedPersonalPaletteJsonEvent;
         }

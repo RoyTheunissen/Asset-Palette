@@ -222,7 +222,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         private void OpenPersonalPaletteDebugWindow()
         {
-            EditorWindow.GetWindow<PersonalPaletteDebugWindow>();
+            EditorWindow.GetWindow<PersonalPaletteDebugWindow>(true);
         }
 
         private void DoAddSpecialDropDown(GenericMenu menu, string prefix)
