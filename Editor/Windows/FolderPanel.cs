@@ -181,7 +181,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (idProperty.intValue != 0)
                 return;
 
-            idProperty.intValue = GetNewSelectionId();
+            idProperty.intValue = GenerateNewSelectionId();
 
             SerializedProperty childrenProperty = folderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             for (int i = 0; i < childrenProperty.arraySize; i++)
@@ -265,7 +265,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             return dropdownMenu;
         }
 
-        private int GetNewSelectionId()
+        private int GenerateNewSelectionId()
         {
             SerializedProperty lastSelectionIdProperty = window
                 .CurrentCollectionSerializedObject.FindProperty("lastSelectionId");
@@ -280,11 +280,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (string.IsNullOrEmpty(name))
                 name = GetUniqueFolderName(parentFolderProperty, NewFolderName);
 
-            PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
-            newFolder.Initialize(name, GetNewSelectionId());
-
-            // Add it to the current collection's list of folders.
+            // NOTE: Why do we need to update this? Keep in mind that this resets any un-applied property modifications.
+            // Make sure to do it BEFORE we generate a new selection ID because that modifies the collection.
             window.CurrentCollectionSerializedObject.Update();
+
+            // Create a new folder.
+            PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
+            newFolder.Initialize(name, GenerateNewSelectionId());
 
             // If we're adding it to an existing folder, make sure that folder is now expanded so we can see what
             // we're doing. The Tree View will be updated shortly and it will then represent the current value.
