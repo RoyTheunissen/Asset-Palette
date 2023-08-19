@@ -210,7 +210,7 @@ namespace RoyTheunissen.AssetPalette.Extensions
             }
             return -1;
         }
-        
+
         public static SerializedProperty AddArrayElement(this SerializedProperty serializedProperty)
         {
             serializedProperty.InsertArrayElementAtIndex(serializedProperty.arraySize);
