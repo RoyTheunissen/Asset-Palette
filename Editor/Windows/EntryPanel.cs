@@ -589,7 +589,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Mark the drag as being an asset palette entry drag, so we know not to accept it again ourselves.
             // Also pass along the name of the directory so we can handle stuff like dragging assets out into
             // another folder (but ignore the folder it was originally dragged from).
-            DragAndDrop.SetGenericData(EntryDragGenericDataType, window.FolderPanel.SelectedFolder.Name);
+            DragAndDrop.SetGenericData(EntryDragGenericDataType, window.FolderPanel.SelectedFolderPath);
             string dragName = selectedAssets.Count == 1 ? selectedAssets[0].ToString() : "<multiple>";
             DragAndDrop.StartDrag(dragName);
         }

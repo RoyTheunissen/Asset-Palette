@@ -30,10 +30,24 @@ namespace RoyTheunissen.AssetPalette.Windows
         private bool isDoingInitialSelection;
         
         private bool IsDraggingAssets => DragAndDrop.objectReferences.Length > 0;
+        
+        private bool IsDraggingFolder
+        {
+            get
+            {
+                for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+                {
+                    if (DragAndDrop.objectReferences[i].IsFolder())
+                        return true;
+                }
+
+                return false;
+            }
+        }
 
         private readonly List<AssetPaletteFolderTreeViewItem> items = new List<AssetPaletteFolderTreeViewItem>();
-        
-        private string FolderDraggedFromName => (string)DragAndDrop.GetGenericData(
+
+        private string FolderDraggedFromPath => (string)DragAndDrop.GetGenericData(
             EntryPanel.EntryDragGenericDataType);
 
         public delegate void SelectedFolderHandler(AssetPaletteFolderTreeView treeView, SerializedProperty folderProperty);
@@ -171,21 +185,38 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
         {
-            if (args.performDrop)
-                Drop(args);
-            
-            if (IsDraggingAssets)
+            AssetPaletteFolderTreeViewItem itemDraggedInto = args.parentItem as AssetPaletteFolderTreeViewItem;
+
+            bool canDoDrag = true;
+            for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
             {
-                AssetPaletteFolderTreeViewItem itemDraggedInto = args.parentItem as AssetPaletteFolderTreeViewItem;
-                PaletteFolder folderDraggedInto = itemDraggedInto?.Folder;
-
-                return args.dragAndDropPosition == DragAndDropPosition.UponItem
-                       && folderDraggedInto != null && FolderDraggedFromName != folderDraggedInto.Name
-                    ? DragAndDropVisualMode.Copy
-                    : DragAndDropVisualMode.None;
+                Object asset = DragAndDrop.objectReferences[i];
+                if (!CanDoDrag(asset, itemDraggedInto, args.dragAndDropPosition))
+                {
+                    canDoDrag = false;
+                    break;
+                }
             }
+            
+            if (args.performDrop && canDoDrag)
+                Drop(args);
 
-            return DragAndDropVisualMode.Move;
+            return canDoDrag ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.None;
+        }
+
+        private bool CanDoDrag(
+            Object asset, AssetPaletteFolderTreeViewItem itemDraggedInto, DragAndDropPosition position)
+        {
+            // Disallow dragging anything into the folder it came from.
+            if (itemDraggedInto != null && FolderDraggedFromPath == itemDraggedInto.Path)
+                return false;
+
+            // Folders can go anywhere. Between other folders, inside other folders, inside the root...
+            if (asset.IsFolder())
+                return true;
+            
+            // Files can only be dragged into a folder.
+            return position == DragAndDropPosition.UponItem;
         }
 
         private void Drop(DragAndDropArgs args)
@@ -196,7 +227,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             if (IsDraggingAssets)
             {
-                bool isDraggingEntriesFromAFolder = !string.IsNullOrEmpty(FolderDraggedFromName);
+                bool isDraggingEntriesFromAFolder = !string.IsNullOrEmpty(FolderDraggedFromPath);
                 DroppedAssetsIntoFolderEvent?.Invoke(
                     this, DragAndDrop.objectReferences, itemDraggedInto.Property, isDraggingEntriesFromAFolder);
                 return;

@@ -74,6 +74,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             get => EditorPrefs.GetString(SelectedFolderGuidPathEditorPref);
             set => EditorPrefs.SetString(SelectedFolderGuidPathEditorPref, value);
         }
+        
+        public string SelectedFolderPath => window
+            .SelectedFolderSerializedProperty.GetIdPath("name", "children");
 
         public PaletteFolder SelectedFolder => window.SelectedFolderSerializedProperty.GetValue<PaletteFolder>();
 
