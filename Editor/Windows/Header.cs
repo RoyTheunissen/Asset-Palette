@@ -213,6 +213,16 @@ namespace RoyTheunissen.AssetPalette.Windows
         public void AddItemsToMenu(GenericMenu menu)
         {
             DoAddSpecialDropDown(menu, "Add Special/");
+            bool isPersonalPaletteDebugOpen = EditorWindow.HasOpenInstances<PersonalPaletteDebugWindow>();
+            if (isPersonalPaletteDebugOpen)
+                menu.AddDisabledItem(new GUIContent("Open Personal Palette Debug Window"));
+            else
+                menu.AddItem(new GUIContent("Open Personal Palette Debug Window"), false, OpenPersonalPaletteDebugWindow);
+        }
+
+        private void OpenPersonalPaletteDebugWindow()
+        {
+            EditorWindow.GetWindow<PersonalPaletteDebugWindow>();
         }
 
         private void DoAddSpecialDropDown(GenericMenu menu, string prefix)

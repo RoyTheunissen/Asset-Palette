@@ -264,6 +264,8 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             string personalPaletteJson = JsonUtility.ToJson(cachedPersonalPalette);
             EditorPrefs.SetString(PersonalPaletteStorageKeyEditorPref, personalPaletteJson);
+            
+            SavedPersonalPaletteJsonEvent?.Invoke();
         }
     }
 }
