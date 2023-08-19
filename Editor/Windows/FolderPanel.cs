@@ -160,7 +160,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             
             // Make sure there is at least one folder.
             window.CurrentCollectionSerializedObject.Update();
-            CreateNewFolder<PaletteFolder>(null, InitialFolderName);
+            CreateNewFolder(null, InitialFolderName);
             window.CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
         
@@ -232,7 +232,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             if (!HasMultipleFolderTypes)
             {
-                CreateNewFolder<PaletteFolder>();
+                CreateNewFolder();
                 return;
             }
 
@@ -244,7 +244,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             if (!HasMultipleFolderTypes)
             {
-                CreateNewFolder<PaletteFolder>(parentFolderProperty);
+                CreateNewFolder(parentFolderProperty);
                 return;
             }
 
@@ -273,7 +273,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             return lastSelectionIdProperty.intValue;
         }
 
-        private PaletteFolder CreateNewFolder(
+        private SerializedProperty CreateNewFolder(
             Type type, SerializedProperty parentFolderProperty = null, string name = null)
         {
             bool nameWasExplicitlySpecified = !string.IsNullOrEmpty(name);
@@ -306,14 +306,19 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (!nameWasExplicitlySpecified)
                 StartFolderRename(newFolder);
 
-            return newFolder;
+            return newFolderProperty;
         }
 
-        private FolderType CreateNewFolder<FolderType>(
+        private SerializedProperty CreateNewFolder(SerializedProperty parentFolderProperty = null, string name = null)
+        {
+            return CreateNewFolder(typeof(PaletteFolder), parentFolderProperty, name);
+        }
+
+        private SerializedProperty CreateNewFolder<FolderType>(
             SerializedProperty parentFolderProperty = null, string name = null)
             where FolderType : PaletteFolder
         {
-            return (FolderType)CreateNewFolder(typeof(FolderType), parentFolderProperty, name);
+            return CreateNewFolder(typeof(FolderType), parentFolderProperty, name);
         }
 
         public void DrawFolderPanel()
