@@ -509,11 +509,33 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void HandleTreeViewDroppedAssetsIntoFolderEvent(
             AssetPaletteFolderTreeView treeView, Object[] assets, SerializedProperty folderProperty)
         {
+            List<Object> assetsToHandle = new List<Object>(assets);
+
+            for (int i = 0; i < assetsToHandle.Count; i++)
+            {
+                if (!assetsToHandle[i].IsFolder())
+                    continue;
+
+                // Create a new folder with the same name. Note that this also selects that newly created folder.
+                CreateNewFolder(folderProperty, assetsToHandle[i].name);
+
+                // Just act as if this folder was dropped into the entries panel.
+                window.HandleAssetDropping(assetsToHandle[i]);
+                
+                // This folder is now handled.
+                assetsToHandle.RemoveAt(i);
+                i--;
+            }
+            
+            // If there are no more assets to handle, we're done already!
+            if (assetsToHandle.Count == 0)
+                return;
+            
             // Make the recipient folder the current folder.
             window.SelectedFolderSerializedProperty = folderProperty;
 
             // Just act as if these assets were dropped into the entries panel.
-            window.HandleAssetDropping(assets);
+            window.HandleAssetDropping(assetsToHandle.ToArray());
 
             window.UpdateAndRepaint();
         }
