@@ -17,7 +17,8 @@ namespace RoyTheunissen.AssetPalette
         public List<PaletteEntry> Entries => entries;
 
         [SerializeField] private int selectionId;
-        
+        public int SelectionId => selectionId;
+
         public void Initialize(string name, int selectionId)
         {
             this.name = name;

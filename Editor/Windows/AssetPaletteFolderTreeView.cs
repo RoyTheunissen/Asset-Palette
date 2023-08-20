@@ -369,8 +369,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (Header.DebugSelectionIds)
             {
                 AssetPaletteFolderTreeViewItem item = (AssetPaletteFolderTreeViewItem)args.item;
-                string selectionId = item.Property.FindPropertyRelative(FolderPanel.SelectionIdPropertyName)
-                    .GetIdForPath();
+                int selectionId = item.Folder.SelectionId;
                 args.label += $" ({selectionId})";
             }
             
