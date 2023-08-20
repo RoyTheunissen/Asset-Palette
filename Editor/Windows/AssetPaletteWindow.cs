@@ -27,7 +27,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         public static string EditorPrefPrefix => $"RoyTheunissen/PrefabPalette/{ProjectName}/";
         private static string CurrentCollectionGUIDEditorPref => EditorPrefPrefix + "CurrentCollectionGUID";
 
-        private static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";
+        public static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";
 
 
         // Measurements
@@ -64,6 +64,9 @@ namespace RoyTheunissen.AssetPalette.Windows
         
         private Header header;
         public Header Header => header;
+        
+        public delegate void SavedPersonalPaletteJsonHandler();
+        public static event SavedPersonalPaletteJsonHandler SavedPersonalPaletteJsonEvent;
 
         public AssetPaletteWindow()
         {

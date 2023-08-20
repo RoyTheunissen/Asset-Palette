@@ -28,13 +28,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         public bool IsRenaming => isRenaming;
 
         private bool isDoingInitialSelection;
-        
-        private bool IsDraggingAssets => DragAndDrop.objectReferences.Length > 0;
 
         private readonly List<AssetPaletteFolderTreeViewItem> items = new List<AssetPaletteFolderTreeViewItem>();
-        
-        private string FolderDraggedFromName => (string)DragAndDrop.GetGenericData(
-            EntryPanel.EntryDragGenericDataType);
 
         public delegate void SelectedFolderHandler(AssetPaletteFolderTreeView treeView, SerializedProperty folderProperty);
         public event SelectedFolderHandler SelectedFolderEvent;
@@ -55,9 +50,13 @@ namespace RoyTheunissen.AssetPalette.Windows
             AssetPaletteFolderTreeView treeView, SerializedProperty parentFolderProperty);
         public event CreateFolderRequestedHandler CreateFolderRequestedEvent;
         
+        public delegate void EntryMoveRequestedHandler(
+            AssetPaletteFolderTreeView treeView, SerializedProperty[] entryProperties,
+            SerializedProperty folderFromProperty, SerializedProperty folderToProperty);
+        public event EntryMoveRequestedHandler EntryMoveRequestedEvent;
+        
         public delegate void DroppedAssetsIntoFolderHandler(
-            AssetPaletteFolderTreeView treeView, Object[] assets, SerializedProperty folderProperty, 
-            bool isDraggedFromFolder);
+            AssetPaletteFolderTreeView treeView, Object[] assets, SerializedProperty folderProperty);
         public event DroppedAssetsIntoFolderHandler DroppedAssetsIntoFolderEvent;
         
         public AssetPaletteFolderTreeView(
@@ -171,21 +170,64 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
         {
-            if (args.performDrop)
-                Drop(args);
+            AssetPaletteFolderTreeViewItem itemDraggedInto = args.parentItem as AssetPaletteFolderTreeViewItem;
             
-            if (IsDraggingAssets)
+            bool canDoDrag = true;
+            
+            // Figure out if this is an entry drag.
+            EntryDragData entryDragData = (EntryDragData)DragAndDrop.GetGenericData(
+                EntryPanel.EntryDragGenericDataType);
+            if (entryDragData != null)
             {
-                AssetPaletteFolderTreeViewItem itemDraggedInto = args.parentItem as AssetPaletteFolderTreeViewItem;
-                PaletteFolder folderDraggedInto = itemDraggedInto?.Folder;
-
-                return args.dragAndDropPosition == DragAndDropPosition.UponItem
-                       && folderDraggedInto != null && FolderDraggedFromName != folderDraggedInto.Name
-                    ? DragAndDropVisualMode.Copy
-                    : DragAndDropVisualMode.None;
+                for (int i = 0; i < entryDragData.EntryProperties.Count; i++)
+                {
+                    if (!CanDragEntries(
+                        entryDragData.FolderDraggingFromPath, itemDraggedInto, args.dragAndDropPosition))
+                    {
+                        canDoDrag = false;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+                {
+                    Object asset = DragAndDrop.objectReferences[i];
+                    if (!CanDragAsset(asset, itemDraggedInto, args.dragAndDropPosition))
+                    {
+                        canDoDrag = false;
+                        break;
+                    }
+                }
             }
 
-            return DragAndDropVisualMode.Move;
+            if (args.performDrop && canDoDrag)
+                Drop(args);
+
+            return canDoDrag ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.None;
+        }
+        
+        private bool CanDragEntries(
+            string folderDraggingFromPath, AssetPaletteFolderTreeViewItem itemDraggedInto, DragAndDropPosition position)
+        {
+            // Disallow dragging back into the folder it came from.
+            if (itemDraggedInto != null && folderDraggingFromPath == itemDraggedInto.Path)
+                return false;
+
+            // Entries can only be dragged into a folder and not next to one.
+            return position == DragAndDropPosition.UponItem;
+        }
+
+        private bool CanDragAsset(
+            Object asset, AssetPaletteFolderTreeViewItem itemDraggedInto, DragAndDropPosition position)
+        {
+            // Folders can go anywhere. Between other folders, inside other folders, inside the root...
+            if (asset.IsFolder())
+                return true;
+            
+            // Files can only be dragged into a folder.
+            return position == DragAndDropPosition.UponItem;
         }
 
         private void Drop(DragAndDropArgs args)
@@ -194,21 +236,36 @@ namespace RoyTheunissen.AssetPalette.Windows
             PaletteFolder folderDraggedInto = itemDraggedInto?.Folder;
             SerializedProperty folderDraggedIntoProperty = itemDraggedInto?.Property;
             
-            if (IsDraggingAssets)
+            // Figure out if this is an entry drag.
+            EntryDragData entryDragData = (EntryDragData)DragAndDrop.GetGenericData(
+                EntryPanel.EntryDragGenericDataType);
+            if (entryDragData != null)
             {
-                bool isDraggingEntriesFromAFolder = !string.IsNullOrEmpty(FolderDraggedFromName);
-                DroppedAssetsIntoFolderEvent?.Invoke(
-                    this, DragAndDrop.objectReferences, itemDraggedInto.Property, isDraggingEntriesFromAFolder);
+                DragAndDrop.SetGenericData(EntryPanel.EntryDragGenericDataType, null);
+                DragAndDrop.AcceptDrag();
+                
+                EntryMoveRequestedEvent?.Invoke(this, entryDragData.EntryProperties.ToArray(),
+                    entryDragData.FolderDraggingFromProperty, folderDraggedIntoProperty);
                 return;
             }
-            
+
+            if (DragAndDrop.objectReferences.Length > 0)
+            {
+                DragAndDrop.AcceptDrag();
+                
+                // Assets are being dragged in from outside of the palette.
+                DroppedAssetsIntoFolderEvent?.Invoke(this, DragAndDrop.objectReferences, folderDraggedIntoProperty);
+                return;
+            }
+
+            // Probably a folder drag.
             AssetPaletteFolderTreeViewItem draggedItem = (AssetPaletteFolderTreeViewItem)DragAndDrop
                 .GetGenericData(FolderDragGenericDataType);
 
             if (draggedItem == null)
             {
-                Debug.LogWarning($"Dragged something into the Folder Panel that is neither a folder nor an asset. " +
-                                 $"Currently unsupported, probably an edge case!");
+                Debug.LogWarning($"Dragged something into the Folder Panel that is neither a entry nor an asset nor " +
+                                 $"a folder. Currently unsupported, probably an edge case!");
                 return;
             }
 
@@ -222,6 +279,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
 
             DragAndDrop.SetGenericData(FolderDragGenericDataType, null);
+            DragAndDrop.AcceptDrag();
+            
             MovedFolderEvent?.Invoke(this, draggedItem.Property, folderDraggedIntoProperty, args.insertAtIndex);
         }
 
@@ -306,10 +365,31 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         protected override void RowGUI(RowGUIArgs args)
         {
+            // If we're debugging the selection IDs, show them after the folder name here.
+            if (Header.DebugSelectionGuids)
+            {
+                AssetPaletteFolderTreeViewItem item = (AssetPaletteFolderTreeViewItem)args.item;
+                string selectionGuid = item.Folder.SelectionGuid;
+                args.label += $" <b>({selectionGuid})</b>";
+            }
+            
             args.rowRect.y += FolderSpacing;
             args.rowRect.height -= FolderSpacing * 2;
 
+            // Temporarily enable rich text so we can have bold text for debugging the selection GUIDs.
+            if (Header.DebugSelectionGuids)
+            {
+                GUIStyle treeViewStyle = "TV Line";
+                treeViewStyle.richText = true;
+            }
             base.RowGUI(args);
+            
+            // Disable rich text again.
+            if (Header.DebugSelectionGuids)
+            {
+                GUIStyle treeViewStyle = "TV Line";
+                treeViewStyle.richText = false;
+            }
 
             // This is the only way we can detect if we're currently renaming or not.
             if (args.isRenaming)

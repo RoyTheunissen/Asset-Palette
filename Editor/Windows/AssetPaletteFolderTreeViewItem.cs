@@ -16,6 +16,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private PaletteFolder folder;
         public PaletteFolder Folder => folder;
 
+        public string Path => property.GetIdPath("name", "children");
+
         public AssetPaletteFolderTreeViewItem(
             int id, int depth, string displayName, SerializedProperty property, PaletteFolder folder)
             : base(id, depth, displayName)

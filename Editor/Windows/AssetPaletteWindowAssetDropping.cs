@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using RoyTheunissen.AssetPalette.Extensions;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -70,6 +71,11 @@ namespace RoyTheunissen.AssetPalette.Windows
             entriesToAddFromDraggedAssets.Clear();
             ProcessDraggedObjects();
         }
+
+        public void HandleAssetDropping(Object objectToProcess)
+        {
+            HandleAssetDropping(new[] { objectToProcess });
+        }
         
         private void ResumeDraggedObjectProcessing(bool didProcessCurrentDraggedObject)
         {
@@ -110,8 +116,6 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             needsToAskForUserInputFirst = false;
 
-            string path = AssetDatabase.GetAssetPath(draggedObject);
-
             bool didHandleSpecialImportCase = CheckUserInputForSpecialImportCases(draggedObject);
             if (didHandleSpecialImportCase)
             {
@@ -120,33 +124,37 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
             
             // If a folder is dragged in, add its contents.
-            if (AssetDatabase.IsValidFolder(path))
+            if (draggedObject.IsFolder())
             {
                 CreateEntriesForFolderContents(draggedObject, ref needsToAskForUserInputFirst);
                 return;
             }
 
+            // Check that it doesn't already have an entry for this asset, we don't want that.
+            if (HasEntryForAsset(draggedObject))
+                return;
+            
             // Basically any Object is fine as long as it's not a scene GameObject.
-            if (!HasEntryForAsset(draggedObject))
+            if (draggedObject is GameObject go && !go.IsPrefab())
             {
-                if (draggedObject is GameObject go && !GameObjectExtensions.IsPrefab(go))
-                {
-                    // You can't add scene game objects.
-                    if (!PrefabUtility.IsPartOfAnyPrefab(go))
-                        return;
-
-                    // You CAN add an object from the scene if it's a valid prefab... 
-                    draggedObject = PrefabUtility.GetCorrespondingObjectFromSource(go);
-                    if (draggedObject == null)
-                        return;
-                }
-                
-                //If this object is already on the list to be added, ignore it.
-                if (entriesToAddFromDraggedAssets.Any(entry => entry is PaletteAsset paletteAsset && paletteAsset.Asset == draggedObject))
+                // You can't add scene game objects.
+                if (!PrefabUtility.IsPartOfAnyPrefab(go))
                     return;
-                
-                entriesToAddFromDraggedAssets.Add(new PaletteAsset(draggedObject));
+
+                // You CAN add an object from the scene if it's a valid prefab... 
+                draggedObject = PrefabUtility.GetCorrespondingObjectFromSource(go);
+                if (draggedObject == null)
+                    return;
             }
+                
+            //If this object is already on the list to be added, ignore it.
+            if (entriesToAddFromDraggedAssets.Any(
+                entry => entry is PaletteAsset paletteAsset && paletteAsset.Asset == draggedObject))
+            {
+                return;
+            }
+                
+            entriesToAddFromDraggedAssets.Add(new PaletteAsset(draggedObject));
         }
 
         private bool CheckUserInputForSpecialImportCases(Object draggedObject)

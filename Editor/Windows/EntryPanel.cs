@@ -578,18 +578,28 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void StartEntriesDrag()
         {
             DragAndDrop.PrepareStartDrag();
+            
+            // Tell the drag and drop system that certain assets are being dragged. This allows you to drag entries
+            // straight into the scene view, the inspector, things like that.
             List<Object> selectedAssets = new List<Object>();
+            List<SerializedProperty> selectedEntryProperties = new List<SerializedProperty>();
             foreach (PaletteEntry selectedEntry in entriesSelected)
             {
                 if (selectedEntry is PaletteAsset paletteAsset)
                     selectedAssets.Add(paletteAsset.Asset);
-            }
 
+                SerializedProperty serializedProperty = GetSerializedPropertyForEntry(selectedEntry);
+                selectedEntryProperties.Add(serializedProperty);
+            }
             DragAndDrop.objectReferences = selectedAssets.ToArray();
-            // Mark the drag as being an asset palette entry drag, so we know not to accept it again ourselves.
-            // Also pass along the name of the directory so we can handle stuff like dragging assets out into
-            // another folder (but ignore the folder it was originally dragged from).
-            DragAndDrop.SetGenericData(EntryDragGenericDataType, window.FolderPanel.SelectedFolder.Name);
+            
+            // Mark the drag as being an asset palette entry drag with the entire context. This means that we can
+            // differentiate between someone dragging in assets from outside of the palette, or whether this was dragged
+            // from a different folder. This distinction is important because if we dragged entries then we want to move
+            // the *entries* and not just re-add the corresponding assets to make brand new entries.
+            EntryDragData entryDragData = new EntryDragData(
+                selectedEntryProperties, window.SelectedFolderSerializedProperty);
+            DragAndDrop.SetGenericData(EntryDragGenericDataType, entryDragData);
             string dragName = selectedAssets.Count == 1 ? selectedAssets[0].ToString() : "<multiple>";
             DragAndDrop.StartDrag(dragName);
         }
