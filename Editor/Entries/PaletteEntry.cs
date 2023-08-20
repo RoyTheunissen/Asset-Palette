@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
-using RoyTheunissen.AssetPalette.Runtime;
 using UnityEngine;
 using Object = UnityEngine.Object;
-
-#if UNITY_EDITOR
 using UnityEditor;
-#endif // UNITY_EDITOR
 
 namespace RoyTheunissen.AssetPalette
 {
@@ -68,8 +64,7 @@ namespace RoyTheunissen.AssetPalette
             // Entries with the same sort priority are sorted by name.
             return String.Compare(Name, other.Name, StringComparison.Ordinal);
         }
-
-#if UNITY_EDITOR
+        
         public virtual bool CanAcceptDraggedAssets(Object[] objectReferences)
         {
             return false;
@@ -78,6 +73,5 @@ namespace RoyTheunissen.AssetPalette
         public virtual void AcceptDraggedAssets(Object[] objectReferences, SerializedProperty serializedProperty)
         {
         }
-#endif // UNITY_EDITOR
     }
 }

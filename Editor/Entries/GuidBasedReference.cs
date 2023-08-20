@@ -1,7 +1,5 @@
 using System;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -32,10 +30,8 @@ namespace RoyTheunissen.AssetPalette
             {
                 if (!didCacheAsset)
                 {
-#if UNITY_EDITOR
                     cachedAsset = AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
                     didCacheAsset = cachedAsset != null;
-#endif
                 }
 
                 return cachedAsset;
@@ -44,9 +40,7 @@ namespace RoyTheunissen.AssetPalette
 
         public GuidBasedReference(T targetObject)
         {
-#if UNITY_EDITOR
             guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(targetObject));
-#endif
             cachedAsset = targetObject;
             didCacheAsset = true;
         }

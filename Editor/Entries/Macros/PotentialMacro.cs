@@ -4,7 +4,6 @@ using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
-using UnityEngine;
 
 namespace RoyTheunissen.AssetPalette
 {

@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
-
-#if UNITY_EDITOR
 using UnityEditor;
-#endif // UNITY_EDITOR
 
 namespace RoyTheunissen.AssetPalette.Runtime
 {
@@ -54,7 +50,6 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
         public override void Open()
         {
-#if UNITY_EDITOR
             MonoScript monoScript = (MonoScript)Script;
 
             if (monoScript == null)
@@ -88,7 +83,6 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
             // Actually call the method.
             methodInfo.Invoke(null, new object[] { });
-#endif // UNITY_EDITOR
         }
         
         public override void GetAssetsToSelect(ref List<Object> selection)
@@ -109,8 +103,7 @@ namespace RoyTheunissen.AssetPalette.Runtime
 
             return true;
         }
-
-#if UNITY_EDITOR
+        
         public override bool CanAcceptDraggedAssets(Object[] objectReferences)
         {
             return objectReferences.Length == 1 && objectReferences[0] is Texture2D;
@@ -125,6 +118,5 @@ namespace RoyTheunissen.AssetPalette.Runtime
             SerializedProperty customIconProperty = serializedProperty.FindPropertyRelative(nameof(customIcon));
             customIconProperty.objectReferenceValue = draggedTexture;
         }
-#endif // UNITY_EDITOR
     }
 }

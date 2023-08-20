@@ -6,7 +6,6 @@ using RoyTheunissen.AssetPalette.Extensions;
 using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
-using GameObjectExtensions = RoyTheunissen.AssetPalette.Extensions.GameObjectExtensions;
 using Object = UnityEngine.Object;
 
 namespace RoyTheunissen.AssetPalette.Windows

@@ -1,4 +1,4 @@
-namespace RoyTheunissen.AssetPalette.Runtime
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Helps you define in what order entries are sorted.

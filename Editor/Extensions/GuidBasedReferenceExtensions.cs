@@ -12,13 +12,11 @@ namespace RoyTheunissen.AssetPalette
             ref GuidBasedReference<T> guidBasedReference, ref T directReference)
             where T : Object
         {
-#if UNITY_EDITOR
             if (guidBasedReference == null || !guidBasedReference.HasGuid && directReference != null)
             {
                 guidBasedReference = new GuidBasedReference<T>(directReference);
                 directReference = null;
             }
-#endif
         }
         
         /// <summary>
