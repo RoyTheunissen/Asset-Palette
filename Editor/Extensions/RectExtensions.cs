@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
-
-#if UNITY_EDITOR
 using UnityEditor;
-#endif // UNITY_EDITOR
 
 namespace RoyTheunissen.AssetPalette.Extensions
 {
@@ -41,7 +38,6 @@ namespace RoyTheunissen.AssetPalette.Extensions
             return rect.Inset(inset, inset, inset, inset);
         }
         
-#if UNITY_EDITOR
         public static Rect GetControlFirstRect(this Rect rect)
         {
             return GetControlFirstRect(rect, EditorGUIUtility.singleLineHeight);
@@ -102,7 +98,6 @@ namespace RoyTheunissen.AssetPalette.Extensions
             
             return result;
         }
-#endif
 
         public static Rect GetSubRectFromLeft(this Rect rect, float width)
         {

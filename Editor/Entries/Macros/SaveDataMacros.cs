@@ -9,18 +9,15 @@ namespace RoyTheunissen.AssetPalette.Runtime.Macros
     {
         public static void ResetSaveData()
         {
-#if UNITY_EDITOR
             if (UnityEditor.EditorUtility.DisplayDialog(
                 "Reset Save Data", "Are you sure you want to reset your save data?", "Yes"))
             {
                 PlayerPrefs.DeleteAll();
             }
-#endif
         }
         
         public static void ResetEditorSaveData()
         {
-#if UNITY_EDITOR
             if (UnityEditor.EditorUtility.DisplayDialog(
                 "Reset Editor Save Data", "Are you sure you want to reset your editor save data?" +
                     "This may reset a lot of preferences for Unity and its extensions.",
@@ -28,7 +25,6 @@ namespace RoyTheunissen.AssetPalette.Runtime.Macros
             {
                 UnityEditor.EditorPrefs.DeleteAll();
             }
-#endif
         }
     }
 }

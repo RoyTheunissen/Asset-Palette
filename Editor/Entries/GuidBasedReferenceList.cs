@@ -1,9 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -33,7 +31,6 @@ namespace RoyTheunissen.AssetPalette
             {
                 if (!didCacheList)
                 {
-#if UNITY_EDITOR
                     cachedList = new List<T>();
                     for (int i = 0; i < guids.Count; i++)
                     {
@@ -41,7 +38,6 @@ namespace RoyTheunissen.AssetPalette
                     }
                     
                     didCacheList = cachedList != null;
-#endif
                 }
 
                 return cachedList;
@@ -65,13 +61,11 @@ namespace RoyTheunissen.AssetPalette
 
         public GuidBasedReferenceList(T[] directReferences)
         {
-#if UNITY_EDITOR
             guids = new List<string>();
             for (int i = 0; i < directReferences.Length; i++)
             {
                 guids.Add(GetGuid(directReferences[i]));
             }
-#endif
             cachedList = new List<T>(directReferences);
             didCacheList = true;
         }
@@ -83,20 +77,12 @@ namespace RoyTheunissen.AssetPalette
         
         private T GetAsset(string guid)
         {
-#if UNITY_EDITOR
             return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
-#else
-            return null;
-#endif
         }
 
         private string GetGuid(T directReference)
         {
-#if UNITY_EDITOR
             return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(directReference));
-#else
-            return null;
-#endif
         }
 
         private void ClearCache()
@@ -113,10 +99,8 @@ namespace RoyTheunissen.AssetPalette
 
         public void Add(T item)
         {
-#if UNITY_EDITOR
             guids.Add(GetGuid(item));
             ClearCache();
-#endif // UNITY_EDITOR
         }
 
         public void Clear()

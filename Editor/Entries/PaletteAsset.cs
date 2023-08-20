@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
-
-#if UNITY_EDITOR
 using UnityEditor;
-#endif // UNITY_EDITOR
 
 namespace RoyTheunissen.AssetPalette
 {
@@ -37,8 +33,7 @@ namespace RoyTheunissen.AssetPalette
         public override bool IsValid => Asset != null;
 
         protected override string DefaultName => Asset.name;
-
-#if UNITY_EDITOR
+        
         [NonSerialized] private Texture2D cachedPreviewTexture;
         [NonSerialized] private bool didCachePreviewTexture;
         public Texture2D PreviewTexture
@@ -58,7 +53,6 @@ namespace RoyTheunissen.AssetPalette
                 return cachedPreviewTexture;
             }
         }
-#endif // UNITY_EDITOR
 
         public PaletteAsset(Object asset)
         {
@@ -67,9 +61,7 @@ namespace RoyTheunissen.AssetPalette
 
         public override void Open()
         {
-#if UNITY_EDITOR
             AssetDatabase.OpenAsset(Asset);
-#endif // UNITY_EDITOR
         }
 
         public override void GetAssetsToSelect(ref List<Object> selection)
@@ -81,10 +73,8 @@ namespace RoyTheunissen.AssetPalette
         {
             base.Refresh();
             
-#if UNITY_EDITOR
             didCachePreviewTexture = false;
             cachedPreviewTexture = null;
-#endif // UNITY_EDITOR
         }
 
     }

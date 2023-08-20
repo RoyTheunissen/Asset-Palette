@@ -87,7 +87,6 @@ namespace RoyTheunissen.AssetPalette.Runtime
             if (Selection.Length == 0)
                 return;
             
-#if UNITY_EDITOR
             UnityEditor.Selection.objects = Selection;
             
             // Ping all of the objects in reverse order so all the corresponding folders open and you can see your
@@ -97,7 +96,6 @@ namespace RoyTheunissen.AssetPalette.Runtime
                 if (Selection[i] != null)
                     UnityEditor.EditorGUIUtility.PingObject(Selection[i]);
             }
-#endif // UNITY_EDITOR
         }
         
         public override void GetAssetsToSelect(ref List<Object> selection)
