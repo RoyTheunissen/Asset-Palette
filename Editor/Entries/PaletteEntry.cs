@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using RoyTheunissen.AssetPalette.Runtime;
 using UnityEngine;
 using Object = UnityEngine.Object;
 

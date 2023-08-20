@@ -1,9 +1,7 @@
 {
-    "name": "RoyTheunissen.AssetPalette.Editor",
+    "name": "RoyTheunissen.AssetPalette",
     "rootNamespace": "RoyTheunissen.AssetPalette",
-    "references": [
-        "GUID:f591e5d22e08d9a409a186d544c1e1e0"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],
