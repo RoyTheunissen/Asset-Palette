@@ -164,7 +164,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                     // First try to find the selected folder by reference guid path. Don't use a regular property path
                     // because those have indices baked into it and those get real screwy when you move things around.
                     cachedSelectedFolderSerializedProperty = CurrentCollectionSerializedObject
-                        .FindPropertyFromIdPath(FolderPanel.SelectedFolderGuidPath, FolderPanel.SelectionIdPropertyName,
+                        .FindPropertyFromIdPath(FolderPanel.SelectedFolderGuidPath, FolderPanel.SelectionGuidPropertyName,
                             FolderPanel.ChildFoldersPropertyName, FolderPanel.RootFoldersPropertyName);
                     
                     // Did not exist. Just select the first folder.
@@ -180,7 +180,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             set
             {
                 string valueGuidPath = value.GetIdPath(
-                    FolderPanel.SelectionIdPropertyName, FolderPanel.ChildFoldersPropertyName);
+                    FolderPanel.SelectionGuidPropertyName, FolderPanel.ChildFoldersPropertyName);
                 if(string.Equals(valueGuidPath, FolderPanel.SelectedFolderGuidPath, StringComparison.Ordinal))
                     return;
                 

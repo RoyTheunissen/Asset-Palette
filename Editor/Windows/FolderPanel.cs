@@ -25,7 +25,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         public const string RootFoldersPropertyName = "folders";
         public const string ChildFoldersPropertyName = "children";
-        internal const string SelectionIdPropertyName = "selectionId";
+        internal const string SelectionGuidPropertyName = "selectionGuid";
         
         private const float DividerBrightness = 0.13f;
         public static readonly Color DividerColor = new Color(DividerBrightness, DividerBrightness, DividerBrightness);
@@ -121,7 +121,7 @@ namespace RoyTheunissen.AssetPalette.Windows
                 foldersTreeView.EntryMoveRequestedEvent += HandleEntryMoveRequestedEvent;
                 foldersTreeView.DroppedAssetsIntoFolderEvent += HandleTreeViewDroppedAssetsIntoFolderEvent;
             }
-            EnsureFolderSelectionIds();
+            EnsureFolderSelectionGuids();
         }
 
         public void UpdateFoldersTreeView(bool clearState)
@@ -164,30 +164,30 @@ namespace RoyTheunissen.AssetPalette.Windows
             window.CurrentCollectionSerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
         
-        private void EnsureFolderSelectionIds()
+        private void EnsureFolderSelectionGuids()
         {
             for (int startIndex = 0; startIndex < window.FoldersSerializedProperty.arraySize; startIndex++)
             {
                 SerializedProperty folderProperty = window.FoldersSerializedProperty.GetArrayElementAtIndex(startIndex);
-                EnsureFolderSelectionIdRecursively(folderProperty);
+                EnsureFolderSelectionGuidRecursively(folderProperty);
             }
 
             window.ApplyModifiedProperties();
         }
 
-        private void EnsureFolderSelectionIdRecursively(SerializedProperty folderProperty)
+        private void EnsureFolderSelectionGuidRecursively(SerializedProperty folderProperty)
         {
-            SerializedProperty idProperty = folderProperty.FindPropertyRelative(SelectionIdPropertyName);
-            if (idProperty.intValue != 0)
+            SerializedProperty guidProperty = folderProperty.FindPropertyRelative(SelectionGuidPropertyName);
+            if (!string.IsNullOrEmpty(guidProperty.stringValue))
                 return;
 
-            idProperty.intValue = GenerateNewSelectionId();
+            guidProperty.stringValue = GenerateNewSelectionGuid();
 
             SerializedProperty childrenProperty = folderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             for (int i = 0; i < childrenProperty.arraySize; i++)
             {
                 SerializedProperty childrenFolder = childrenProperty.GetArrayElementAtIndex(i);
-                EnsureFolderSelectionIdRecursively(childrenFolder);
+                EnsureFolderSelectionGuidRecursively(childrenFolder);
             }
         }
 
@@ -265,12 +265,9 @@ namespace RoyTheunissen.AssetPalette.Windows
             return dropdownMenu;
         }
 
-        private int GenerateNewSelectionId()
+        private string GenerateNewSelectionGuid()
         {
-            SerializedProperty lastSelectionIdProperty = window
-                .CurrentCollectionSerializedObject.FindProperty("lastSelectionId");
-            lastSelectionIdProperty.intValue = lastSelectionIdProperty.intValue + 1;
-            return lastSelectionIdProperty.intValue;
+            return GUID.Generate().ToString();
         }
 
         private SerializedProperty CreateNewFolder(
@@ -286,7 +283,7 @@ namespace RoyTheunissen.AssetPalette.Windows
 
             // Create a new folder.
             PaletteFolder newFolder = (PaletteFolder)Activator.CreateInstance(type);
-            newFolder.Initialize(name, GenerateNewSelectionId());
+            newFolder.Initialize(name, GenerateNewSelectionGuid());
 
             // If we're adding it to an existing folder, make sure that folder is now expanded so we can see what
             // we're doing. The Tree View will be updated shortly and it will then represent the current value.
@@ -434,7 +431,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             PaletteFolder folder = folderProperty.GetValue<PaletteFolder>();
             
             string targetFolderGuidPath = targetFolderProperty.GetIdPath(
-                SelectionIdPropertyName, ChildFoldersPropertyName);
+                SelectionGuidPropertyName, ChildFoldersPropertyName);
             
             SerializedProperty fromListProperty = folderProperty.GetParent();
             int folderToDragIndex = fromListProperty.GetIndexOfArrayElement(folderProperty);
@@ -459,7 +456,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             // Having removed the folder that we want to drag, that changed the order of all the properties. Figure out
             // the correct property for the folder that we wanted to drag to
             targetFolderProperty = window.CurrentCollectionSerializedObject.FindPropertyFromIdPath(
-                targetFolderGuidPath, SelectionIdPropertyName, ChildFoldersPropertyName, RootFoldersPropertyName);
+                targetFolderGuidPath, SelectionGuidPropertyName, ChildFoldersPropertyName, RootFoldersPropertyName);
             toListProperty = targetFolderProperty == null
                 ? window.FoldersSerializedProperty : targetFolderProperty.FindPropertyRelative(ChildFoldersPropertyName);
             toListProperty.InsertArrayElementAtIndex(toIndex);

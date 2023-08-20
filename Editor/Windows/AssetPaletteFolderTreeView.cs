@@ -366,18 +366,18 @@ namespace RoyTheunissen.AssetPalette.Windows
         protected override void RowGUI(RowGUIArgs args)
         {
             // If we're debugging the selection IDs, show them after the folder name here.
-            if (Header.DebugSelectionIds)
+            if (Header.DebugSelectionGuids)
             {
                 AssetPaletteFolderTreeViewItem item = (AssetPaletteFolderTreeViewItem)args.item;
-                int selectionId = item.Folder.SelectionId;
-                args.label += $" <b>({selectionId})</b>";
+                string selectionGuid = item.Folder.SelectionGuid;
+                args.label += $" <b>({selectionGuid})</b>";
             }
             
             args.rowRect.y += FolderSpacing;
             args.rowRect.height -= FolderSpacing * 2;
 
-            // Temporarily enable rich text so we can have bold text for debugging the selection ID's.
-            if (Header.DebugSelectionIds)
+            // Temporarily enable rich text so we can have bold text for debugging the selection GUIDs.
+            if (Header.DebugSelectionGuids)
             {
                 GUIStyle treeViewStyle = "TV Line";
                 treeViewStyle.richText = true;
@@ -385,7 +385,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             base.RowGUI(args);
             
             // Disable rich text again.
-            if (Header.DebugSelectionIds)
+            if (Header.DebugSelectionGuids)
             {
                 GUIStyle treeViewStyle = "TV Line";
                 treeViewStyle.richText = false;

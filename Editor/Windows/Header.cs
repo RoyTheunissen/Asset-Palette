@@ -12,11 +12,12 @@ namespace RoyTheunissen.AssetPalette.Windows
     public sealed class Header : IHasCustomMenu
     {
         // Editor preferences
-        private static string DebugSelectionIdsEditorPref => AssetPaletteWindow.EditorPrefPrefix + "DebugSelectionIds";
-        internal static bool DebugSelectionIds
+        private static string DebugSelectionGuidsEditorPref
+            => AssetPaletteWindow.EditorPrefPrefix + "DebugSelectionGUIDs";
+        internal static bool DebugSelectionGuids
         {
-            get => EditorPrefs.GetBool(DebugSelectionIdsEditorPref);
-            set => EditorPrefs.SetBool(DebugSelectionIdsEditorPref, value);
+            get => EditorPrefs.GetBool(DebugSelectionGuidsEditorPref);
+            set => EditorPrefs.SetBool(DebugSelectionGuidsEditorPref, value);
         }
         
         // Measurements
@@ -234,8 +235,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
             
             menu.AddItem(
-                new GUIContent(DebugPrefix + "Debug Selection IDs"), DebugSelectionIds,
-                () => DebugSelectionIds = !DebugSelectionIds);
+                new GUIContent(DebugPrefix + "Debug Selection GUIDs"), DebugSelectionGuids,
+                () => DebugSelectionGuids = !DebugSelectionGuids);
         }
 
         private void OpenPersonalPaletteDebugWindow()
