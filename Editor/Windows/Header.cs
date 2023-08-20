@@ -11,6 +11,14 @@ namespace RoyTheunissen.AssetPalette.Windows
 {
     public sealed class Header : IHasCustomMenu
     {
+        // Editor preferences
+        private static string DebugSelectionIdsEditorPref => AssetPaletteWindow.EditorPrefPrefix + "DebugSelectionIds";
+        internal static bool DebugSelectionIds
+        {
+            get => EditorPrefs.GetBool(DebugSelectionIdsEditorPref);
+            set => EditorPrefs.SetBool(DebugSelectionIdsEditorPref, value);
+        }
+        
         // Measurements
         public static float HeaderHeight => EditorGUIUtility.singleLineHeight + 3;
         public static float CollectionButtonWidth => 130;
@@ -213,11 +221,21 @@ namespace RoyTheunissen.AssetPalette.Windows
         public void AddItemsToMenu(GenericMenu menu)
         {
             DoAddSpecialDropDown(menu, "Add Special/");
+
+            const string DebugPrefix = "Debug/";
             bool isPersonalPaletteDebugOpen = EditorWindow.HasOpenInstances<PersonalPaletteDebugWindow>();
             if (isPersonalPaletteDebugOpen)
-                menu.AddDisabledItem(new GUIContent("Open Personal Palette Debug Window"));
+                menu.AddDisabledItem(new GUIContent(DebugPrefix + "Open Personal Palette Debug Window"));
             else
-                menu.AddItem(new GUIContent("Open Personal Palette Debug Window"), false, OpenPersonalPaletteDebugWindow);
+            {
+                menu.AddItem(
+                    new GUIContent(DebugPrefix + "Open Personal Palette Debug Window"), false,
+                    OpenPersonalPaletteDebugWindow);
+            }
+            
+            menu.AddItem(
+                new GUIContent(DebugPrefix + "Debug Selection IDs"), DebugSelectionIds,
+                () => DebugSelectionIds = !DebugSelectionIds);
         }
 
         private void OpenPersonalPaletteDebugWindow()

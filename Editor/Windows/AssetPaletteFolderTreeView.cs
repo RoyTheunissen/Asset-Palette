@@ -365,6 +365,15 @@ namespace RoyTheunissen.AssetPalette.Windows
 
         protected override void RowGUI(RowGUIArgs args)
         {
+            // If we're debugging the selection IDs, show them after the folder name here.
+            if (Header.DebugSelectionIds)
+            {
+                AssetPaletteFolderTreeViewItem item = (AssetPaletteFolderTreeViewItem)args.item;
+                string selectionId = item.Property.FindPropertyRelative(FolderPanel.SelectionIdPropertyName)
+                    .GetIdForPath();
+                args.label += $" ({selectionId})";
+            }
+            
             args.rowRect.y += FolderSpacing;
             args.rowRect.height -= FolderSpacing * 2;
 
