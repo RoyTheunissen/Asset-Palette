@@ -370,13 +370,26 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 AssetPaletteFolderTreeViewItem item = (AssetPaletteFolderTreeViewItem)args.item;
                 int selectionId = item.Folder.SelectionId;
-                args.label += $" ({selectionId})";
+                args.label += $" <b>({selectionId})</b>";
             }
             
             args.rowRect.y += FolderSpacing;
             args.rowRect.height -= FolderSpacing * 2;
 
+            // Temporarily enable rich text so we can have bold text for debugging the selection ID's.
+            if (Header.DebugSelectionIds)
+            {
+                GUIStyle treeViewStyle = "TV Line";
+                treeViewStyle.richText = true;
+            }
             base.RowGUI(args);
+            
+            // Disable rich text again.
+            if (Header.DebugSelectionIds)
+            {
+                GUIStyle treeViewStyle = "TV Line";
+                treeViewStyle.richText = false;
+            }
 
             // This is the only way we can detect if we're currently renaming or not.
             if (args.isRenaming)
