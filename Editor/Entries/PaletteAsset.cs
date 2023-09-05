@@ -33,6 +33,8 @@ namespace RoyTheunissen.AssetPalette
         public override bool IsValid => Asset != null;
 
         protected override string DefaultName => Asset.name;
+
+        private Editor cachedEditor;
         
         [NonSerialized] private Texture2D cachedPreviewTexture;
         [NonSerialized] private bool didCachePreviewTexture;
@@ -45,10 +47,9 @@ namespace RoyTheunissen.AssetPalette
                     didCachePreviewTexture = true;
 
                     string path = AssetDatabase.GetAssetPath(Asset.GetInstanceID());
-                    
-                    Editor editor = Editor.CreateEditor(Asset, null);
-                    cachedPreviewTexture = editor.RenderStaticPreview(path, null, TextureSize, TextureSize);
-                    Object.DestroyImmediate(editor);
+
+                    Editor.CreateCachedEditor(Asset, null, ref cachedEditor);
+                    cachedPreviewTexture = cachedEditor.RenderStaticPreview(path, null, TextureSize, TextureSize);
                 }
                 return cachedPreviewTexture;
             }
