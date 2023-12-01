@@ -1,12 +1,8 @@
 {
-    "name": "RoyTheunissen.AssetPalette",
-    "rootNamespace": "RoyTheunissen.AssetPalette",
-    "references": [
-        "GUID:473c9d882a6ce194fab63c7bb035077e"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "name": "RoyTheunissen.AssetPalette.Runtime",
+    "rootNamespace": "RoyTheunissen.AssetPalette.Runtime",
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
