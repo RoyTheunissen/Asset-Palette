@@ -19,6 +19,8 @@ namespace RoyTheunissen.AssetPalette
         protected abstract string DefaultName { get; }
         public string Name => HasCustomName ? CustomName : DefaultName;
 
+        public virtual string Tooltip => string.Empty;
+
         public abstract bool IsValid { get; }
 
         public virtual bool CanRename => true;

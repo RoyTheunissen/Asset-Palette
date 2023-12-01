@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using UnityEditor;
+using RoyTheunissen.AssetPalette.Runtime;
 
 namespace RoyTheunissen.AssetPalette
 {
@@ -33,6 +34,28 @@ namespace RoyTheunissen.AssetPalette
         public override bool IsValid => Asset != null;
 
         protected override string DefaultName => Asset.name;
+
+        [NonSerialized] private Object objectTooltipIsCachedFor;
+        [NonSerialized] private string cachedTooltip;
+
+        public override string Tooltip
+        {
+            get
+            {
+                if (objectTooltipIsCachedFor != Asset)
+                {
+                    if (Asset == null)
+                        cachedTooltip = base.Tooltip;
+                    else
+                    {
+                        if (Asset is IAssetPaletteTooltip paletteTooltip)
+                            cachedTooltip = paletteTooltip.Tooltip;
+                    }
+                    objectTooltipIsCachedFor = Asset;
+                }
+                return cachedTooltip;
+            }
+        }
 
         private Editor cachedEditor;
         
