@@ -6,7 +6,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using UnityEditor;
 
-namespace RoyTheunissen.AssetPalette.Runtime
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Palette entry for a function defined in script that you can run as a macro.

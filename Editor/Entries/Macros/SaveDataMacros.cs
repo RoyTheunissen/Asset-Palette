@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace RoyTheunissen.AssetPalette.Runtime.Macros
+namespace RoyTheunissen.AssetPalette.Macros
 {
     /// <summary>
     /// Macros for dealing with save data.

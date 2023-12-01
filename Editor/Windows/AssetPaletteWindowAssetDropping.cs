@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using RoyTheunissen.AssetPalette.Extensions;
-using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;

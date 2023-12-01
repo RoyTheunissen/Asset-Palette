@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using RoyTheunissen.AssetPalette.Extensions;
-using RoyTheunissen.AssetPalette.Runtime;
 using UnityEditor;
 
 namespace RoyTheunissen.AssetPalette

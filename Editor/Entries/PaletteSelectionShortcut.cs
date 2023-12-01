@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
-namespace RoyTheunissen.AssetPalette.Runtime
+namespace RoyTheunissen.AssetPalette
 {
     /// <summary>
     /// Represents a project window selection that you want to get back to quickly.
