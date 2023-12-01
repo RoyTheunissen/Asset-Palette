@@ -12,6 +12,7 @@ namespace RoyTheunissen.AssetPalette
     /// Palette entry for a function defined in script that you can run as a macro.
     /// </summary>
     [Serializable]
+    [UnityEngine.Scripting.APIUpdating.MovedFrom(false, "RoyTheunissen.AssetPalette.Runtime")]
     public class PaletteMacro : PaletteEntry
     {
         [SerializeField] private GuidBasedReference<TextAsset> scriptReference;
@@ -37,6 +38,9 @@ namespace RoyTheunissen.AssetPalette
         public bool HasCustomIcon => CustomIcon != null;
 
         protected override string DefaultName => methodName.ToHumanReadable();
+
+        public override string Tooltip => 
+            $"Performs the '{methodName}' method in the '{(script == null ? null : script.name)}' script";
 
         public override bool IsValid => Script != null && !string.IsNullOrEmpty(methodName);
 

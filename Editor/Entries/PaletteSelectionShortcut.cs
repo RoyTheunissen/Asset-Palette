@@ -10,6 +10,7 @@ namespace RoyTheunissen.AssetPalette
     /// Represents a project window selection that you want to get back to quickly.
     /// </summary>
     [Serializable]
+    [UnityEngine.Scripting.APIUpdating.MovedFrom(false, "RoyTheunissen.AssetPalette.Runtime")]
     public class PaletteSelectionShortcut : PaletteEntry
     {
         public const int ItemNamesToDisplayMax = 3;
@@ -66,6 +67,8 @@ namespace RoyTheunissen.AssetPalette
                 return cachedName;
             }
         }
+
+        public override string Tooltip => $"Selects {Selection.Length} entries when you click on this entry.";
 
         public override bool IsValid
         {
