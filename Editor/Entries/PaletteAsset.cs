@@ -44,14 +44,13 @@ namespace RoyTheunissen.AssetPalette
             {
                 if (objectTooltipIsCachedFor != Asset)
                 {
-                    if (Asset == null)
-                        cachedTooltip = base.Tooltip;
-                    else
+                    cachedTooltip = base.Tooltip;
+                    if (Asset != null)
                     {
                         if (Asset is IAssetPaletteTooltip paletteTooltip)
                             cachedTooltip = paletteTooltip.Tooltip;
+                        objectTooltipIsCachedFor = Asset;
                     }
-                    objectTooltipIsCachedFor = Asset;
                 }
                 return cachedTooltip;
             }
