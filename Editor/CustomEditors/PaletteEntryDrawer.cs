@@ -106,7 +106,7 @@ namespace RoyTheunissen.AssetPalette.CustomEditors
             // rect even steal focus? It is not a named control...
             if ((Event.current.type == EventType.Repaint || PaletteEntry.IsEntryBeingRenamed) && !entry.IsRenaming)
             {
-                GUIContent label = new GUIContent(entry.Name);
+                GUIContent label = new GUIContent(entry.Name, entry.Tooltip);
                 Rect labelRect = GetLabelRect(position, entry);
                 DrawLabel(position, labelRect, property, label, entry);
             }
