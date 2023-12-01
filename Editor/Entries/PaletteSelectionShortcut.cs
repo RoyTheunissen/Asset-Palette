@@ -68,7 +68,10 @@ namespace RoyTheunissen.AssetPalette
             }
         }
 
-        public override string Tooltip => $"Selects {Selection.Length} entries when you click on this entry.";
+        public override string Tooltip
+        {
+            get { return $"Selects {Selection.Length} asset{(Selection.Length == 1 ? "" : "s")} when you click on this entry."; }
+        }
 
         public override bool IsValid
         {
