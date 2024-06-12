@@ -28,6 +28,8 @@ namespace RoyTheunissen.AssetPalette.Windows
         private static string CurrentCollectionGUIDEditorPref => EditorPrefPrefix + "CurrentCollectionGUID";
 
         public static string PersonalPaletteStorageKeyEditorPref => EditorPrefPrefix + "PersonalPaletteStorageKey";
+        
+        private static string SelectAssetsWhenSelectingEntriesEditorPref => EditorPrefPrefix + "SelectAssetsWhenSelectingEntries";
 
 
         // Measurements

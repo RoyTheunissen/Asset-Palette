@@ -621,15 +621,19 @@ namespace RoyTheunissen.AssetPalette.Windows
             entriesSelected.Remove(entry);
             entriesIndividuallySelected.Remove(entry);
             
-            List<Object> assetsToSelect = new List<Object>();
-            entry.GetAssetsToSelect(ref assetsToSelect);
-            
-            List<Object> selection = Selection.objects.ToList();
-            for (int i = assetsToSelect.Count - 1; i >= 0; i--)
+            if (AssetPaletteWindow.SelectAssetsWhenSelectingEntries)
             {
-                selection.Remove(assetsToSelect[i]);
+                List<Object> assetsToSelect = new List<Object>();
+                entry.GetAssetsToSelect(ref assetsToSelect);
+
+                List<Object> selection = Selection.objects.ToList();
+                for (int i = assetsToSelect.Count - 1; i >= 0; i--)
+                {
+                    selection.Remove(assetsToSelect[i]);
+                }
+
+                Selection.objects = selection.ToArray();
             }
-            Selection.objects = selection.ToArray();
         }
 
         private void SelectEntryInternal(PaletteEntry entry, bool exclusively)
@@ -644,9 +648,10 @@ namespace RoyTheunissen.AssetPalette.Windows
             {
                 ClearEntrySelection();
                 
-                Selection.objects = assetsToSelect.ToArray();
+                if (AssetPaletteWindow.SelectAssetsWhenSelectingEntries)
+                    Selection.objects = assetsToSelect.ToArray();
             }
-            else
+            else if (AssetPaletteWindow.SelectAssetsWhenSelectingEntries)
             {
                 List<Object> selection = Selection.objects.ToList();
                 selection.AddRange(assetsToSelect);
@@ -703,7 +708,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             entriesSelected.Clear();
             entriesIndividuallySelected.Clear();
 
-            if (didHaveEntriesSelected)
+            if (AssetPaletteWindow.SelectAssetsWhenSelectingEntries && didHaveEntriesSelected)
                 Selection.activeObject = null;
         }
 

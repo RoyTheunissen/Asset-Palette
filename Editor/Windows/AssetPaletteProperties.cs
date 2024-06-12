@@ -245,6 +245,18 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
         
+        public static bool SelectAssetsWhenSelectingEntries
+        {
+            get => EditorPrefs.GetBool(CurrentCollectionGUIDEditorPref);
+            set
+            {
+                if (SelectAssetsWhenSelectingEntries == value)
+                    return;
+
+                EditorPrefs.SetBool(SelectAssetsWhenSelectingEntriesEditorPref, value);
+            }
+        }
+        
         private void ClearCachedCollection()
         {
             // Need to re-cache the current collection now.

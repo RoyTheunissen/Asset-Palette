@@ -222,6 +222,11 @@ namespace RoyTheunissen.AssetPalette.Windows
         public void AddItemsToMenu(GenericMenu menu)
         {
             DoAddSpecialDropDown(menu, "Add Special/");
+            
+            const string SettingsPrefix = "Settings/";
+            menu.AddItem(
+                new GUIContent(SettingsPrefix + "Select Assets When Selecting Palette Entries"), false,
+                () => AssetPaletteWindow.SelectAssetsWhenSelectingEntries = !AssetPaletteWindow.SelectAssetsWhenSelectingEntries);
 
             const string DebugPrefix = "Debug/";
             bool isPersonalPaletteDebugOpen = EditorWindow.HasOpenInstances<PersonalPaletteDebugWindow>();
@@ -237,6 +242,8 @@ namespace RoyTheunissen.AssetPalette.Windows
             menu.AddItem(
                 new GUIContent(DebugPrefix + "Debug Selection GUIDs"), DebugSelectionGuids,
                 () => DebugSelectionGuids = !DebugSelectionGuids);
+            
+            menu.AddSeparator("");
         }
 
         private void OpenPersonalPaletteDebugWindow()
