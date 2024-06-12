@@ -75,7 +75,7 @@ namespace RoyTheunissen.AssetPalette.Windows
             set => EditorPrefs.SetString(SelectedFolderGuidPathEditorPref, value);
         }
 
-        public PaletteFolder SelectedFolder => window.SelectedFolderSerializedProperty.GetValue<PaletteFolder>();
+        public PaletteFolder SelectedFolder => window.SelectedFolder;
 
         public bool IsFolderBeingRenamed => foldersTreeView != null && foldersTreeView.IsRenaming;
         

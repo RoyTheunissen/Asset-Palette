@@ -199,6 +199,21 @@ namespace RoyTheunissen.AssetPalette.Windows
             }
         }
         
+        [NonSerialized] private PaletteFolder cachedSelectedFolder;
+        [NonSerialized] private bool didCacheSelectedFolder;
+        public PaletteFolder SelectedFolder
+        {
+            get
+            {
+                if (!didCacheSelectedFolder)
+                {
+                    didCacheSelectedFolder = true;
+                    cachedSelectedFolder = SelectedFolderSerializedProperty.GetValue<PaletteFolder>();
+                }
+                return cachedSelectedFolder;
+            }
+        }
+        
         [NonSerialized] private bool didCacheSelectedFolderEntriesSerializedProperty;
         [NonSerialized] private SerializedProperty cachedSelectedFolderEntriesSerializedProperty;
 
@@ -233,6 +248,7 @@ namespace RoyTheunissen.AssetPalette.Windows
         private void ClearCachedSelectedFolderSerializedProperties()
         {
             didCacheSelectedFolderSerializedProperty = false;
+            didCacheSelectedFolder = false;
             didCacheSelectedFolderEntriesSerializedProperty = false;
             
             entryPanel.ClearEntrySelection();
