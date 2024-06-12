@@ -141,21 +141,30 @@ namespace RoyTheunissen.AssetPalette.Windows
         [NonSerialized] private SerializedProperty cachedSelectedFolderSerializedPropertyParent;
         [NonSerialized] private string cachedSelectedFolderSerializedPropertyPath;
 
+        private bool IsCachedSelectedFolderInvalid
+        {
+            get
+            {
+                if (!didCacheSelectedFolderSerializedProperty)
+                    return false;
+
+                return cachedSelectedFolderSerializedProperty == null
+                       || !cachedSelectedFolderSerializedProperty.ExistsInParentArray(
+                           cachedSelectedFolderSerializedPropertyParent,
+                           cachedSelectedFolderSerializedPropertyPath)
+                       || cachedSelectedFolderSerializedProperty.GetValue<PaletteFolder>() == null;
+            }
+        }
+
         public SerializedProperty SelectedFolderSerializedProperty
         {
             get
             {
                 // Sanity check: if the folder selection is no longer valid, reset the selected folder.
                 // This is something that can happen with undo...
-                if (didCacheSelectedFolderSerializedProperty && (cachedSelectedFolderSerializedProperty == null
-                                    || !cachedSelectedFolderSerializedProperty.ExistsInParentArray(
-                                        cachedSelectedFolderSerializedPropertyParent,
-                                        cachedSelectedFolderSerializedPropertyPath)
-                                    || cachedSelectedFolderSerializedProperty.GetValue<PaletteFolder>() == null))
-                {
+                if (IsCachedSelectedFolderInvalid)
                     ClearCachedSelectedFolderSerializedProperties();
-                }
-                
+
                 if (!didCacheSelectedFolderSerializedProperty)
                 {
                     folderPanel.EnsureFolderExists();
@@ -205,6 +214,11 @@ namespace RoyTheunissen.AssetPalette.Windows
         {
             get
             {
+                // Sanity check: if the folder selection is no longer valid, reset the selected folder.
+                // This is something that can happen with undo...
+                if (IsCachedSelectedFolderInvalid)
+                    ClearCachedSelectedFolderSerializedProperties();
+                
                 if (!didCacheSelectedFolder)
                 {
                     didCacheSelectedFolder = true;
