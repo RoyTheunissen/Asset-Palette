@@ -29,8 +29,8 @@ namespace RoyTheunissen.AssetPalette.Extensions
             {
                 if (fieldStructure[i].Contains("["))
                 {
-                    int index = System.Convert.ToInt32(new string(fieldStructure[i].Where(char.IsDigit).ToArray()));
-                    obj = GetFieldValueWithIndex(rgx.Replace(fieldStructure[i], ""), obj, index);
+                    ParseFieldStructure(fieldStructure[i], out string fieldName, out int index);
+                    obj = GetFieldValueWithIndex(fieldName, obj, index);
                 }
                 else
                 {
@@ -39,6 +39,14 @@ namespace RoyTheunissen.AssetPalette.Extensions
             }
 
             return (T)obj;
+        }
+
+        private static void ParseFieldStructure(string input, out string fieldName, out int index)
+        {
+            int startIndex = input.IndexOf('[');
+            int endIndex = input.IndexOf(']');
+            index = int.Parse(input.Substring(startIndex + 1, endIndex - startIndex - 1));
+            fieldName = input.Substring(0, startIndex) + input.Substring(endIndex + 1);
         }
 
         public static bool SetValue<T>(this SerializedProperty property, T value) where T : class
