@@ -24,7 +24,6 @@ namespace RoyTheunissen.AssetPalette.Extensions
             object obj = property.serializedObject.targetObject;
             string path = property.propertyPath.Replace(".Array.data", "");
             string[] fieldStructure = path.Split('.');
-            Regex rgx = new Regex(@"\[\d+\]");
             for (int i = 0; i < fieldStructure.Length; i++)
             {
                 if (fieldStructure[i].Contains("["))
