@@ -24,13 +24,11 @@ namespace RoyTheunissen.AssetPalette.Extensions
             object obj = property.serializedObject.targetObject;
             string path = property.propertyPath.Replace(".Array.data", "");
             string[] fieldStructure = path.Split('.');
-            Regex rgx = new Regex(@"\[\d+\]");
             for (int i = 0; i < fieldStructure.Length; i++)
             {
-                if (fieldStructure[i].Contains("["))
+                if (TryParseFieldStructure(fieldStructure[i], out string fieldName, out int index))
                 {
-                    int index = System.Convert.ToInt32(new string(fieldStructure[i].Where(char.IsDigit).ToArray()));
-                    obj = GetFieldValueWithIndex(rgx.Replace(fieldStructure[i], ""), obj, index);
+                    obj = GetFieldValueWithIndex(fieldName, obj, index);
                 }
                 else
                 {
@@ -39,6 +37,22 @@ namespace RoyTheunissen.AssetPalette.Extensions
             }
 
             return (T)obj;
+        }
+
+        private static bool TryParseFieldStructure(string input, out string fieldName, out int index)
+        {
+            int endIndex = input.LastIndexOf(']');
+            if (endIndex == -1)
+            {
+                fieldName = null;
+                index = -1;
+                return false;
+            }
+
+            int startIndex = input.LastIndexOf('[', endIndex - 1);
+            index = int.Parse(input.Substring(startIndex + 1, endIndex - startIndex - 1));
+            fieldName = input.Substring(0, startIndex) + input.Substring(endIndex + 1);
+            return true;
         }
 
         public static bool SetValue<T>(this SerializedProperty property, T value) where T : class
