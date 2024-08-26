@@ -58,6 +58,9 @@ namespace RoyTheunissen.AssetPalette
 
         public int CompareTo(PaletteEntry other)
         {
+            if (!IsValid || !other.IsValid)
+                return 1;
+            
             // First check if the sort priorities are different.
             int priorityOrder = SortPriority.CompareTo(other.SortPriority);
             if (priorityOrder != 0)
