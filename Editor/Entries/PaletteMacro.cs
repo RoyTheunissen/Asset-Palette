@@ -44,6 +44,9 @@ namespace RoyTheunissen.AssetPalette
 
         public override bool IsValid => Script != null && !string.IsNullOrEmpty(methodName);
 
+        // NOTE: Don't select assets for Macros because we want you to be able to run them easily by double-clicking
+        public override bool ShouldSelectAssets => false;
+
         protected override PaletteEntrySortPriorities SortPriority => PaletteEntrySortPriorities.Macros;
 
         public PaletteMacro(TextAsset script, string methodName)

@@ -33,6 +33,8 @@ namespace RoyTheunissen.AssetPalette
 
         protected virtual PaletteEntrySortPriorities SortPriority => PaletteEntrySortPriorities.Default;
 
+        public virtual bool ShouldSelectAssets => true;
+
         public abstract void Open();
 
         public abstract void GetAssetsToSelect(ref List<Object> selection);

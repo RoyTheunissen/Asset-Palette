@@ -637,20 +637,23 @@ namespace RoyTheunissen.AssetPalette.Windows
             if (PaletteEntry.IsEntryBeingRenamed && PaletteEntry.EntryCurrentlyRenaming != entry)
                 StopEntryRename(true);
 
-            List<Object> assetsToSelect = new List<Object>();
-            entry.GetAssetsToSelect(ref assetsToSelect);
+            if (entry.ShouldSelectAssets)
+            {
+                List<Object> assetsToSelect = new List<Object>();
+                entry.GetAssetsToSelect(ref assetsToSelect);
             
-            if (exclusively)
-            {
-                ClearEntrySelection();
+                if (exclusively)
+                {
+                    ClearEntrySelection();
                 
-                Selection.objects = assetsToSelect.ToArray();
-            }
-            else
-            {
-                List<Object> selection = Selection.objects.ToList();
-                selection.AddRange(assetsToSelect);
-                Selection.objects = selection.ToArray();
+                    Selection.objects = assetsToSelect.ToArray();
+                }
+                else
+                {
+                    List<Object> selection = Selection.objects.ToList();
+                    selection.AddRange(assetsToSelect);
+                    Selection.objects = selection.ToArray();
+                }
             }
 
             entriesSelected.Add(entry);
