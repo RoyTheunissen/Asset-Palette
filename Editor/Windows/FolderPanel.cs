@@ -1,8 +1,17 @@
+#if UNITY_6000_5_OR_NEWER
+    using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+    using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+    using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#else
+    using TreeView = UnityEditor.IMGUI.Controls.TreeView;
+    using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem;
+    using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState;
+#endif
+
 using System;
 using System.Collections.Generic;
 using RoyTheunissen.AssetPalette.Extensions;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
