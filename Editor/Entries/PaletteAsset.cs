@@ -66,7 +66,11 @@ namespace RoyTheunissen.AssetPalette
                 {
                     didCachePreviewTexture = true;
 
+#if UNITY_6000_5_OR_NEWER
+                    string path = AssetDatabase.GetAssetPath(Asset.GetEntityId());
+#else
                     string path = AssetDatabase.GetAssetPath(Asset.GetInstanceID());
+#endif
 
                     Editor editor = Editor.CreateEditor(Asset, null);
                     cachedPreviewTexture = editor.RenderStaticPreview(path, null, TextureSize, TextureSize);
